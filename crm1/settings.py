@@ -31,11 +31,11 @@ ALLOWED_HOSTS = [
     "yourdomain.com",
     "www.yourdomain.com",
     "landlink-tai1.onrender.com",
-    "https://landlink-tai1.onrender.com/",
+    "https://realindataai.onrender.com",
 ]  # Add your domain for production
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://landlink-tai1.onrender.com",
+    "https://realindataai.onrender.com",
 ]
 
 
