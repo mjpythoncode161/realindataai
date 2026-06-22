@@ -28,16 +28,15 @@ DEBUG = True  # Set to False in production
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "yourdomain.com",
-    "www.yourdomain.com",
-    "landlink-tai1.onrender.com",
-    "https://realindataai.onrender.com",
-]  # Add your domain for production
+    "realindataai.onrender.com",
+    ".onrender.com",
+] 
+
+# Add your domain for production
 
 CSRF_TRUSTED_ORIGINS = [
     "https://realindataai.onrender.com",
 ]
-
 
 # Application definition
 
