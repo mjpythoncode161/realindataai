@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Lead{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6"><h1>Confirm Lead → Customer</h1></div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card card-success card-outline">
+          <div class="card-header"><h3 class="card-title">{{ lead.full_name }} — {{ lead.phone }}</h3></div>
+          <form method="POST">
+            {% csrf_token %}
+            <div class="card-body">
+              <div class="alert alert-info">
+                Confirming this lead will create a <strong>Customer</strong> record visible in Admin → Customers.
+                The lead will be marked as <strong>Confirmed</strong>.
+              </div>
+              <p><strong>Project:</strong> {{ lead.p_id.name|default:"—" }}</p>
+              <p><strong>Plot Interest:</strong> {{ lead.plot_interest|default:"—" }}</p>
+              <hr>
+              <div class="form-group">
+                <label>{{ form.password.label }}</label>
+                {{ form.password }}
+                <small class="text-muted">If left blank, default password = last 6 digits of phone.</small>
+              </div>
+              <div class="form-group mb-0">
+                <label>Confirm Password</label>
+                {{ form.confirm_password }}
+              </div>
+            </div>
+            <div class="card-footer text-center">
+              <a href="{% url 'lead_detail' lead.lead_id %}" class="btn btn-secondary">Cancel</a>
+              <button type="submit" class="btn btn-success">Confirm &amp; Create Customer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

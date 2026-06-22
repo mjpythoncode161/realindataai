@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title|default:"Swap Plot/Flat (Post-KGP)" }}{% endblock %}
+
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>{{ page_title|default:"Swap Plot/Flat (Post-KGP)" }}</h1>
+        <p class="text-muted mb-0">
+          Only plot/flat number is exchanged. Area, rate, and amounts stay on each booking.
+        </p>
+      </div>
+      <div class="col-sm-6 text-right">
+        <a href="{% url 'booking_list' %}" class="btn btn-secondary">Back</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-outline card-maroon mb-4">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3"><strong>Booking No.</strong><br />{{ booking.booking_no }}</div>
+          <div class="col-md-3"><strong>Customer</strong><br />{{ booking.customer_full_name|default:"-" }}</div>
+          <div class="col-md-3"><strong>Project</strong><br />{% if booking.p_id %}{{ booking.p_id.name }}{% else %}-{% endif %}</div>
+          <div class="col-md-3"><strong>KGP Date</strong><br />{% if booking.kgp_completed_at %}{{ booking.kgp_completed_at|date:"d-m-Y" }}{% else %}-{% endif %}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-outline card-warning">
+      <div class="card-body">
+        {% if current_item %}
+        <div class="table-responsive mb-4">
+          <table class="table table-bordered">
+            <thead class="bg-light">
+              <tr>
+                <th>Plot / Flat No.</th>
+                <th>Area (sq.ft)</th>
+                <th>Rate</th>
+                <th>Total Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>{{ current_item.plot_number|default:"-" }}</strong></td>
+                <td>{{ current_item.area_sqft }}</td>
+                <td>{{ current_item.rate }}</td>
+                <td>{{ current_item.total_amount }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="alert alert-warning">This booking has no property row.</div>
+        {% endif %}
+
+        {% if swap_targets %}
+        <form method="POST" novalidate id="kgpSwapForm">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="{{ form.swap_with_booking.id_for_label }}">{{ form.swap_with_booking.label }}</label>
+            {{ form.swap_with_booking }}
+            {% for error in form.swap_with_booking.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="table-responsive mb-3">
+            <table class="table table-sm table-bordered">
+              <thead>
+                <tr>
+                  <th>Booking No.</th>
+                  <th>Customer</th>
+                  <th>Plot / Flat No.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for target in swap_targets %}
+                  {% with target_item=target.items.first %}
+                  <tr>
+                    <td>{{ target.booking_no }}</td>
+                    <td>{{ target.customer_full_name|default:"-" }}</td>
+                    <td>{{ target_item.plot_number|default:"-" }}</td>
+                  </tr>
+                  {% endwith %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}
+                {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <button type="submit" class="btn btn-warning">
+            <i class="fas fa-exchange-alt mr-1"></i> Confirm Swap Plot/Flat
+          </button>
+        </form>
+        {% else %}
+        <div class="alert alert-info mb-0">
+          No other KGP-completed bookings in this project are available for swapping.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

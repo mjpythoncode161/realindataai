@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_payment %}Payment Request{% else %}Down Payment Bill{% endif %}{% endblock %}
+
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-12">
+        <h1 style="color: #333; font-weight: 500; text-transform: uppercase;">{% if is_payment %}Payment Request{% else %}Down Payment Bill{% endif %}</h1>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-outline card-maroon">
+      <div class="card-header">
+        <h3 class="card-title" style="text-transform: uppercase; font-size: 1rem; font-weight: 600; color: #555;">{% if is_payment %}Request Details{% else %}Payment Details{% endif %}</h3>
+      </div>
+      <form method="POST" novalidate id="receiptForm">
+        {% csrf_token %}
+        <div class="card-body">
+          <div class="row">
+            <!-- Hidden field for plot_number to satisfy backend requirement -->
+            <input type="hidden" name="plot_number" id="id_plot_number_hidden" value="{{ form.plot_number.value|default:'' }}">
+
+            <!-- Column 1 -->
+            <div class="col-md-6">
+              <div class="form-group">
+                <label style="text-transform: uppercase; font-size: 0.85rem;">Date</label>
+                {% if is_payment %}{{ form.payment_date }}{% else %}{{ form.receipt_date }}{% endif %}
+              </div>
+              <div class="form-group">
+                <label style="text-transform: uppercase; font-size: 0.85rem;">Bill No.</label>
+                {% if is_edit %}
+                  <input type="text" class="form-control" value="{{ form.instance.b_id.booking_no }}" readonly>
+                  <input type="hidden" name="b_id" value="{{ form.instance.b_id.pk }}">
+                {% else %}
+                  {{ form.b_id }}
+                {% endif %}
+              </div>
+              <div class="form-group">
+                <label style="text-transform: uppercase; font-size: 0.85rem;">Total Amount</label>
+                {{ form.total_amount }}
+              </div>
+              <div class="form-group">
+                <label style="text-transform: uppercase; font-size: 0.85rem;">Payment Details</label>
+                {{ form.payment_details }}
+              </div>
+              <div class="form-group">
+                <label style="text-transform: uppercase; font-size: 0.85rem;">Pay Amount</label>
+                {{ form.pay_amount }}
+              </div>
+            </div>
+
+            <!-- Column 2 -->
+            <div class="col-md-6">
+              <div class="form-group">
+                <label style="text-transform: uppercase; font-size: 0.85rem;">Phone/WhatsApp No</label>
+                {{ form.phone }}
+              </div>
+              <div class="form-group">
+                <label style="text-transform: uppercase; font-size: 0.85rem;">Customer Name</label>
+                {{ form.customer_name }}
+              </div>
+              <div class="form-group">
+                <label style="text-transform: uppercase; font-size: 0.85rem;">Payment Method</label>
+                {{ form.payment_method }}
+              </div>
+              <div class="form-group">
+                <label style="text-transform: uppercase; font-size: 0.85rem;">Balance Amount</label>
+                {{ form.balance_amount }}
+              </div>
+              <div class="form-group">
+                <label style="text-transform: uppercase; font-size: 0.85rem;">Next Payment Date</label>
+                {{ form.next_payment_date }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer text-right" style="background: transparent; border-top: none;">
+          <a href="{% if is_payment %}{% url 'payment_list' %}{% else %}{% url 'receipt_list' %}{% endif %}" class="btn btn-secondary mr-2">Cancel</a>
+          <button type="submit" class="btn btn-maroon-custom" style="background-color: #29577f; color: white; border: none; padding: 6px 20px;">
+            {% if is_payment %}Submit Request{% else %}Save Receipt{% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  $(function () {
+    // 1. Initialize Bill No. dropdown
+    {% if not is_edit %}
+        $('#id_b_id').empty().append('<option value="">Enter Phone to load Bills</option>');
+    {% endif %}
+
+    // 1. Dynamic Filtering: Filter BILL No. based on Phone Number
+    $('#id_phone').on('input blur', function () {
+      var phone = ($(this).val() || '').trim();
+      
+      // Clear dropdown and other details if phone is cleared or too short
+      if (phone.length < 10) {
+        $('#id_b_id').empty().append('<option value="">Enter Phone to load Bills</option>');
+        $('#id_customer_name, #id_plot_number_hidden, #id_total_amount, #id_balance_amount').val('');
+        return;
+      }
+
+      var $billSelect = $('#id_b_id');
+      
+      $.getJSON('{% url "bookings_by_phone" %}', { phone: phone })
+        .done(function (resp) {
+          $billSelect.empty();
+          $billSelect.append('<option value="">Select Bill No.</option>');
+          
+          if (resp.bookings && resp.bookings.length > 0) {
+            resp.bookings.forEach(function (b) {
+              $billSelect.append('<option value="' + b.id + '">' + b.no + '</option>');
+            });
+          } else {
+            // No bookings found for this specific number
+            $billSelect.append('<option value="">No Bookings Found</option>');
+          }
+        });
+    });
+
+    // 2. Auto-fill logic: ONLY when a Bill No. is selected
+    $('#id_b_id').on('change', function () {
+      var bId = $(this).val();
+      if (!bId) {
+        $('#id_customer_name, #id_plot_number_hidden, #id_total_amount, #id_balance_amount').val('');
+        return;
+      }
+
+      $.getJSON('{% url "booking_details_api" %}', { b_id: bId })
+        .done(function (resp) {
+          if (resp.error) {
+            Swal.fire('Error', resp.error, 'error');
+            return;
+          }
+          $('#id_customer_name').val(resp.customer_name);
+          // Keep phone sync if needed, though usually phone is what triggered this
+          $('#id_plot_number_hidden').val(resp.plot_number);
+          $('#id_total_amount').val(resp.total_amount.toFixed(2));
+          $('#id_balance_amount').val(resp.balance_amount.toFixed(2));
+        });
+    });
+
+    // AJAX Form Submission
+    $('#receiptForm').on('submit', function (e) {
+      e.preventDefault();
+
+      var balance = parseFloat($('#id_balance_amount').val()) || 0;
+      var pay = parseFloat($('#id_pay_amount').val()) || 0;
+
+      if (balance <= 0 && pay > 0) {
+        Swal.fire('Error', 'This booking is already fully paid.', 'error');
+        return;
+      }
+
+      if (pay > balance) {
+        Swal.fire('Error', 'Pay amount cannot be greater than the remaining balance (' + balance.toFixed(2) + ').', 'error');
+        return;
+      }
+
+      var form = $(this);
+      
+      $.ajax({
+        url: form.attr('action'),
+        method: 'POST',
+        data: form.serialize(),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function (resp) {
+          if (resp.status === 'success') {
+            Swal.fire({
+              title: 'Success!',
+              text: resp.message,
+              icon: 'success',
+              confirmButtonColor: '#29577f'
+            }).then(() => {
+              window.location.href = "{% if is_payment %}{% url 'payment_list' %}{% else %}{% url 'receipt_list' %}{% endif %}";
+            });
+          } else {
+            Swal.fire({
+              title: 'Error!',
+              html: resp.message || 'Please check the form for errors',
+              icon: 'error'
+            });
+          }
+        },
+        error: function () {
+          Swal.fire('Error!', 'Network error or server error', 'error');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

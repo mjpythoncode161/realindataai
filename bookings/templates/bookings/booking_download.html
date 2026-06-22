@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BookingMaster {{ booking.b_id }}</title>
+  </head>
+  <body>
+    <h2>{{ company_name }}</h2>
+    {% if company_address %}<p>{{ company_address|linebreaksbr }}</p>{% endif %}
+
+    <p>
+      <strong>BookingMaster No.</strong> {{ booking.b_id }}<br />
+      <strong>BookingMaster Date</strong> {% if booking.booking_date %}{{ booking.booking_date|date:"d-m-Y" }}{% else %}-{% endif %}<br />
+      <strong>Customer Name</strong> {{ booking.customer_full_name|default:"-" }}<br />
+      <strong>Mobile No.</strong> {{ booking.customer_phone|default:"-" }}<br />
+      <strong>Email</strong> {{ booking.customer_email|default:"-" }}<br />
+      <strong>Aadhaar No.</strong> {{ booking.customer_aadhar|default:"-" }}<br />
+      <strong>Apartment/Layout</strong> {% if booking.p_id %}{{ booking.p_id.name }}{% else %}-{% endif %}<br />
+      <strong>Location</strong> {{ booking.project_location|default:"-" }}<br />
+      <strong>Next Payment Date</strong> {% if booking.next_payment_date %}{{ booking.next_payment_date|date:"d-m-Y" }}{% else %}-{% endif %}
+    </p>
+
+    <h3>Property Details</h3>
+    <table border="1" cellpadding="6" cellspacing="0" width="100%">
+      <thead>
+        <tr>
+          <th>Project Name</th>
+          <th>Plot No</th>
+          <th>Plot Name</th>
+          <th>Area(sq.ft)</th>
+          <th>Rate</th>
+          <th>BookingMaster Amount</th>
+          <th>Total Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for it in booking.items.all %}
+          <tr>
+            <td>{% if it.p_id %}{{ it.p_id.name }}{% else %}-{% endif %}</td>
+            <td>{{ it.plot_number|default:"-" }}</td>
+            <td>{{ it.plot_name|default:"-" }}</td>
+            <td>{{ it.area_sqft }}</td>
+            <td>{{ it.rate }}</td>
+            <td>{{ it.booking_amount }}</td>
+            <td>{{ it.total_amount }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7">No items</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>

@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}Journal Entry{% endblock %}
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6"><h1>Journal Entry</h1><p class="text-muted">Debit must equal Credit</p></div>
+      <div class="col-sm-6 text-right">
+        <a href="{% url 'tally_voucher_list' %}" class="btn btn-secondary btn-sm"><i class="fas fa-list"></i> Voucher List</a>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-outline card-info">
+      <div class="card-header"><h3 class="card-title"><i class="fas fa-book text-info mr-1"></i> New Journal Entry</h3></div>
+      <div class="card-body">
+        <form method="POST" id="jvForm" onsubmit="return validateJV()">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>Date <span class="text-danger">*</span></label>
+                <input type="date" name="voucher_date" class="form-control" value="{% now 'Y-m-d' %}" required>
+              </div>
+            </div>
+            <div class="col-md-9">
+              <div class="form-group">
+                <label>Narration</label>
+                <input type="text" name="narration" class="form-control" placeholder="Being...">
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive mt-2">
+            <table class="table table-bordered" id="jvTable">
+              <thead class="bg-light">
+                <tr>
+                  <th width="50%">Ledger Account</th>
+                  <th width="20%">Debit (₹)</th>
+                  <th width="20%">Credit (₹)</th>
+                  <th width="10%"><button type="button" class="btn btn-xs btn-success" onclick="addJVRow()"><i class="fas fa-plus"></i> Add</button></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <select name="ledger[]" class="form-control" required>
+                      <option value="">-- Select --</option>
+                      {% if bank_cash %}<optgroup label="Bank / Cash">{% for l in bank_cash %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+                      {% if staff_ledgers %}<optgroup label="Staff Members">{% for l in staff_ledgers %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+                      {% if other_ledgers %}<optgroup label="Other Accounts">{% for l in other_ledgers %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+                    </select>
+                  </td>
+                  <td><input type="number" name="dr_amount[]" step="0.01" min="0" class="form-control dr-input" placeholder="0.00" value="0.00"></td>
+                  <td><input type="number" name="cr_amount[]" step="0.01" min="0" class="form-control cr-input" placeholder="0.00" value="0.00"></td>
+                  <td class="text-center"><button type="button" class="btn btn-xs btn-danger" onclick="removeJVRow(this)"><i class="fas fa-trash"></i></button></td>
+                </tr>
+                <tr>
+                  <td>
+                    <select name="ledger[]" class="form-control" required>
+                      <option value="">-- Select --</option>
+                      {% if bank_cash %}<optgroup label="Bank / Cash">{% for l in bank_cash %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+                      {% if staff_ledgers %}<optgroup label="Staff Members">{% for l in staff_ledgers %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+                      {% if other_ledgers %}<optgroup label="Other Accounts">{% for l in other_ledgers %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+                    </select>
+                  </td>
+                  <td><input type="number" name="dr_amount[]" step="0.01" min="0" class="form-control dr-input" placeholder="0.00" value="0.00"></td>
+                  <td><input type="number" name="cr_amount[]" step="0.01" min="0" class="form-control cr-input" placeholder="0.00" value="0.00"></td>
+                  <td class="text-center"><button type="button" class="btn btn-xs btn-danger" onclick="removeJVRow(this)"><i class="fas fa-trash"></i></button></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="bg-light">
+                  <td><strong>Total</strong></td>
+                  <td><strong id="jvDrTotal">0.00</strong></td>
+                  <td><strong id="jvCrTotal">0.00</strong></td>
+                  <td><span id="jvBalIcon"></span></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <hr>
+          <div class="text-right">
+            <a href="{% url 'tally_voucher_list' %}" class="btn btn-secondary mr-2">Cancel</a>
+            <button type="submit" class="btn btn-info"><i class="fas fa-save mr-1"></i> Save Journal Entry</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const ledgerSelectHTML = `<option value="">-- Select --</option>{% if bank_cash %}<optgroup label="Bank / Cash">{% for l in bank_cash %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}{% if staff_ledgers %}<optgroup label="Staff Members">{% for l in staff_ledgers %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}{% if other_ledgers %}<optgroup label="Other Accounts">{% for l in other_ledgers %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}`;
+
+function addJVRow() {
+  const tbody = document.querySelector('#jvTable tbody');
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td><select name="ledger[]" class="form-control" required>${ledgerSelectHTML}</select></td>
+    <td><input type="number" name="dr_amount[]" step="0.01" min="0" class="form-control dr-input" value="0.00"></td>
+    <td><input type="number" name="cr_amount[]" step="0.01" min="0" class="form-control cr-input" value="0.00"></td>
+    <td class="text-center"><button type="button" class="btn btn-xs btn-danger" onclick="removeJVRow(this)"><i class="fas fa-trash"></i></button></td>`;
+  tbody.appendChild(row);
+}
+
+function removeJVRow(btn) {
+  const tbody = btn.closest('tbody');
+  if (tbody.rows.length > 2) { btn.closest('tr').remove(); updateJVTotals(); }
+}
+
+function updateJVTotals() {
+  let dr = 0, cr = 0;
+  document.querySelectorAll('.dr-input').forEach(i => dr += parseFloat(i.value || 0));
+  document.querySelectorAll('.cr-input').forEach(i => cr += parseFloat(i.value || 0));
+  document.getElementById('jvDrTotal').textContent = dr.toFixed(2);
+  document.getElementById('jvCrTotal').textContent = cr.toFixed(2);
+  const icon = document.getElementById('jvBalIcon');
+  if (Math.abs(dr - cr) < 0.01) {
+    icon.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+  } else {
+    icon.innerHTML = '<i class="fas fa-exclamation-circle text-danger"></i>';
+  }
+}
+
+function validateJV() {
+  let dr = 0, cr = 0;
+  document.querySelectorAll('.dr-input').forEach(i => dr += parseFloat(i.value || 0));
+  document.querySelectorAll('.cr-input').forEach(i => cr += parseFloat(i.value || 0));
+  if (Math.abs(dr - cr) > 0.01) {
+    alert(`Debit (₹${dr.toFixed(2)}) ≠ Credit (₹${cr.toFixed(2)}). Please balance the entry.`);
+    return false;
+  }
+  return true;
+}
+
+document.addEventListener('input', function(e) {
+  if (e.target.classList.contains('dr-input') || e.target.classList.contains('cr-input')) {
+    updateJVTotals();
+  }
+});
+updateJVTotals();
+</script>
+{% endblock extra_scripts %}

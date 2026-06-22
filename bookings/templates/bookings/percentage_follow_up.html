@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Percentage Follow-Up{% endblock %}
+
+{% block extra_head %}
+<!-- DataTables -->
+<link rel="stylesheet" href="{% static 'assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<style>
+    .nav-tabs.custom-tabs .nav-link {
+        color: #495057;
+        font-weight: 500;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 0;
+    }
+    .nav-tabs.custom-tabs .nav-link.active {
+        color: #29577f;
+        border-bottom: 3px solid #29577f;
+        background: transparent;
+    }
+    .filter-btn-group .btn {
+        margin-right: 10px;
+        border-radius: 20px;
+        padding: 5px 15px;
+        font-size: 0.85rem;
+    }
+    .btn-outline-maroon {
+        color: #29577f;
+        border-color: #29577f;
+    }
+    .btn-outline-maroon:hover, .btn-outline-maroon.active {
+        background-color: #29577f;
+        color: white;
+    }
+    .tab-maroon-group {
+        display: flex;
+        background: #f4f6f9;
+        padding: 0;
+        border: 1px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    .tab-maroon-group .btn {
+        flex: 1;
+        border-radius: 0;
+        border: none;
+        padding: 12px;
+        color: #444;
+        border-right: 1px solid #dee2e6;
+        font-weight: 500;
+    }
+    .tab-maroon-group .btn.active {
+        background: #29577f;
+        color: white;
+    }
+    .tab-maroon-group .btn:last-child {
+        border-right: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 style="color: #333; font-weight: 500;">Percentage Follow-Up</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card card-outline card-maroon">
+            <div class="card-body">
+                <!-- Percentage Range Tabs (Restored) -->
+                <div class="tab-maroon-group">
+                    <a href="?tab=0-30" class="btn {% if tab == '0-30' %}active{% endif %}">0% - 30%</a>
+                    <a href="?tab=30-50" class="btn {% if tab == '30-50' %}active{% endif %}">30% - 50%</a>
+                    <a href="?tab=50-75" class="btn {% if tab == '50-75' %}active{% endif %}">50% - 75%</a>
+                    <a href="?tab=75-99" class="btn {% if tab == '75-99' %}active{% endif %}">75% - 99%</a>
+                    <a href="?tab=100" class="btn {% if tab == '100' %}active{% endif %}">100%</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="percentageTable" class="table table-bordered table-hover">
+                        <thead>
+                            <tr class="text-center">
+                                <th>Customer Name</th>
+                                <th>Project</th>
+                                <th>Flat/Plot</th>
+                                <th>Total Amount</th>
+                                <th>Paid Amount</th>
+                                <th>Balance</th>
+                                <th>Paid %</th>
+                                <th>Follow-up Date</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in bookings %}
+                            <tr class="text-center">
+                                <td>{{ b.customer_full_name }}</td>
+                                <td>{{ b.p_id.name }}</td>
+                                <td>
+                                    {% for it in b.items.all %}{{ it.plot_number }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                </td>
+                                <td>₹ {{ b.balance.total_amount|floatformat:2 }}</td>
+                                <td>₹ {{ b.balance.paid_amount|floatformat:2 }}</td>
+                                <td class="text-danger font-weight-bold">₹ {{ b.balance.balance_amount|floatformat:2 }}</td>
+                                <td class="font-weight-bold">{{ b.paid_percentage_annotated|floatformat:1 }}%</td>
+                                <td>{{ b.final_followup_date|date:"d-m-Y" }}</td>
+                                <td>
+                                    {% if b.followup_source == 'RECEIPT' %}
+                                    <span class="badge badge-info">RECEIPT</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">BOOKING</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center text-muted">No records found for this percentage range.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script>
+    $(function () {
+        $("#percentageTable").DataTable({
+            responsive: true,
+            autoWidth: false,
+            ordering: true,
+            order: [[0, 'asc']]
+        });
+    });
+</script>
+{% endblock %}

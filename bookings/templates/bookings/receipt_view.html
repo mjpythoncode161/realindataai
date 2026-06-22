@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Receipt Details - {{ receipt.receipt_no }}{% endblock %}
+
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 style="color: #333; font-weight: 500; text-transform: uppercase;">Receipt Details</h1>
+      </div>
+      <div class="col-sm-6 text-right">
+        <a href="{% url 'receipt_list' %}" class="btn btn-secondary mr-1"><i class="fas fa-arrow-left mr-1"></i> Back</a>
+        {% include "bookings/includes/share_buttons.html" %}
+        <a href="{% url 'receipt_edit' receipt.rm_id %}" class="btn btn-maroon-custom" style="background-color: #29577f; color: white; border: none;"><i class="fas fa-pencil-alt mr-1"></i> Edit</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-outline card-maroon">
+      <div class="card-header">
+        <h3 class="card-title text-bold" style="text-transform: uppercase;">{{ receipt.receipt_no }}</h3>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 border-right">
+            <table class="table table-borderless">
+              <tr>
+                <th style="width: 40%">Receipt Date:</th>
+                <td>{{ receipt.receipt_date|date:"d-m-Y" }}</td>
+              </tr>
+              <tr>
+                <th>Bill No (Booking):</th>
+                <td class="text-bold text-primary">{{ receipt.b_id.booking_no }}</td>
+              </tr>
+              <tr>
+                <th>Customer Name:</th>
+                <td>{{ receipt.customer_name }}</td>
+              </tr>
+              <tr>
+                <th>Phone No:</th>
+                <td>{{ receipt.phone }}</td>
+              </tr>
+              <tr>
+                <th>Plot / Flat:</th>
+                <td>{{ receipt.plot_number }}</td>
+              </tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <table class="table table-borderless">
+              <tr>
+                <th style="width: 40%">Total Amount:</th>
+                <td>{{ receipt.total_amount }}</td>
+              </tr>
+              <tr>
+                <th>Pay Amount:</th>
+                <td class="text-bold text-success" style="font-size: 1.2rem;">{{ receipt.pay_amount }}</td>
+              </tr>
+              <tr>
+                <th>Balance Amount:</th>
+                <td>{{ receipt.balance_amount }}</td>
+              </tr>
+              <tr>
+                <th>Payment Method:</th>
+                <td><span class="badge badge-info">{{ receipt.get_payment_method_display }}</span></td>
+              </tr>
+              <tr>
+                <th>Next Payment Date:</th>
+                <td>{{ receipt.next_payment_date|date:"d-m-Y"|default:"N/A" }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="callout callout-info">
+              <h5><i class="fas fa-info mr-2"></i> Payment Details</h5>
+              <p>{{ receipt.payment_details|default:"No additional details provided." }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer text-muted small">
+        Created on: {{ receipt.created_at|date:"d-m-Y H:i" }}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+{% include "bookings/includes/share_email_script.html" %}
+{% endblock %}

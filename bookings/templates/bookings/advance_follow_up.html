@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Advance Booking{% endblock %}
+
+{% block extra_head %}
+<!-- DataTables -->
+<link rel="stylesheet" href="{% static 'assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<style>
+    .bg-navy-custom {
+        background-color: #2a3f54 !important;
+        color: white !important;
+    }
+    #reportTable thead th {
+        background-color: #2a3f54;
+        color: white;
+        font-weight: 500;
+        border: 1px solid #3e566d;
+        padding: 12px;
+        text-align: center;
+    }
+    .card-filter {
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+    .btn-search {
+        background-color: #2a3f54;
+        color: white;
+        padding: 8px 25px;
+        font-weight: 500;
+    }
+    .btn-search:hover {
+        background-color: #1a2a3a;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 style="color: #333; font-weight: 500;">Advance Booking</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Search Filters (Matches Screenshot) -->
+        <div class="card card-filter shadow-sm mb-4">
+            <div class="card-body">
+                <form method="GET" class="row align-items-end">
+                    <div class="col-md-6">
+                        <label class="small text-muted font-weight-bold">Select Project</label>
+                        <select name="project" class="form-control">
+                            <option value="">-- Select Project --</option>
+                            {% for p in projects %}
+                            <option value="{{ p.p_id }}" {% if request.GET.project == p.p_id|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="small text-muted font-weight-bold">Paid % Range</label>
+                        <div class="d-flex align-items-center">
+                            <input type="number" name="from_pct" class="form-control mr-2" value="{{ request.GET.from_pct }}" placeholder="0">
+                            <input type="number" name="to_pct" class="form-control" value="{{ request.GET.to_pct }}" placeholder="100">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-search btn-block">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table id="reportTable" class="table table-bordered table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Customer Name</th>
+                                <th>Project</th>
+                                <th>Flat/Plot</th>
+                                <th>Total Amount</th>
+                                <th>Paid Amount</th>
+                                <th>Balance</th>
+                                <th>Paid %</th>
+                                <th>Follow-up Date</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in bookings %}
+                            <tr class="text-center">
+                                <td>{{ b.customer_full_name }}</td>
+                                <td>{{ b.p_id.name }}</td>
+                                <td>
+                                    {% for it in b.items.all %}{{ it.plot_number }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                </td>
+                                <td>₹ {{ b.balance.total_amount|floatformat:2 }}</td>
+                                <td>₹ {{ b.balance.paid_amount|floatformat:2 }}</td>
+                                <td class="text-danger font-weight-bold">₹ {{ b.balance.balance_amount|floatformat:2 }}</td>
+                                <td class="font-weight-bold">{{ b.paid_percentage_annotated|floatformat:1 }}%</td>
+                                <td>{{ b.final_followup_date|date:"d-m-Y" }}</td>
+                                <td>
+                                    {% if b.followup_source == 'RECEIPT' %}
+                                    <span class="badge badge-info">RECEIPT</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">BOOKING</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center text-muted py-5">
+                                    <i class="fas fa-info-circle mr-2"></i> Please select a project and enter percentage range to view records
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script>
+    $(function () {
+        $("#reportTable").DataTable({
+            "paging": true,
+            "lengthChange": false,
+            "searching": false,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true,
+        });
+    });
+</script>
+{% endblock %}

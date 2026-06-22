@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Ledger{% endblock %}
+
+{% block extra_head %}
+<style>
+    .nav-tabs-custom {
+        display: flex;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    .nav-tabs-custom a {
+        padding: 10px 30px;
+        color: #666;
+        text-decoration: none;
+        border-bottom: 3px solid transparent;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    .nav-tabs-custom a.active {
+        color: #1a73e8;
+        border-bottom-color: #1a73e8;
+    }
+    .ledger-card {
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    }
+    .ledger-card .info {
+        flex: 1;
+    }
+    .ledger-card .project-name {
+        font-weight: 700;
+        color: #333;
+        font-size: 1rem;
+    }
+    .ledger-card .plot-no {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    .btn-view-ledger {
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        padding: 6px 15px;
+        border-radius: 6px;
+        color: #333;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .btn-view-ledger:hover {
+        background: #eee;
+    }
+    
+    /* Reuse modal styles from ledger_list.html */
+    .company-title { text-align: center; font-weight: 700; font-size: 1.6rem; text-transform: uppercase; margin-bottom: 5px; color: #333; }
+    .customer-name-ledger { text-align: center; color: #29577f; font-size: 1.2rem; margin-bottom: 2rem; font-weight: 500; }
+    .summary-card { border: 1px solid #dee2e6; border-radius: 6px; padding: 15px 20px; text-align: center; background: #fff; height: 100%; margin-bottom: 20px; }
+    .summary-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #888; margin-bottom: 5px; }
+    .summary-value { font-size: 1rem; font-weight: 700; color: #333; }
+    .ledger-table thead th { background-color: #f8f9fa; color: #555; text-transform: uppercase; font-size: 0.8rem; font-weight: 700; text-align: center; border-bottom: 2px solid #dee2e6; }
+    .ledger-table td { text-align: center; vertical-align: middle; padding: 10px; border-bottom: 1px solid #eee; }
+    .text-green { color: #28a745; font-weight: 700; }
+    .text-red { color: #dc3545; font-weight: 700; }
+    .total-label { text-align: right !important; padding-right: 30px !important; font-weight: 700; text-transform: uppercase; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6 d-flex align-items-center">
+                <a href="{% url 'home' %}" class="btn btn-sm btn-light rounded-circle mr-3 border">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 style="color: #333; font-weight: 500; text-transform: uppercase; font-size: 1.5rem;">Payment Ledger</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        
+        <div class="nav-tabs-custom">
+            <a href="{% url 'receipt_list' %}">History</a>
+            <a href="{% url 'ledger_list' %}" class="active">Ledger</a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <style>
+                    .ledger-container {
+                        background: #fff;
+                        border-radius: 12px;
+                        padding: 15px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+                        margin-bottom: 25px;
+                    }
+                    .ledger-table-inline {
+                        width: 100%;
+                        border-collapse: separate;
+                        border-spacing: 0;
+                        margin-bottom: 10px;
+                    }
+                    .ledger-table-inline thead th {
+                        background-color: #0b63ce;
+                        color: white;
+                        padding: 10px 15px;
+                        font-weight: 500;
+                        text-align: center;
+                        font-size: 15px;
+                        border-bottom: none;
+                    }
+                    .ledger-table-inline thead th:first-child {
+                        border-top-left-radius: 8px;
+                        border-bottom-left-radius: 8px;
+                    }
+                    .ledger-table-inline thead th:last-child {
+                        border-top-right-radius: 8px;
+                        border-bottom-right-radius: 8px;
+                    }
+                    .ledger-table-inline tbody td {
+                        padding: 12px 15px;
+                        text-align: center;
+                        border-bottom: 1px solid #f0f0f0;
+                        font-size: 14px;
+                        color: #444;
+                    }
+                    .ledger-table-inline tbody tr:last-child td {
+                        border-bottom: none;
+                    }
+                    .txt-cyan { color: #3b9dbf; }
+                    .txt-green { color: #4baf50; }
+                    .txt-red { color: #d9534f; }
+                    .final-balance {
+                        text-align: right;
+                        padding-right: 15px;
+                        font-size: 16px;
+                        font-weight: 600;
+                        color: #d9534f;
+                    }
+                </style>
+                
+                {% for ledger in ledgers %}
+                <div class="ledger-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="text-muted mb-0">
+                            <i class="fas fa-file-invoice"></i> Booking No: {{ ledger.booking.booking_no }} ({{ ledger.booking.p_id.name }})
+                        </h6>
+                        <a href="{% url 'ledger_print' ledger.booking.b_id %}" target="_blank" class="btn btn-sm btn-light border">
+                            <i class="fas fa-download"></i> Print
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="ledger-table-inline">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Plot</th>
+                                    <th>Mode</th>
+                                    <th>Total</th>
+                                    <th>Received</th>
+                                    <th>Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in ledger.transactions %}
+                                <tr>
+                                    <td>{{ row.date|date:"d M Y" }}</td>
+                                    <td>{{ row.plot|default:"-" }}</td>
+                                    <td>{{ row.mode|default:"" }}</td>
+                                    <td class="txt-cyan">₹{{ row.total|floatformat:1 }}</td>
+                                    <td class="txt-green">₹{{ row.received|floatformat:1 }}</td>
+                                    <td class="txt-red">₹{{ row.balance|floatformat:1 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="final-balance">
+                        Final Balance: ₹{{ ledger.final_balance|floatformat:1 }}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5">
+                    <i class="fas fa-file-invoice-dollar fa-4x text-muted opacity-25 mb-3"></i>
+                    <h5 class="text-muted">No bookings found for ledger.</h5>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Ledger Modal -->
+<div class="modal fade" id="ledgerModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title font-weight-bold">Statement of Account</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 1rem 2rem;">
+        
+        <div id="ledgerLoader" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Loading Statement...</p>
+        </div>
+
+        <div id="ledgerContent" style="display: none;">
+            <h1 class="company-title">{{ company_name }}</h1>
+            {% if company_address %}<p class="text-center text-muted small mb-3" style="white-space:pre-line;">{{ company_address }}</p>{% endif %}
+            <p id="ledgerCustomerName" class="customer-name-ledger"></p>
+
+            <div class="row">
+                <div class="col-md-4"><div class="summary-card"><div class="summary-label">Project</div><div id="summaryProject" class="summary-value"></div></div></div>
+                <div class="col-md-4"><div class="summary-card"><div class="summary-label">Plot No</div><div id="summaryPlot" class="summary-value"></div></div></div>
+                <div class="col-md-4"><div class="summary-card"><div class="summary-label">Area (Sq.ft)</div><div id="summaryArea" class="summary-value"></div></div></div>
+            </div>
+            <div class="row">
+                <div class="col-md-4"><div class="summary-card"><div class="summary-label">Rate</div><div id="summaryRate" class="summary-value"></div></div></div>
+                <div class="col-md-4"><div class="summary-card"><div class="summary-label">Initial Paid</div><div id="summaryBookingAmount" class="summary-value"></div></div></div>
+                <div class="col-md-4"><div class="summary-card"><div class="summary-label">Total Amount</div><div id="summaryTotalAmount" class="summary-value"></div></div></div>
+            </div>
+
+            <div class="table-responsive mt-3">
+                <table class="table table-bordered ledger-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">Sl No</th>
+                            <th>Date</th>
+                            <th>Receipt No</th>
+                            <th>Amount</th>
+                            <th>Mode</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledgerTableBody"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="total-label text-right">Total Received:</td>
+                            <td id="totalReceived" class="text-green text-right"></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="total-label text-right">Balance:</td>
+                            <td id="balanceAmount" class="text-red text-right"></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+$(function() {
+    $(document).on('click', '.btn-view-ledger', function() {
+        var bId = $(this).data('id');
+        $('#ledgerModal').modal('show');
+        $('#ledgerContent').hide();
+        $('#ledgerLoader').show();
+
+        $.getJSON("{% url 'ledger_data_api' %}", { b_id: bId })
+            .done(function(data) {
+                if (data.error) {
+                    Swal.fire('Error', data.error, 'error');
+                    $('#ledgerModal').modal('hide');
+                    return;
+                }
+                $('#ledgerCustomerName').text(data.header.customer_name);
+                $('#summaryProject').text(data.summary.project);
+                $('#summaryPlot').text(data.summary.plot_no);
+                $('#summaryArea').text(data.summary.area);
+                $('#summaryRate').text('₹ ' + data.summary.rate);
+                $('#summaryBookingAmount').text('₹ ' + data.summary.booking_amount);
+                $('#summaryTotalAmount').text('₹ ' + data.summary.total_amount);
+
+                var $tbody = $('#ledgerTableBody');
+                $tbody.empty();
+                data.receipts.forEach(function(r, index) {
+                    $tbody.append(`
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${r.date}</td>
+                            <td>${r.receipt_no}</td>
+                            <td class="text-right">₹ ${r.amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td>${r.mode}</td>
+                        </tr>
+                    `);
+                });
+
+                $('#totalReceived').text('₹ ' + data.totals.received);
+                $('#balanceAmount').text('₹ ' + data.totals.balance);
+
+                $('#ledgerLoader').hide();
+                $('#ledgerContent').fadeIn();
+            })
+            .fail(function() {
+                Swal.fire('Error', 'Failed to fetch ledger data.', 'error');
+                $('#ledgerModal').modal('hide');
+            });
+    });
+});
+</script>
+{% endblock %}

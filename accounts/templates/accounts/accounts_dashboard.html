@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Accounts Dashboard{% endblock %}
+
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Accounts Dashboard</h1>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Pending Approvals -->
+      <div class="col-12 col-sm-6 col-lg-4">
+        <a href="{% url 'payment_list' %}" style="text-decoration:none;color:inherit;">
+          <div class="info-box">
+            <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-clock"></i></span>
+            <div class="info-box-content">
+              <span class="info-box-text">PENDING APPROVALS</span>
+              <span class="info-box-number">{{ pending_payments_count }}</span>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Approved Payments -->
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="info-box">
+          <span class="info-box-icon bg-success elevation-1"><i class="fas fa-check-circle"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">APPROVED PAYMENTS</span>
+            <span class="info-box-number">{{ approved_payments_count }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Summary -->
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="info-box">
+          <span class="info-box-icon bg-info elevation-1"><i class="fas fa-wallet"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">FINANCIAL SUMMARY</span>
+            <span class="info-box-number">₹{{ total_financial_summary|floatformat:2 }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Payments Table -->
+    <div class="card card-outline card-maroon mt-4">
+      <div class="card-header">
+        <h3 class="card-title">Pending Payment Requests</h3>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Amount</th>
+              <th>Manager</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for payment in pending_payments %}
+            <tr>
+              <td>{{ payment.payment_date }}</td>
+              <td>{{ payment.b_id.full_name }}</td>
+              <td>₹{{ payment.pay_amount }}</td>
+              <td>{{ payment.created_by.full_name }}</td>
+              <td>
+                <a href="{% url 'payment_list' %}" class="btn btn-sm btn-primary">Review</a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center">No pending payments</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

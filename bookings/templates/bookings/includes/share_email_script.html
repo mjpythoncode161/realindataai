@@ -1,0 +1,35 @@
+<script>
+  $(function () {
+    $(document).on('click', '.btn-send-share-email', function () {
+      var btn = $(this);
+      var url = btn.data('url');
+      var email = btn.data('email');
+      if (!url) return;
+
+      btn.prop('disabled', true);
+      $.ajax({
+        url: url,
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        data: { csrfmiddlewaretoken: '{{ csrf_token }}', email: email },
+        success: function (resp) {
+          if (resp.status === 'success') {
+            Swal.fire('Sent!', resp.message || 'Email sent successfully.', 'success');
+          } else {
+            Swal.fire('Error', resp.message || 'Could not send email.', 'error');
+          }
+        },
+        error: function (xhr) {
+          var msg = 'Could not send email.';
+          if (xhr.responseJSON && xhr.responseJSON.message) {
+            msg = xhr.responseJSON.message;
+          }
+          Swal.fire('Error', msg, 'error');
+        },
+        complete: function () {
+          btn.prop('disabled', false);
+        }
+      });
+    });
+  });
+</script>

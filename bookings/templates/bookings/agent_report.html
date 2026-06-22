@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ role_display }} Report{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>{{ role_display }} Report</h1>
+            </div>
+            <div class="col-sm-6 text-right">
+                <a href="{% url 'all_reports' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to Reports
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Filter Card -->
+        <div class="card card-outline card-maroon">
+            <div class="card-header">
+                <h3 class="card-title">Filter Options</h3>
+            </div>
+            <div class="card-body">
+                <form method="GET">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>{{ role_display }}</label>
+                                <select name="agent" class="form-control select2">
+                                    <option value="">-- Select {{ role_display }} --</option>
+                                    {% for a in agents %}
+                                    <option value="{{ a.u_id.u_id }}" {% if selected_agent == a.u_id.u_id|stringformat:"s" %}selected{% endif %}>{{ a.u_id.full_name }} ({{ a.u_id.phone }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>From Date</label>
+                                <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>To Date</label>
+                                <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <button type="submit" class="btn btn-maroon btn-block"
+                                    style="background-color: #29577f; color: white;">Show Report</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if selected_agent %}
+        <!-- Summary Cards -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info"><i class="fas fa-file-invoice"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Bookings</span>
+                        <span class="info-box-number">{{ bookings|length }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Sales (Collected)</span>
+                        <span class="info-box-number">₹{{ total_paid|default:"0.00"|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="info-box">
+                    <span class="info-box-icon bg-warning"><i class="fas fa-hand-holding-usd"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Commission</span>
+                        <span class="info-box-number">₹{{ total_commission|default:"0.00"|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="card">
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-striped text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Booking No</th>
+                            <th>Date</th>
+                            <th>Project</th>
+                            <th>Plot/Flat No</th>
+                            <th>Paid Amount</th>
+                            <th>Commission %</th>
+                            <th>Commission Earned</th>
+                            <th>TDS %</th>
+                            <th>Security %</th>
+                            <th>TDS Amount</th>
+                            <th>Security Amount</th>
+                            <th>Net Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in bookings %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ b.booking_no }}</td>
+                            <td>{{ b.booking_date|date:"d-m-Y" }}</td>
+                            <td>{{ b.p_id.name }}</td>
+                            <td>{{ b.balance.display_plot_number|default:b.balance.plot_number|default:"—" }}</td>
+                            <td class="text-success">₹{{ b.balance.paid_amount|floatformat:2 }}</td>
+                            <td>{{ b.commission_percentage_display }}%</td>
+                            <td class="text-warning font-weight-bold">₹{{ b.commission_amount|floatformat:2 }}</td>
+                            <td class="text-danger">{{ tds_pct|floatformat:2 }}%</td>
+                            <td class="text-danger">{{ security_pct|floatformat:2 }}%</td>
+                            <td class="text-danger">₹{{ b.tds_debit|floatformat:2 }}</td>
+                            <td class="text-danger">₹{{ b.security_pct_debit|floatformat:2 }}</td>
+                            <td class="font-weight-bold {% if b.row_balance < 0 %}text-danger{% else %}text-primary{% endif %}">
+                                ₹{{ b.row_balance|floatformat:2 }}
+                                <small class="d-block {% if b.row_balance < 0 %}text-danger{% else %}text-success{% endif %}">{{ b.balance_type }}</small>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="13" class="text-center">No bookings found for this {{ role_display }}.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    {% if bookings %}
+                    <tfoot class="font-weight-bold bg-light">
+                        <tr>
+                            <td colspan="7" class="text-right">Totals:</td>
+                            <td class="text-warning">₹{{ total_commission|floatformat:2 }}</td>
+                            <td colspan="2"></td>
+                            <td class="text-danger">₹{{ total_tds_debit|floatformat:2 }}</td>
+                            <td class="text-danger">₹{{ total_security_pct_debit|floatformat:2 }}</td>
+                            <td class="text-primary">
+                                ₹{{ total_net_credit|floatformat:2 }} CR
+                            </td>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Accounts Ledger — Debits &amp; Credits</h3>
+            </div>
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-striped text-nowrap mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Particulars</th>
+                            <th class="text-right">Debit (DR)</th>
+                            <th class="text-right">Credit (CR)</th>
+                            <th class="text-right">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in account_ledger %}
+                        <tr>
+                            <td>{{ row.date|date:"d-m-Y" }}</td>
+                            <td>{{ row.particulars }}</td>
+                            <td class="text-right text-danger">
+                                {% if row.debit %}₹{{ row.debit|floatformat:2 }}{% else %}—{% endif %}
+                            </td>
+                            <td class="text-right text-success">
+                                {% if row.credit %}₹{{ row.credit|floatformat:2 }}{% else %}—{% endif %}
+                            </td>
+                            <td class="text-right font-weight-bold {% if row.balance < 0 %}text-danger{% else %}text-primary{% endif %}">
+                                ₹{{ row.balance|floatformat:2 }}
+                                <small class="d-block {% if row.balance < 0 %}text-danger{% else %}text-success{% endif %}">{{ row.balance_type }}</small>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No ledger entries.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    {% if account_ledger %}
+                    <tfoot class="font-weight-bold bg-light">
+                        <tr>
+                            <td colspan="2" class="text-right">Closing Balance:</td>
+                            <td class="text-right text-danger">₹{{ total_debits_paid|floatformat:2 }}</td>
+                            <td class="text-right text-success">₹{{ total_net_credit|floatformat:2 }}</td>
+                            <td class="text-right {% if total_balance < 0 %}text-danger{% else %}text-primary{% endif %}">
+                                ₹{{ total_balance|floatformat:2 }}
+                                <small class="d-block {% if total_balance < 0 %}text-danger{% else %}text-success{% endif %}">{{ total_balance_type }}</small>
+                            </td>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    $(document).ready(function () {
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Create Ledger Master{% endblock %}
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6"><h1>Add Ledger Account</h1></div>
+      <div class="col-sm-6 text-right">
+        <a href="{% url 'tally_master_list' %}" class="btn btn-secondary btn-sm"><i class="fas fa-list"></i> All Masters</a>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-outline card-primary" style="max-width:760px; margin:auto;">
+      <div class="card-header"><h3 class="card-title"><i class="fas fa-plus-circle text-primary mr-1"></i> New Ledger Account</h3></div>
+      <div class="card-body">
+        {% if messages %}
+          {% for msg in messages %}
+          <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>{{ msg }}
+          </div>
+          {% endfor %}
+        {% endif %}
+        <form method="POST">
+          {% csrf_token %}
+
+          <!-- Name & Group -->
+          <div class="row">
+            <div class="col-md-7">
+              <div class="form-group">
+                <label>Ledger Name <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" placeholder="e.g. SBI Bank, Rent Expense, Ramesh Kumar (Manager)" required>
+              </div>
+            </div>
+            <div class="col-md-5">
+              <div class="form-group">
+                <label>Group / Category <span class="text-danger">*</span></label>
+                <select name="group" id="groupSelect" class="form-control" required>
+                  <option value="">-- Select Group --</option>
+                  {% for val, label in group_choices %}
+                  <option value="{{ val }}">{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Opening Balance table (Debit | Credit) -->
+          <div class="form-group">
+            <label>Opening Balance</label>
+            <div class="table-responsive">
+              <table class="table table-bordered" style="max-width:500px;">
+                <thead style="background:#343a40; color:#fff;">
+                  <tr>
+                    <th class="text-center">Debit Amount (₹)</th>
+                    <th class="text-center">Credit Amount (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <input type="number" id="drAmount" step="0.01" min="0" class="form-control text-center"
+                             placeholder="0.00" oninput="syncBalance('Dr')">
+                    </td>
+                    <td>
+                      <input type="number" id="crAmount" step="0.01" min="0" class="form-control text-center"
+                             placeholder="0.00" oninput="syncBalance('Cr')">
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- Hidden fields sent to server -->
+            <input type="hidden" name="opening_balance" id="hiddenBalance" value="0">
+            <input type="hidden" name="opening_balance_type" id="hiddenType" value="Dr">
+            <small class="text-muted">Enter amount in either Debit or Credit column — not both.</small>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label>Description <small class="text-muted">(optional)</small></label>
+            <input type="text" name="description" class="form-control" placeholder="Short note about this ledger">
+          </div>
+
+          <hr>
+          <div class="text-right">
+            <a href="{% url 'tally_master_list' %}" class="btn btn-secondary mr-2">Cancel</a>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Save Ledger</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// When a bank/cash group is selected, auto-set Dr (bank accounts default to Debit opening balance)
+document.getElementById('groupSelect').addEventListener('change', function() {
+  const val = this.value;
+  if (val === 'BANK_CASH' || val === 'ASSET') {
+    document.getElementById('drAmount').focus();
+  } else if (val === 'LIABILITY' || val === 'INCOME') {
+    document.getElementById('crAmount').focus();
+  }
+});
+
+function syncBalance(side) {
+  if (side === 'Dr') {
+    const v = parseFloat(document.getElementById('drAmount').value || 0);
+    document.getElementById('crAmount').value = '';
+    document.getElementById('hiddenBalance').value = v;
+    document.getElementById('hiddenType').value = 'Dr';
+  } else {
+    const v = parseFloat(document.getElementById('crAmount').value || 0);
+    document.getElementById('drAmount').value = '';
+    document.getElementById('hiddenBalance').value = v;
+    document.getElementById('hiddenType').value = 'Cr';
+  }
+}
+</script>
+{% endblock extra_scripts %}

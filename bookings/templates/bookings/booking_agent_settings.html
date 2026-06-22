@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Store Settings{% endblock %}
+
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1>Store Settings</h1>
+        <p class="text-muted mb-0">Company profile and agent roles for bookings, forms, and reports.</p>
+      </div>
+      <div class="col-sm-6 text-sm-right">
+        <a href="{% url 'project_list' %}" class="btn btn-secondary btn-sm">
+          <i class="fas fa-arrow-left"></i> Projects
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+        <form method="POST">
+          {% csrf_token %}
+
+          <div class="card card-primary card-outline mb-4">
+            <div class="card-header">
+              <h3 class="card-title mb-0">Company profile</h3>
+            </div>
+            <div class="card-body">
+              <p class="text-muted">
+                This name and address appear on the dashboard, ledgers, booking client copy, and all printed forms.
+              </p>
+              <div class="form-group">
+                <label for="{{ form.company_name.id_for_label }}">{{ form.company_name.label }}</label>
+                {{ form.company_name }}
+                {% if form.company_name.errors %}<div class="text-danger small">{{ form.company_name.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="form-group">
+                <label for="{{ form.company_address.id_for_label }}">{{ form.company_address.label }}</label>
+                {{ form.company_address }}
+                {% if form.company_address.errors %}<div class="text-danger small">{{ form.company_address.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="row">
+                <div class="col-md-6 form-group">
+                  <label for="{{ form.company_phone.id_for_label }}">{{ form.company_phone.label }}</label>
+                  {{ form.company_phone }}
+                </div>
+                <div class="col-md-6 form-group">
+                  <label for="{{ form.company_email.id_for_label }}">{{ form.company_email.label }}</label>
+                  {{ form.company_email }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-primary card-outline">
+            <div class="card-header">
+              <h3 class="card-title mb-0">Agent roles for booking &amp; reports</h3>
+            </div>
+            <div class="card-body">
+              {% if form.non_field_errors %}
+              <div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>
+              {% endif %}
+
+              <p class="text-muted">
+                Checked roles appear in the booking form and their reports. Unchecked roles are hidden.
+              </p>
+
+              <div class="form-group">
+                <div class="custom-control custom-checkbox mb-3">
+                  {{ form.enable_manager }}
+                  <label class="custom-control-label font-weight-bold" for="{{ form.enable_manager.id_for_label }}">
+                    Manager
+                  </label>
+                  <small class="form-text text-muted">Show Manager dropdown in booking and Manager Report.</small>
+                </div>
+                <div class="custom-control custom-checkbox mb-3">
+                  {{ form.enable_executive }}
+                  <label class="custom-control-label font-weight-bold" for="{{ form.enable_executive.id_for_label }}">
+                    Executive
+                  </label>
+                  <small class="form-text text-muted">Show Executive dropdown in booking and Executive Report.</small>
+                </div>
+                <div class="custom-control custom-checkbox mb-0">
+                  {{ form.enable_telecaller }}
+                  <label class="custom-control-label font-weight-bold" for="{{ form.enable_telecaller.id_for_label }}">
+                    Telecaller
+                  </label>
+                  <small class="form-text text-muted">Show Telecaller dropdown in booking and Telecaller Report.</small>
+                </div>
+              </div>
+
+              <div class="alert alert-info mb-0 mt-4">
+                <strong>Currently enabled:</strong>
+                {% for role in settings_obj.enabled_roles %}
+                <span class="badge badge-primary mr-1">{{ role|title }}</span>
+                {% empty %}
+                <span class="text-muted">None</span>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="card-footer text-center">
+              <button type="submit" class="btn btn-primary" style="background-color: #29577f; border: none;">
+                Save Settings
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

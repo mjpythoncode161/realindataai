@@ -1,0 +1,101 @@
+{% extends "website/landing_base.html" %}
+{% block title %}Land Link | Sign up{% endblock %}
+{% block extra_head %}
+<style>
+  .ll-signup-wrap {
+    max-width: 520px;
+    margin: 2.5rem auto 3rem;
+    padding: 0 1.25rem;
+  }
+  .ll-signup-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 12px 40px rgba(41, 87, 127, 0.12);
+    border: 1px solid #e8edf3;
+  }
+  .ll-signup-card h1 {
+    font-size: 1.5rem;
+    color: var(--ll-primary);
+    margin: 0 0 0.35rem;
+  }
+  .ll-trial-note {
+    background: rgba(232, 168, 56, 0.2);
+    border-radius: 8px;
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+  }
+  .form-group { margin-bottom: 1rem; }
+  .form-group label { font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.35rem; }
+  .form-control {
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+  .invalid-feedback { color: #c0392b; font-size: 0.85rem; margin-top: 0.25rem; display: block; }
+  .ll-alert-danger {
+    background: #fdecea;
+    color: #922b21;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+  }
+</style>
+{% endblock %}
+{% block body %}
+<div class="ll-signup-wrap">
+  <div class="ll-signup-card">
+    <h1><i class="fas fa-user-plus"></i> Create your account</h1>
+    <p style="color:var(--ll-muted);margin-bottom:1rem;">Manager trial — access the full CRM dashboard.</p>
+    <div class="ll-trial-note"><i class="fas fa-gift"></i> After <strong>Followup team approval</strong>, your <strong>7-day free trial</strong> and dashboard access will begin.</div>
+
+    {% if form.non_field_errors %}
+      <div class="ll-alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form method="post" action="{% url 'public_signup' %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="id_company_name">{{ form.company_name.label }}</label>
+        {{ form.company_name }}
+        {% for e in form.company_name.errors %}<span class="invalid-feedback">{{ e }}</span>{% endfor %}
+      </div>
+      <div class="form-group">
+        <label for="id_full_name">{{ form.full_name.label }}</label>
+        {{ form.full_name }}
+        {% for e in form.full_name.errors %}<span class="invalid-feedback">{{ e }}</span>{% endfor %}
+      </div>
+      <div class="form-group">
+        <label for="id_email">Email</label>
+        {{ form.email }}
+        {% for e in form.email.errors %}<span class="invalid-feedback">{{ e }}</span>{% endfor %}
+      </div>
+      <div class="form-group">
+        <label for="id_phone">Phone</label>
+        {{ form.phone }}
+        {% for e in form.phone.errors %}<span class="invalid-feedback">{{ e }}</span>{% endfor %}
+      </div>
+      <div class="form-group">
+        <label for="id_password">Password</label>
+        {{ form.password }}
+        {% for e in form.password.errors %}<span class="invalid-feedback">{{ e }}</span>{% endfor %}
+      </div>
+      <div class="form-group">
+        <label for="id_confirm_password">Confirm password</label>
+        {{ form.confirm_password }}
+        {% for e in form.confirm_password.errors %}<span class="invalid-feedback">{{ e }}</span>{% endfor %}
+      </div>
+      <button type="submit" class="ll-btn ll-btn-primary" style="width:100%;padding:0.85rem;margin-top:0.5rem;border:none;color:#fff !important;">
+        Submit registration
+      </button>
+    </form>
+    <p class="text-center mt-3 mb-0" style="color:var(--ll-muted);font-size:0.9rem;">
+      Already have an account? <a href="{% url 'login' %}">Sign in</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

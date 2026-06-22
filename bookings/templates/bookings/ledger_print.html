@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ledger - {{ booking.booking_no }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Professional Ledger Layout */
+  .ledger-print-container {
+    background: #fff !important;
+    padding: 30px 40px !important;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+    max-width: 1000px !important;
+    margin: 20px auto !important;
+  }
+  .company-title {
+    text-align: center !important;
+    font-weight: 700 !important;
+    font-size: 1.8rem !important;
+    text-transform: uppercase !important;
+    margin-bottom: 5px !important;
+    color: #333 !important;
+  }
+  .customer-name-ledger {
+    text-align: center !important;
+    color: #29577f !important;
+    font-size: 1.3rem !important;
+    margin-bottom: 2.5rem !important;
+    font-weight: 500 !important;
+  }
+
+  /* Summary Section - Card Based */
+  .summary-card {
+    border: 1px solid #ced4da !important;
+    border-radius: 6px !important;
+    padding: 15px !important;
+    text-align: center !important;
+    background: #fdfdfd !important;
+    height: calc(100% - 20px) !important;
+    margin-bottom: 20px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+  .summary-label {
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    color: #777 !important;
+    margin-bottom: 5px !important;
+  }
+  .summary-value {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    color: #222 !important;
+  }
+
+  /* Table Styling */
+  .ledger-table {
+    border: 1px solid #dee2e6 !important;
+  }
+  .ledger-table thead th {
+    background-color: #f8f9fa !important;
+    color: #444 !important;
+    text-transform: uppercase !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    border: 1px solid #dee2e6 !important;
+  }
+  .ledger-table td {
+    text-align: center !important;
+    vertical-align: middle !important;
+    padding: 10px !important;
+    border: 1px solid #dee2e6 !important;
+  }
+  .text-green { color: #28a745 !important; font-weight: 700 !important; }
+  .text-red { color: #dc3545 !important; font-weight: 700 !important; }
+
+  .total-label {
+    text-align: right !important;
+    padding-right: 30px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    background-color: #fff !important;
+  }
+
+  @media print {
+    .no-print, .main-header, .main-sidebar, .main-footer, .content-header {
+      display: none !important;
+    }
+    .content-wrapper {
+      margin-left: 0 !important;
+      background: #fff !important;
+      padding: 0 !important;
+    }
+    .ledger-print-container {
+      box-shadow: none !important;
+      border: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    .summary-card {
+      border: 1px solid #ddd !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="content-header no-print">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Ledger Report</h1>
+      </div>
+      <div class="col-sm-6 text-right">
+        <button onclick="window.print()" class="btn btn-maroon" style="background: #29577f; color: white;">
+          <i class="fas fa-print mr-2"></i> Print / Download PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container-fluid">
+  <div class="ledger-print-container">
+    <div class="company-title">{{ company_name }}</div>
+    {% if company_address %}<div class="text-center text-muted small mb-3" style="white-space:pre-line;">{{ company_address }}</div>{% endif %}
+    <div class="customer-name-ledger">{{ booking.customer_full_name }}</div>
+
+    <!-- 2x3 Grid Summary Section -->
+    <div class="row">
+        <!-- Row 1 -->
+        <div class="col-4">
+            <div class="summary-card">
+                <div class="summary-label">Project</div>
+                <div class="summary-value">{{ project_name }}</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="summary-card">
+                <div class="summary-label">Plot No</div>
+                <div class="summary-value">{{ plot_numbers }}</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="summary-card">
+                <div class="summary-label">Area (Sq.ft)</div>
+                <div class="summary-value">{{ total_area|floatformat:2 }}</div>
+            </div>
+        </div>
+        <!-- Row 2 -->
+        <div class="col-4">
+            <div class="summary-card">
+                <div class="summary-label">Rate</div>
+                <div class="summary-value">₹ {{ rate|floatformat:2 }}</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="summary-card">
+                <div class="summary-label">Booking Amount</div>
+                <div class="summary-value">₹ {{ booking_amount|floatformat:2 }}</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="summary-card">
+                <div class="summary-label">Total Amount</div>
+                <div class="summary-value">₹ {{ total_amount|floatformat:2 }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="table-responsive mt-4">
+        <table class="table table-bordered ledger-table">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">Sl No</th>
+                    <th>Date</th>
+                    <th>Bill No</th>
+                    <th>Receipt No</th>
+                    <th>Received Amount</th>
+                    <th>Payment Mode</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in receipts %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ r.receipt_date|date:"d-m-Y" }}</td>
+                    <td>{{ booking.booking_no }}</td>
+                    <td>{{ r.receipt_no }}</td>
+                    <td style="text-align: right; padding-right: 20px;">₹ {{ r.pay_amount|floatformat:2 }}</td>
+                    <td>{{ r.get_payment_method_display }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted">No receipts found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="total-label">TOTAL RECEIVED AMOUNT:</td>
+                    <td class="text-green text-right" style="padding-right: 20px;">₹ {{ total_received|floatformat:2 }}</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="total-label">BALANCE AMOUNT:</td>
+                    <td class="text-red text-right" style="padding-right: 20px;">₹ {{ balance|floatformat:2 }}</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

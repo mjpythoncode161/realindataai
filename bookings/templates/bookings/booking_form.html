@@ -1,0 +1,722 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title|default:"Site BookingMaster Application" }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .booking-section-highlight {
+    outline: 2px solid #dc3545;
+    outline-offset: 4px;
+    border-radius: 6px;
+    background-color: #fff5f5;
+    transition: outline-color 0.2s, background-color 0.2s;
+  }
+  .booking-section-highlight .card-header {
+    background-color: #f8d7da !important;
+    color: #721c24;
+  }
+  .has-validation-error label {
+    color: #dc3545;
+    font-weight: 600;
+  }
+  .is-invalid-field,
+  .has-validation-error .form-control,
+  .has-validation-error select {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.2);
+  }
+  #itemsTable .project-cell {
+    min-width: 180px;
+  }
+  #itemsTable #id_p_id {
+    min-width: 160px;
+  }
+  #itemsTable tr.has-validation-error td {
+    background-color: #fff5f5;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 style="color: #333; font-weight: 500;">{{ page_title|default:"Site BookingMaster Application" }}</h1>
+      </div>
+    </div>
+    
+    <!-- Explicit Booking ID for Validation -->
+    <input type="hidden" id="current_booking_id" value="{{ booking.pk|default:'' }}">
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-outline card-maroon">
+      <form method="POST" novalidate id="bookingForm">
+        {% csrf_token %}
+        <div class="card-body">
+
+
+          <div id="section-customer" class="card card-outline card-info mt-3 mb-4 booking-form-section">
+            <div class="card-header">
+              <h3 class="card-title mb-0">Customer Details</h3>
+              <small class="text-muted ml-2">Enter mobile number to auto-fill — other fields optional</small>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4 form-group">
+                  <label>Booking Date</label>
+                  {{ form.booking_date }}
+                </div>
+                <div class="col-md-4 form-group">
+                  <label>Phone No / WhatsApp No <span class="text-danger">*</span></label>
+                  {{ form.phone }}
+                  <small id="customerLookupStatus" class="form-text text-muted"></small>
+                </div>
+                <div class="col-md-4 form-group">
+                  <label>Full Name</label>
+                  {{ form.full_name }}
+                </div>
+                <div class="col-md-4 form-group">
+                  <label>Mail ID</label>
+                  {{ form.email }}
+                </div>
+                <div class="col-md-4 form-group">
+                  <label>DOB</label>
+                  {{ form.date_of_birth }}
+                </div>
+                <div class="col-md-4 form-group">
+                  <label>Occupation</label>
+                  {{ form.occupation }}
+                </div>
+                <div class="col-md-4 form-group">
+                  <label>Present Address</label>
+                  {{ form.present_address }}
+                </div>
+                <div class="col-md-4 form-group">
+                  <label>Permanent Address</label>
+                  {{ form.permanent_address }}
+                </div>
+                <div class="col-md-4 form-group">
+                  <label>Aadhaar Number</label>
+                  {{ form.aadhar_number }}
+                </div>
+                <div class="col-md-4 form-group">
+                  <label>Pin Code</label>
+                  {{ form.pin_code }}
+                </div>
+                <div class="col-md-4 form-group">
+                  <label>Nominee</label>
+                  {{ form.nominee }}
+                </div>
+                <div class="col-md-4 form-group">
+                  <label>Relationship</label>
+                  {{ form.relationship }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="section-booking" class="row booking-form-section">
+            <!-- Agent Rows -->
+            {% if agent_settings.enable_manager %}
+            <div class="col-md-4 form-group">
+              <label>Manager <span class="text-danger">*</span></label>
+              {{ form.manager_u_id }}
+            </div>
+            <div class="col-md-4 form-group">
+              <label>Manager (%)</label>
+              {{ form.manager_percentage }}
+            </div>
+            {% else %}
+            {{ form.manager_u_id }}
+            {{ form.manager_percentage }}
+            {% endif %}
+
+            {% if agent_settings.enable_executive %}
+            <div class="col-md-4 form-group">
+                <label>Executive <span class="text-danger">*</span></label>
+                {{ form.executive_u_id }}
+            </div>
+            <div class="col-md-4 form-group">
+              <label>Executive (%)</label>
+              {{ form.executive_percentage }}
+            </div>
+            {% else %}
+            {{ form.executive_u_id }}
+            {{ form.executive_percentage }}
+            {% endif %}
+            {{ form.manager_tds }}
+            {{ form.manager_security_amount }}
+
+            {% if agent_settings.enable_telecaller %}
+            <div class="col-md-4 form-group">
+                <label>Telecaller</label>
+                {{ form.telecaller_u_id }}
+            </div>
+            <div class="col-md-4 form-group">
+                <label>Telecaller (%)</label>
+                {{ form.telecaller_percentage }}
+            </div>
+            {% else %}
+            {{ form.telecaller_u_id }}
+            {{ form.telecaller_percentage }}
+            {% endif %}
+            {{ form.executive_tds }}
+            {{ form.executive_security_amount }}
+            {{ form.telecaller_tds }}
+            {{ form.telecaller_security_amount }}
+
+            <!-- Row 5 -->
+            <div class="col-md-4 form-group">
+              <label>Payment Method</label>
+              {{ form.payment_method }}
+            </div>
+            <div class="col-md-4 form-group">
+              <label>Payment Details</label>
+              {{ form.payment_details }}
+            </div>
+            <div class="col-md-4 form-group">
+              <label>Payment Status</label>
+              {{ form.payment_status }}
+            </div>
+            <div class="col-md-4 form-group">
+              <label>Next Payment Date</label>
+              {{ form.next_payment_date }}
+            </div>
+          </div>
+
+          <div id="section-property" class="card card-outline card-success mt-4 mb-3 booking-form-section">
+            <div class="card-header">
+              <h3 class="card-title mb-0">Add Property Details</h3>
+              <small class="text-muted ml-2">
+                Projects from
+                <a href="{% url 'project_list' %}" target="_blank" rel="noopener">Store Settings &rarr; Projects</a>
+              </small>
+            </div>
+            <div class="card-body">
+              {{ form.location }}
+
+          {{ formset.management_form }}
+          <div class="table-responsive">
+            <table class="table table-bordered" id="itemsTable">
+              <thead style="background-color: #f8f9fa;">
+                <tr>
+                  <th>Project <span class="text-danger">*</span></th>
+                  <th>Plot No <span class="text-danger">*</span></th>
+                  <th>Area(sq.ft) <span class="text-danger">*</span></th>
+                  <th>Rate <span class="text-danger">*</span></th>
+                  <th>BookingMaster Amount</th>
+                  <th>Total Amount</th>
+                  <th style="width: 100px">Row</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for f in formset.forms %}
+                <tr class="item-row{% if forloop.first %} first-property-row{% endif %}">
+                  <td class="project-cell">
+                    {% if forloop.first %}
+                      {{ form.p_id }}
+                      {% if not projects %}
+                      <small class="form-text text-warning mb-0">
+                        Add projects in
+                        <a href="{% url 'project_add' %}" target="_blank" rel="noopener">Store Settings</a>.
+                      </small>
+                      {% endif %}
+                    {% endif %}
+                  </td>
+                  <td>{{ f.plot_number }}</td>
+                  <td>{{ f.area_sqft }}</td>
+                  <td>{{ f.rate }}</td>
+                  <td>{{ f.booking_amount }}</td>
+                  <td>
+                    <input type="text" class="form-control total-cell" readonly style="background-color: #e9ecef;" placeholder="Enter Total Amount" />
+                  </td>
+                  <td>
+                    <div class="d-none">{{ f.DELETE }}</div>
+                    <button type="button" class="btn btn-sm btn-success add-row">+</button>
+                    {% if not forloop.first %}
+                    <button type="button" class="btn btn-sm btn-danger remove-row">-</button>
+                    {% endif %}
+                  </td>
+                  {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+            </div>
+          </div>
+
+          <template id="emptyFormTemplate">
+            <tr class="item-row">
+              <td class="project-cell"></td>
+              <td>{{ formset.empty_form.plot_number }}</td>
+              <td>{{ formset.empty_form.area_sqft }}</td>
+              <td>{{ formset.empty_form.rate }}</td>
+              <td>{{ formset.empty_form.booking_amount }}</td>
+              <td><input type="text" class="form-control total-cell" readonly style="background-color: #e9ecef;" placeholder="Enter Total Amount" /></td>
+              <td>
+                <div class="d-none">{{ formset.empty_form.DELETE }}</div>
+                <button type="button" class="btn btn-sm btn-success add-row">+</button>
+                <button type="button" class="btn btn-sm btn-danger remove-row">-</button>
+              </td>
+              {% for hidden in formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+            </tr>
+          </template>
+
+        </div>
+
+        <div class="card-footer text-right" style="background: transparent; border-top: none;">
+          <a href="{% url 'booking_list' %}" class="btn btn-secondary mr-2" style="padding: 6px 20px;">Cancel</a>
+          <button type="submit" class="btn btn-maroon-custom" style="background-color: #29577f; color: white; border: none; padding: 6px 20px;">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function clearBookingValidation() {
+    $('.booking-form-section').removeClass('booking-section-highlight');
+    $('.has-validation-error').removeClass('has-validation-error');
+    $('.is-invalid-field').removeClass('is-invalid-field');
+  }
+
+  function markInvalid($field, sectionId) {
+    if (!$field || !$field.length) return;
+    $field.addClass('is-invalid-field');
+    $field.closest('.form-group, td').addClass('has-validation-error');
+    $(sectionId).addClass('booking-section-highlight');
+  }
+
+  function validateBookingForm() {
+    clearBookingValidation();
+    var missing = [];
+
+    var phone = ($('#id_phone').val() || '').replace(/\D/g, '');
+    if (phone.length < 10) {
+      missing.push('Phone No / WhatsApp No (10 digits)');
+      markInvalid($('#id_phone'), '#section-customer');
+    }
+
+    if (!$('#id_manager_u_id').val()) {
+      missing.push('Manager');
+      markInvalid($('#id_manager_u_id'), '#section-booking');
+    }
+    if (!$('#id_executive_u_id').val()) {
+      missing.push('Executive');
+      markInvalid($('#id_executive_u_id'), '#section-booking');
+    }
+    if (!$('#id_p_id').val()) {
+      missing.push('Property Details — Project');
+      markInvalid($('#id_p_id'), '#section-property');
+    }
+
+    var hasValidProperty = false;
+    var firstVisibleRow = null;
+    $('#itemsTable tbody tr.item-row').each(function () {
+      var row = $(this);
+      if (!row.is(':visible') || row.find('input[name$="-DELETE"]').prop('checked')) {
+        return;
+      }
+      if (!firstVisibleRow) {
+        firstVisibleRow = row;
+      }
+      var plot = (row.find('input[name$="-plot_number"]').val() || '').trim();
+      var area = parseFloat(row.find('input[name$="-area_sqft"]').val() || '0');
+      var rate = parseFloat(row.find('input[name$="-rate"]').val() || '0');
+      if (plot && area > 0 && rate > 0) {
+        hasValidProperty = true;
+      }
+    });
+
+    if (!hasValidProperty) {
+      missing.push('Property Details — Plot No, Area (sq.ft), and Rate');
+      var row = firstVisibleRow || $('#itemsTable tbody tr.item-row:visible').first();
+      if (row.length) {
+        var plotInput = row.find('input[name$="-plot_number"]');
+        var areaInput = row.find('input[name$="-area_sqft"]');
+        var rateInput = row.find('input[name$="-rate"]');
+        var plot = (plotInput.val() || '').trim();
+        var area = parseFloat(areaInput.val() || '0');
+        var rate = parseFloat(rateInput.val() || '0');
+        if (!plot) markInvalid(plotInput, '#section-property');
+        if (!(area > 0)) markInvalid(areaInput, '#section-property');
+        if (!(rate > 0)) markInvalid(rateInput, '#section-property');
+      } else {
+        $('#section-property').addClass('booking-section-highlight');
+      }
+    }
+
+    return missing;
+  }
+
+  function showMissingFieldsAlert(missing) {
+    var listHtml = '<ul style="text-align:left;margin:0;padding-left:1.25rem;">' +
+      missing.map(function (label) { return '<li>' + label + '</li>'; }).join('') +
+      '</ul>';
+    Swal.fire({
+      title: 'Please fill required fields',
+      html: '<p class="mb-2">The following are missing or invalid:</p>' + listHtml,
+      icon: 'warning',
+      confirmButtonColor: '#29577f',
+      confirmButtonText: 'OK'
+    });
+    var firstSection = $('.booking-section-highlight').first();
+    if (firstSection.length) {
+      $('html, body').animate({ scrollTop: firstSection.offset().top - 90 }, 400);
+    }
+  }
+
+  function recalcRowTotal(row) {
+    var area = parseFloat(row.find('input[name$="-area_sqft"]').val() || '0');
+    var rate = parseFloat(row.find('input[name$="-rate"]').val() || '0');
+    row.find('.total-cell').val((area * rate).toFixed(2));
+  }
+
+  function wireRow(row) {
+    row.on('input', 'input[name$="-area_sqft"], input[name$="-rate"]', function () {
+      recalcRowTotal(row);
+    });
+    recalcRowTotal(row);
+  }
+
+  $(function () {
+    $('#bookingForm').on('input change', 'input, select, textarea', function () {
+      var $el = $(this);
+      $el.removeClass('is-invalid-field');
+      $el.closest('.form-group, td').removeClass('has-validation-error');
+      var $section = $el.closest('.booking-form-section');
+      if ($section.length && !$section.find('.is-invalid-field').length) {
+        $section.removeClass('booking-section-highlight');
+      }
+    });
+
+    // Payment Status Logic
+    $('#id_payment_status').on('change', function() {
+        var status = $(this).val();
+        var nextDateInput = $('#id_next_payment_date');
+        if (status === 'FULL') {
+            var today = new Date();
+            today.setDate(today.getDate() + 30);
+            var dateStr = today.toISOString().split('T')[0];
+            nextDateInput.val(dateStr).prop('disabled', true).css('background-color', '#e9ecef');
+        } else {
+            nextDateInput.prop('disabled', false).css('background-color', '');
+        }
+    });
+    $('#id_payment_status').trigger('change');
+
+    function fillCustomerFields(d) {
+      if (!d) return;
+      var map = {
+        full_name: '#id_full_name',
+        email: '#id_email',
+        date_of_birth: '#id_date_of_birth',
+        occupation: '#id_occupation',
+        present_address: '#id_present_address',
+        permanent_address: '#id_permanent_address',
+        aadhar_number: '#id_aadhar_number',
+        pin_code: '#id_pin_code',
+        nominee: '#id_nominee',
+        relationship: '#id_relationship'
+      };
+      Object.keys(map).forEach(function (key) {
+        if (d[key]) $(map[key]).val(d[key]);
+      });
+    }
+
+    var lookupTimer = null;
+    function lookupCustomerByPhone() {
+      var phone = ($('#id_phone').val() || '').replace(/\D/g, '');
+      var status = $('#customerLookupStatus');
+      if (phone.length < 10) {
+        status.removeClass('text-success text-danger').addClass('text-muted').text('');
+        return;
+      }
+      phone = phone.slice(-10);
+      $('#id_phone').val(phone);
+      status.removeClass('text-success text-danger').addClass('text-muted').text('Looking up customer...');
+      $.getJSON('{% url "customer_by_phone" %}', { phone: phone })
+        .done(function (resp) {
+          if (resp.found) {
+            fillCustomerFields(resp.data || {});
+            status.removeClass('text-muted text-danger').addClass('text-success')
+              .html('<i class="fas fa-check-circle"></i> Customer found — details auto-filled');
+          } else {
+            status.removeClass('text-muted text-success').addClass('text-danger')
+              .html('<i class="fas fa-user-plus"></i> New customer — enter details (optional)');
+          }
+        })
+        .fail(function () {
+          status.removeClass('text-success text-muted').addClass('text-danger')
+            .text('Could not look up customer. Enter details manually.');
+        });
+    }
+
+    $('#id_phone').on('blur input', function () {
+      clearTimeout(lookupTimer);
+      var phone = ($(this).val() || '').replace(/\D/g, '');
+      if (phone.length === 10) {
+        lookupTimer = setTimeout(lookupCustomerByPhone, 400);
+      }
+    });
+
+    if (($('#id_phone').val() || '').replace(/\D/g, '').length >= 10) {
+      lookupCustomerByPhone();
+    }
+
+    // Auto-fill from URL parameters (passed from Master Plots)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlPId = urlParams.get('p_id');
+    const urlPlotNo = urlParams.get('plot_no');
+    
+    if (urlPId && urlPlotNo) {
+        setTimeout(function () {
+            $('#id_p_id').val(urlPId).trigger('change');
+            var firstRow = $('#itemsTable tbody tr.item-row').first();
+            if (firstRow.length) {
+                firstRow.find('input[id$="-plot_number"], input[name$="-plot_number"]')
+                    .val(urlPlotNo).trigger('change');
+            }
+        }, 300);
+    }
+
+    // Agent percentage, TDS, and Security auto-fill (only when agent is changed)
+    function fetchAgentDetails(userId, role, prefix) {
+      if (!userId) {
+        $('#id_' + prefix + '_percentage').val('0.00');
+        $('#id_' + prefix + '_tds').val('0.00');
+        $('#id_' + prefix + '_security_amount').val('0.00');
+        return;
+      }
+      $.getJSON('{% url "get_agent_info" %}', { user_id: userId, role: role })
+        .done(function (resp) {
+          if (resp.status === 'success') {
+            $('#id_' + prefix + '_percentage').val(resp.commission.toFixed(4));
+            $('#id_' + prefix + '_tds').val(resp.tds.toFixed(2));
+            $('#id_' + prefix + '_security_amount').val(resp.security.toFixed(2));
+          }
+        });
+    }
+
+    $('#id_manager_u_id').on('change', function () {
+      fetchAgentDetails($(this).val(), 'manager', 'manager');
+    });
+    $('#id_executive_u_id').on('change', function () {
+      fetchAgentDetails($(this).val(), 'executive', 'executive');
+    });
+    $('#id_telecaller_u_id').on('change', function () {
+      fetchAgentDetails($(this).val(), 'telecaller', 'telecaller');
+    });
+
+    // Auto-calculate Next Payment Date (Booking Date + 30 days)
+    function syncNextPaymentDate() {
+      var bookingDateStr = $('#id_booking_date').val();
+      if (bookingDateStr) {
+        var bookingDate = new Date(bookingDateStr);
+        if (!isNaN(bookingDate.getTime())) {
+          bookingDate.setDate(bookingDate.getDate() + 30);
+          var yyyy = bookingDate.getFullYear();
+          var mm = String(bookingDate.getMonth() + 1).padStart(2, '0');
+          var dd = String(bookingDate.getDate()).padStart(2, '0');
+          $('#id_next_payment_date').val(yyyy + '-' + mm + '-' + dd);
+        }
+      }
+    }
+
+    $('#id_booking_date').on('change', syncNextPaymentDate);
+    
+    // Initial sync on page load
+    syncNextPaymentDate();
+
+    // Wire existing rows
+    $('#itemsTable tbody tr').each(function () {
+      wireRow($(this));
+    });
+
+    function addRowAfter($afterRow) {
+      var totalForms = $('#id_items-TOTAL_FORMS');
+      var index = parseInt(totalForms.val(), 10);
+
+      var html = $('#emptyFormTemplate').html().replace(/__prefix__/g, index);
+      var row = $(html);
+      if ($afterRow && $afterRow.length) {
+        $afterRow.after(row);
+      } else {
+        $('#itemsTable tbody').append(row);
+      }
+      wireRow(row);
+
+      totalForms.val(index + 1);
+    }
+
+    // Add/Remove row buttons in each row
+    $('#itemsTable').on('click', '.add-row', function () {
+      var $row = $(this).closest('tr');
+      addRowAfter($row);
+    });
+
+    $('#itemsTable').on('click', '.remove-row', function () {
+      var row = $(this).closest('tr');
+      if (row.hasClass('first-property-row')) {
+        return;
+      }
+      var deleteInput = row.find('input[name$="-DELETE"]');
+      if (deleteInput.length) {
+        deleteInput.prop('checked', true);
+      }
+      row.hide();
+    });
+
+    // Plot Availability Validation
+    function checkPlotAvailability(row) {
+      var project_id = $('#id_p_id').val();
+      var plot_numbers = row.find('input[name$="-plot_number"]').val();
+      var plotInput = row.find('input[name$="-plot_number"]');
+      var exclude_booking_id = $('#current_booking_id').val();
+
+      // Safety Net: If hidden field is empty, try to get ID from URL (e.g., /booking/3/edit/)
+      if (!exclude_booking_id) {
+        var pathParts = window.location.pathname.split('/');
+        // Find the number in the path /booking/3/edit/
+        for (var i = 0; i < pathParts.length; i++) {
+          if (pathParts[i] === 'booking' && pathParts[i+2] === 'edit') {
+            exclude_booking_id = pathParts[i+1];
+            break;
+          }
+        }
+      }
+
+      // Clear previous error state
+      plotInput.css('border-color', '');
+      row.find('.plot-error').remove();
+
+      if (!project_id || !plot_numbers) return;
+
+      console.log("VALIDATING: Plots=" + plot_numbers + ", Project=" + project_id + ", Exclude=" + exclude_booking_id);
+
+      $.getJSON('{% url "check_plot_availability" %}', {
+        project_id: project_id,
+        plot_numbers: plot_numbers,
+        exclude_booking_id: exclude_booking_id
+      }).done(function (resp) {
+        if (!resp.available) {
+          console.log("CONFLICT FOUND:", resp.message);
+          plotInput.css('border-color', 'red');
+          var msg = resp.message || 'Plot unavailable';
+          $('<div class="plot-error text-danger small" style="font-weight:bold; margin-bottom:2px;">' + msg + '</div>').insertBefore(plotInput);
+        } else {
+          console.log("PLOT OK");
+        }
+      });
+    }
+
+    $('#itemsTable').on('input change', 'input[name$="-plot_number"]', function () {
+      var row = $(this).closest('tr');
+      checkPlotAvailability(row);
+    });
+
+    // Initial check for existing rows
+    $('#itemsTable tbody tr').each(function () {
+      checkPlotAvailability($(this));
+    });
+
+    var projectsData = {{ projects_json|safe }};
+
+    function syncHiddenLocation(projectId) {
+      if (projectId && projectsData[projectId]) {
+        $('#id_location').val(projectsData[projectId].location || '');
+      }
+    }
+
+    syncHiddenLocation($('#id_p_id').val());
+
+    $('#id_p_id').on('change', function () {
+      var projectId = $(this).val();
+      if (projectId && projectsData[projectId]) {
+        $('#id_location').val(projectsData[projectId].location || '');
+      } else {
+        $('#id_location').val('');
+      }
+      $('#itemsTable tbody tr.item-row:visible').each(function () {
+        checkPlotAvailability($(this));
+      });
+    });
+
+    // AJAX Form Submission
+    $('#bookingForm').on('submit', function (e) {
+      e.preventDefault();
+
+      var missing = validateBookingForm();
+      if (missing.length) {
+        showMissingFieldsAlert(missing);
+        return;
+      }
+
+      // Check for plot errors before submitting
+      if ($('.plot-error').length > 0) {
+          Swal.fire({
+            title: 'Wait!',
+            text: 'Some plots are already booked. Please correct them before saving.',
+            icon: 'warning',
+            confirmButtonColor: '#29577f'
+          });
+          return;
+      }
+
+      var form = $(this);
+      var formData = form.serializeArray();
+      
+      // If next_payment_date is disabled, it won't be in serializeArray
+      // But we want it in the backend. However, backend will re-calculate it anyway.
+      // To be safe, we can add it if missing and FULL is selected.
+      var isFull = $('#id_payment_status').val() === 'FULL';
+      if (isFull) {
+          formData.push({ name: 'next_payment_date', value: $('#id_next_payment_date').val() });
+      }
+      
+      $.ajax({
+        url: form.attr('action'),
+        method: 'POST',
+        data: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function (resp) {
+          if (resp.status === 'success') {
+            Swal.fire({
+              title: 'Success!',
+              text: resp.message,
+              icon: 'success',
+              confirmButtonColor: '#29577f'
+            }).then(() => {
+              window.location.href = "{% url 'booking_list' %}";
+            });
+          } else {
+            validateBookingForm();
+            Swal.fire({
+              title: 'Error!',
+              html: resp.message || 'Please check the form for errors',
+              icon: 'error',
+              confirmButtonColor: '#29577f'
+            }).then(function () {
+              var firstSection = $('.booking-section-highlight').first();
+              if (firstSection.length) {
+                $('html, body').animate({ scrollTop: firstSection.offset().top - 90 }, 400);
+              }
+            });
+          }
+        },
+        error: function () {
+          Swal.fire('Error!', 'Network error or server error', 'error');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

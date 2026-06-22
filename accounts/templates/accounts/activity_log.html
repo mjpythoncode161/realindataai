@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load user_roles %}
+
+{% block title %}Activity Log{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1 class="m-0"><i class="fas fa-history text-warning mr-2"></i>Activity Log</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="container-fluid">
+
+    <!-- Filter Card -->
+    <div class="card card-outline card-primary mb-3">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-filter mr-1"></i> Filters</h3>
+        <div class="card-tools">
+          <button type="button" class="btn btn-tool" data-card-widget="collapse">
+            <i class="fas fa-minus"></i>
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <form method="get" class="form-row align-items-end">
+          <div class="form-group col-md-2">
+            <label>Action</label>
+            <select name="action" class="form-control form-control-sm">
+              <option value="">All</option>
+              {% for val, label in action_choices %}
+              <option value="{{ val }}" {% if filters.action == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group col-md-2">
+            <label>Module</label>
+            <select name="model" class="form-control form-control-sm">
+              <option value="">All</option>
+              {% for mn in model_names %}
+              <option value="{{ mn }}" {% if filters.model == mn %}selected{% endif %}>{{ mn }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group col-md-2">
+            <label>User</label>
+            <input type="text" name="user" class="form-control form-control-sm" value="{{ filters.user }}" placeholder="Username...">
+          </div>
+          <div class="form-group col-md-2">
+            <label>From Date</label>
+            <input type="date" name="date_from" class="form-control form-control-sm" value="{{ filters.date_from }}">
+          </div>
+          <div class="form-group col-md-2">
+            <label>To Date</label>
+            <input type="date" name="date_to" class="form-control form-control-sm" value="{{ filters.date_to }}">
+          </div>
+          <div class="form-group col-md-2">
+            <button type="submit" class="btn btn-primary btn-sm btn-block">Apply</button>
+            <a href="{% url 'activity_log' %}" class="btn btn-secondary btn-sm btn-block mt-1">Reset (1 Week)</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Log Table -->
+    <div class="card card-outline card-warning">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-list mr-1"></i> Records ({{ logs.count }})</h3>
+      </div>
+      <div class="card-body table-responsive p-0">
+        <table id="activityLogTable" class="table table-hover table-striped table-sm">
+          <thead class="thead-dark">
+            <tr>
+              <th>#</th>
+              <th>Timestamp</th>
+              <th>User</th>
+              <th>Action</th>
+              <th>Module</th>
+              <th>Record</th>
+              <th>Changes / Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td style="white-space:nowrap;">{{ log.timestamp|date:"d M Y H:i" }}</td>
+              <td>
+                {% if log.user %}
+                  <span class="font-weight-bold">{{ log.user.get_full_name|default:log.user.username }}</span>
+                  <small class="text-muted d-block">{{ log.user.role }}</small>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if log.action == "CREATE" %}
+                  <span class="badge badge-success">Created</span>
+                {% elif log.action == "EDIT" %}
+                  <span class="badge badge-primary">Edited</span>
+                {% elif log.action == "DELETE" %}
+                  <span class="badge badge-danger">Deleted</span>
+                {% elif log.action == "CANCEL" %}
+                  <span class="badge badge-warning">Cancelled</span>
+                {% elif log.action == "STATUS" %}
+                  <span class="badge badge-info">Status Changed</span>
+                {% elif log.action == "APPROVE" %}
+                  <span class="badge badge-success">Approved</span>
+                {% else %}
+                  <span class="badge badge-secondary">{{ log.action }}</span>
+                {% endif %}
+              </td>
+              <td>{{ log.model_name }}</td>
+              <td>
+                <span>{{ log.object_repr|default:log.object_id }}</span>
+                {% if log.object_id %}<small class="text-muted d-block">ID: {{ log.object_id }}</small>{% endif %}
+              </td>
+              <td>{{ log.changes|default:"—"|highlight_changes }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center text-muted py-3">No activity records found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+$(document).ready(function () {
+  $('#activityLogTable').DataTable({
+    pageLength: 50,
+    order: [[1, 'desc']],
+    columnDefs: [{ orderable: false, targets: [6] }]
+  });
+});
+</script>
+{% endblock %}

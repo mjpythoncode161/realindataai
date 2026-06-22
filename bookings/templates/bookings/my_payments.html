@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Payments{% endblock %}
+
+{% block extra_head %}
+<style>
+    .payment-card {
+        background: linear-gradient(135deg, #29577f 0%, #1a3750 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+        position: relative;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .payment-card .label {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        opacity: 0.8;
+        letter-spacing: 1px;
+    }
+    .payment-card .amount {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+    .method-option {
+        border: 2px solid #eee;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    .method-option i {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+    }
+    .method-option.active {
+        border-color: #29577f;
+        background: #fff5f5;
+        color: #29577f;
+    }
+    .method-option input {
+        display: none;
+    }
+    .details-box {
+        background: #fdfdfd;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+        display: none;
+    }
+    .details-box.active {
+        display: block;
+    }
+    .qr-container img {
+        max-width: 180px;
+        border: 1px solid #ddd;
+        padding: 8px;
+        background: #white;
+    }
+    .btn-maroon-custom {
+        background-color: #29577f;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        font-weight: 600;
+        border-radius: 5px;
+        transition: opacity 0.2s;
+    }
+    .btn-maroon-custom:hover {
+        opacity: 0.9;
+        color: white;
+    }
+    .form-group label {
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        color: #555;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 style="color: #333; font-weight: 500; text-transform: uppercase;">My Payments</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Side: Summary Card & Form -->
+            <div class="col-md-12">
+                <div class="card card-outline card-maroon">
+                    <div class="card-header">
+                        <h3 class="card-title" style="text-transform: uppercase; font-size: 1rem; font-weight: 600; color: #555;">Make a Payment</h3>
+                    </div>
+                    <form id="paymentForm" method="POST">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            
+                            <!-- Financial Summary in Form -->
+                            <div class="payment-card">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="label">Total Balance</div>
+                                        <div class="amount">₹{{ total_balance|floatformat:2 }}</div>
+                                    </div>
+                                    <div class="col-md-6 text-right d-none d-md-block">
+                                        <i class="fas fa-wallet fa-4x opacity-25"></i>
+                                    </div>
+                                </div>
+                                <div class="row small mt-2" style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;">
+                                    <div class="col-6">
+                                        <span class="opacity-75">Total Amount:</span> <strong>₹{{ total_amount|floatformat:2 }}</strong>
+                                    </div>
+                                    <div class="col-6 text-right">
+                                        <span class="opacity-75">Total Paid:</span> <strong>₹{{ total_paid|floatformat:2 }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Select Project</label>
+                                        <select id="selectProject" class="form-control" required>
+                                            <option value="">Choose a project</option>
+                                            {% for project, bookings in project_bookings.items %}
+                                                <option value="{{ project.p_id }}">{{ project.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Select Plot</label>
+                                        <select id="selectPlot" name="b_id" class="form-control" required disabled>
+                                            <option value="">Select a project first</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Payment Amount</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">₹</span>
+                                            </div>
+                                            <input type="number" name="pay_amount" id="payAmount" class="form-control" placeholder="Enter amount" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Payment Mode</label>
+                                        <div class="row no-gutters">
+                                            <div class="col-4 px-1">
+                                                <label class="method-option active" data-target="qr-details">
+                                                    <input type="radio" name="payment_method" value="UPI" checked>
+                                                    <i class="fas fa-qrcode"></i>
+                                                    <span class="small font-weight-bold">QR Code</span>
+                                                </label>
+                                            </div>
+                                            <div class="col-4 px-1">
+                                                <label class="method-option" data-target="cheque-details">
+                                                    <input type="radio" name="payment_method" value="CHEQUE">
+                                                    <i class="fas fa-money-check"></i>
+                                                    <span class="small font-weight-bold">Cheque</span>
+                                                </label>
+                                            </div>
+                                            <div class="col-4 px-1">
+                                                <label class="method-option" data-target="online-details">
+                                                    <input type="radio" name="payment_method" value="BANK_TRANSFER">
+                                                    <i class="fas fa-globe"></i>
+                                                    <span class="small font-weight-bold">Online</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Method Details -->
+                            <div id="qr-details" class="details-box active">
+                                <div class="row align-items-center">
+                                    <div class="col-sm-4 text-center">
+                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=neelgund@icici&pn=Neelgund%20Developers&cu=INR" alt="QR Code" class="img-fluid border p-2 bg-white">
+                                    </div>
+                                    <div class="col-sm-8 mt-3 mt-sm-0">
+                                        <h6 class="font-weight-bold text-maroon">UPI PAYMENT</h6>
+                                        <p class="text-muted small mb-1">Scan this QR to pay directly to our business account.</p>
+                                        <p class="mb-0"><strong>UPI ID:</strong> neelgund@icici <i class="far fa-copy text-primary pointer ml-2" title="Copy UPI ID"></i></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="cheque-details" class="details-box">
+                                <h6 class="font-weight-bold text-maroon">BANK DETAILS FOR CHEQUE</h6>
+                                <table class="table table-sm table-borderless mb-0 small">
+                                    <tr><td width="150">PAYEE NAME:</td><td><strong>NEELGUND DEVELOPERS LLP</strong></td></tr>
+                                    <tr><td>ACCOUNT NO:</td><td><strong>015705018265</strong></td></tr>
+                                    <tr><td>IFSC CODE:</td><td><strong>ICIC0000157</strong></td></tr>
+                                    <tr><td>BANK NAME:</td><td><strong>ICICI BANK</strong></td></tr>
+                                </table>
+                                <div class="alert alert-info mt-2 py-1 px-2 small mb-0">
+                                    <i class="fas fa-info-circle mr-1"></i> Write Plot No & Mobile in cheque memo.
+                                </div>
+                            </div>
+
+                            <div id="online-details" class="details-box">
+                                <h6 class="font-weight-bold text-maroon">ONLINE TRANSFER DETAILS</h6>
+                                <div class="form-group mb-2">
+                                    <label class="small mb-1">Transfer Type</label>
+                                    <input type="text" name="payment_type" class="form-control form-control-sm" placeholder="e.g., NEFT, IMPS, RTGS">
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="small mb-1">Ref / Transaction ID</label>
+                                    <input type="text" name="payment_details" class="form-control form-control-sm" placeholder="Enter Reference Number">
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="card-footer text-right">
+                            <button type="submit" class="btn btn-maroon-custom">SUBMIT PAYMENT REQUEST</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+$(function() {
+    const projectData = {
+        {% for project, bookings in project_bookings.items %}
+        "{{ project.p_id }}": [
+            {% for b in bookings %}
+            { "id": "{{ b.id }}", "label": "Plot: {{ b.plots }} ({{ b.no }})" },
+            {% endfor %}
+        ],
+        {% endfor %}
+    };
+
+    $('#selectProject').on('change', function() {
+        const projectId = $(this).val();
+        const $plotSelect = $('#selectPlot');
+        
+        $plotSelect.empty();
+        
+        if (projectId && projectData[projectId]) {
+            $plotSelect.append('<option value="">Select Plot</option>');
+            projectData[projectId].forEach(item => {
+                $plotSelect.append(`<option value="${item.id}">${item.label}</option>`);
+            });
+            $plotSelect.prop('disabled', false);
+        } else {
+            $plotSelect.append('<option value="">Select a project first</option>');
+            $plotSelect.prop('disabled', true);
+        }
+    });
+
+    $('.method-option').on('click', function() {
+        $('.method-option').removeClass('active');
+        $(this).addClass('active');
+        $(this).find('input').prop('checked', true);
+        
+        const target = $(this).data('target');
+        $('.details-box').removeClass('active');
+        $('#' + target).addClass('active');
+    });
+
+    $('#paymentForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = $(this).serialize();
+        
+        $.ajax({
+            url: window.location.href,
+            method: 'POST',
+            data: formData,
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+            success: function(response) {
+                if (response.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: response.message,
+                        confirmButtonColor: '#29577f'
+                    }).then(() => {
+                        window.location.href = "{% url 'payment_list' %}";
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Something went wrong. Please try again.'
+                });
+            }
+        });
+    });
+});
+</script>
+<style>
+    .text-maroon { color: #29577f; }
+    .pointer { cursor: pointer; }
+    .opacity-25 { opacity: 0.25; }
+    .opacity-75 { opacity: 0.75; }
+</style>
+{% endblock %}

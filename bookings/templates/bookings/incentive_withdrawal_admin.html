@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Incentive Withdrawal Requests{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Incentive Withdrawal Requests</h1>
+                <p>Approve or reject pending withdrawal requests from agents.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="info-box bg-info">
+                    <span class="info-box-icon"><i class="fas fa-file-invoice"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Requested</span>
+                        <span class="info-box-number">₹{{ total_requested|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box bg-success">
+                    <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Approved</span>
+                        <span class="info-box-number">₹{{ total_approved|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box bg-warning">
+                    <span class="info-box-icon"><i class="fas fa-clock"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Pending</span>
+                        <span class="info-box-number">₹{{ total_pending|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box bg-danger">
+                    <span class="info-box-icon"><i class="fas fa-times-circle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Rejected</span>
+                        <span class="info-box-number">₹{{ total_rejected|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-outline card-maroon">
+            <div class="card-header">
+                <h3 class="card-title">Filter Requests</h3>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="form-inline">
+                    <div class="form-group mr-2">
+                        <label for="status" class="mr-2">Status</label>
+                        <select class="form-control" name="status" id="status">
+                            <option value="">All</option>
+                            <option value="PENDING" {% if status_filter == 'PENDING' %}selected{% endif %}>Pending</option>
+                            <option value="APPROVED" {% if status_filter == 'APPROVED' %}selected{% endif %}>Approved</option>
+                            <option value="REJECTED" {% if status_filter == 'REJECTED' %}selected{% endif %}>Rejected</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-maroon" style="background-color: #29577f; color: white;">Filter</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card card-outline card-success">
+            <div class="card-header">
+                <h3 class="card-title">Process Withdrawal for Agent</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{% url 'incentive_withdrawal' %}" id="adminWithdrawalForm">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label><strong>Select User (Manager / Executive / Telecaller)</strong></label>
+                                <select name="target_user_id" id="targetUserSelect" class="form-control" required>
+                                    <option value="">----------</option>
+                                    {% for u in agent_users %}
+                                    <option value="{{ u.u_id }}" data-role="{{ u.role }}">
+                                        {{ u.full_name }} ({{ u.get_role_display }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label><strong>Withdrawal Commission %</strong></label>
+                                <input type="text" id="withdrawalCommissionPct" class="form-control" value="0.00" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Commission Breakdown (shown after user selected) -->
+                    <div id="commissionBreakdown" style="display:none;">
+                        <div class="row mb-2">
+                            <div class="col-md-4">
+                                <div class="small-box bg-info">
+                                    <div class="inner">
+                                        <h5 id="managerCommVal">₹0.00</h5>
+                                        <p>Manager Commission</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="small-box bg-success">
+                                    <div class="inner">
+                                        <h5 id="executiveCommVal">₹0.00</h5>
+                                        <p>Executive Commission</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="small-box bg-warning">
+                                    <div class="inner">
+                                        <h5 id="telecallerCommVal">₹0.00</h5>
+                                        <p>Telecaller Commission</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label><strong>Total Commission Earned</strong></label>
+                                    <input type="text" id="totalCommissionDisplay" class="form-control" value="₹0.00" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label><strong>Withdrawal Security Amount</strong></label>
+                                    <input type="text" id="withdrawalSecurityDisplay" class="form-control" value="0.00" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label><strong>Net Amount to Withdraw</strong></label>
+                                    <input type="text" id="netAmountDisplay" class="form-control font-weight-bold text-success" value="₹0.00" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields sent on submit -->
+                    <input type="hidden" name="net_amount" id="netAmountHidden" value="0">
+
+                    <div class="form-group">
+                        <label><strong>Remarks</strong></label>
+                        <textarea name="remarks" class="form-control" rows="3" placeholder="Enter remarks (optional)"></textarea>
+                    </div>
+
+                    <hr>
+                    <div class="text-right">
+                        <button type="button" class="btn btn-secondary mr-2" onclick="resetWithdrawalForm()">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="saveWithdrawalBtn" disabled>Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Withdrawal Request List</h3>
+            </div>
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Agent</th>
+                            <th>Role</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Requested At</th>
+                            <th>Proof</th>
+                            <th>Processed By</th>
+                            <th>Processed At</th>
+                            <th>Remarks</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in withdrawal_requests %}
+                        <tr>
+                            <td>{{ r.iwr_id }}</td>
+                            <td>{{ r.requested_by.full_name }}<br><small>{{ r.requested_by.email }}</small></td>
+                            <td>{{ r.get_role_display }}</td>
+                            <td>₹{{ r.amount|floatformat:2 }}</td>
+                            <td>{{ r.get_status_display }}</td>
+                            <td>{{ r.requested_at|date:"d-m-Y H:i" }}</td>
+                            <td>
+                                {% if r.proof_image %}
+                                    <a href="{{ r.proof_image.url }}" target="_blank">View</a>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{% if r.processed_by %}{{ r.processed_by.full_name }}{% else %}-{% endif %}</td>
+                            <td>{% if r.processed_at %}{{ r.processed_at|date:"d-m-Y H:i" }}{% else %}-{% endif %}</td>
+                            <td>{{ r.remarks|default:'-' }}</td>
+                            <td>
+                                {% if r.status == 'PENDING' %}
+                                <form method="POST" style="display:inline-block; margin-bottom: 4px;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="request_id" value="{{ r.iwr_id }}">
+                                    <input type="hidden" name="action" value="approve">
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                                <form method="POST" style="display:inline-block;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="request_id" value="{{ r.iwr_id }}">
+                                    <input type="hidden" name="action" value="reject">
+                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                                {% else %}
+                                <span class="text-muted">No action</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center">No withdrawal requests found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% block extra_scripts %}
+<script>
+document.getElementById('targetUserSelect').addEventListener('change', function () {
+    const userId = this.value;
+    if (!userId) {
+        resetWithdrawalForm();
+        return;
+    }
+    fetch(`/api/agent-withdrawal-data/?user_id=${userId}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.status !== 'success') {
+                alert('Could not fetch agent data. Please try again.');
+                return;
+            }
+            const fmt = v => '₹' + parseFloat(v).toFixed(2);
+            document.getElementById('withdrawalCommissionPct').value = parseFloat(data.commission_pct).toFixed(2);
+            document.getElementById('withdrawalSecurityDisplay').value = parseFloat(data.security_amount).toFixed(2);
+            document.getElementById('managerCommVal').textContent = fmt(data.manager_commission);
+            document.getElementById('executiveCommVal').textContent = fmt(data.executive_commission);
+            document.getElementById('telecallerCommVal').textContent = fmt(data.telecaller_commission);
+            document.getElementById('totalCommissionDisplay').value = fmt(data.total_commission);
+            document.getElementById('netAmountDisplay').value = fmt(data.net_amount);
+            document.getElementById('netAmountHidden').value = data.net_amount;
+            document.getElementById('commissionBreakdown').style.display = 'block';
+            document.getElementById('saveWithdrawalBtn').disabled = (data.net_amount <= 0);
+        })
+        .catch(() => alert('Error fetching agent data.'));
+});
+
+function resetWithdrawalForm() {
+    document.getElementById('targetUserSelect').value = '';
+    document.getElementById('withdrawalCommissionPct').value = '0.00';
+    document.getElementById('withdrawalSecurityDisplay').value = '0.00';
+    document.getElementById('totalCommissionDisplay').value = '₹0.00';
+    document.getElementById('netAmountDisplay').value = '₹0.00';
+    document.getElementById('netAmountHidden').value = '0';
+    document.getElementById('managerCommVal').textContent = '₹0.00';
+    document.getElementById('executiveCommVal').textContent = '₹0.00';
+    document.getElementById('telecallerCommVal').textContent = '₹0.00';
+    document.getElementById('commissionBreakdown').style.display = 'none';
+    document.getElementById('saveWithdrawalBtn').disabled = true;
+}
+</script>
+{% endblock extra_scripts %}
+{% endblock %}

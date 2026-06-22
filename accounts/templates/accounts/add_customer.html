@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Customer{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">Add Customer</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-primary card-outline">
+      <div class="card-header">
+        <h3 class="card-title">Account Details</h3>
+      </div>
+
+      <form action="{% url 'register_customer' %}" method="POST" id="addCustomerForm">
+        {% csrf_token %}
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 form-group">
+              <label for="full_name">Full Name <span class="text-danger">*</span></label>
+              <input
+                type="text"
+                id="full_name"
+                name="full_name"
+                class="form-control"
+                placeholder="Enter full name"
+                required
+              />
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="contact">Contact No. <span class="text-danger">*</span></label>
+              <input
+                type="text"
+                id="contact"
+                name="contact"
+                class="form-control"
+                placeholder="Enter 10-digit contact number"
+                maxlength="15"
+                required
+              />
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="email">Email ID <span class="text-danger">*</span></label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                class="form-control"
+                placeholder="Enter email ID"
+                required
+              />
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="aadhar_number">Aadhaar No.</label>
+              <input
+                type="text"
+                id="aadhar_number"
+                name="aadhar_number"
+                class="form-control"
+                placeholder="Enter 12-digit Aadhaar number (optional)"
+                maxlength="12"
+              />
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="password">Password <span class="text-danger">*</span></label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                class="form-control"
+                placeholder="Enter password"
+                required
+              />
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="confirm_password">Confirm Password <span class="text-danger">*</span></label>
+              <input
+                type="password"
+                id="confirm_password"
+                name="confirm_password"
+                class="form-control"
+                placeholder="Re-enter password"
+                required
+              />
+            </div>
+          </div>
+
+          <hr>
+          <h5 class="mb-3 text-muted">Additional Information <small>(optional)</small></h5>
+          <div class="row">
+            <div class="col-md-6 form-group">
+              <label for="date_of_birth">DOB</label>
+              <input
+                type="date"
+                id="date_of_birth"
+                name="date_of_birth"
+                class="form-control"
+              />
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="occupation">Occupation</label>
+              <input
+                type="text"
+                id="occupation"
+                name="occupation"
+                class="form-control"
+                placeholder="Enter occupation"
+              />
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="present_address">Present Address</label>
+              <input
+                type="text"
+                id="present_address"
+                name="present_address"
+                class="form-control"
+                placeholder="Enter present address"
+              />
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="permanent_address">Permanent Address</label>
+              <input
+                type="text"
+                id="permanent_address"
+                name="permanent_address"
+                class="form-control"
+                placeholder="Enter permanent address"
+              />
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="pin_code">Pin Code</label>
+              <input
+                type="text"
+                id="pin_code"
+                name="pin_code"
+                class="form-control"
+                placeholder="Enter pin code"
+                maxlength="10"
+              />
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="nominee">Nominee</label>
+              <input
+                type="text"
+                id="nominee"
+                name="nominee"
+                class="form-control"
+                placeholder="Enter nominee name"
+              />
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="relationship">Relationship</label>
+              <input
+                type="text"
+                id="relationship"
+                name="relationship"
+                class="form-control"
+                placeholder="Enter relationship"
+              />
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="user_type">User Type</label>
+              <input type="hidden" name="type" value="2" />
+              <select id="user_type" class="form-control" disabled>
+                <option selected>Customer</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer text-center">
+          <button type="submit" class="btn btn-primary" style="background-color: #29577f; border: none;">Submit</button>
+          <a href="{% url 'customer_list' %}" class="btn btn-secondary">Close</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  $(function () {
+    $('#addCustomerForm').on('submit', function (e) {
+      e.preventDefault();
+      var form = $(this);
+      
+      $.ajax({
+        url: form.attr('action'),
+        method: 'POST',
+        data: form.serialize(),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function (resp) {
+          if (resp.status === 'success') {
+            Swal.fire({
+              title: 'Success!',
+              text: resp.message,
+              icon: 'success',
+              confirmButtonColor: '#29577f'
+            }).then(() => {
+              window.location.href = "{% url 'customer_list' %}";
+            });
+          } else {
+            Swal.fire('Error!', resp.message, 'error');
+          }
+        },
+        error: function (xhr) {
+          var errorMsg = 'Something went wrong';
+          if (xhr.responseJSON && xhr.responseJSON.message) {
+            errorMsg = xhr.responseJSON.message;
+          }
+          Swal.fire('Error!', errorMsg, 'error');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

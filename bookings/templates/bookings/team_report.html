@@ -1,0 +1,404 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Team Report{% endblock %}
+
+{% block extra_head %}
+<style>
+  .team-report-table thead .grp-booking { background: #e9ecef; }
+  .team-report-table thead .grp-manager { background: #d4e8f7; color: #1a4a6e; }
+  .team-report-table thead .grp-executive { background: #d4edda; color: #155724; }
+  .team-report-table thead .grp-telecaller { background: #fff3cd; color: #856404; }
+  .team-report-table thead .grp-total { background: #e2d9f3; color: #4a2c6e; }
+  .team-report-table tbody td.grp-manager { background: #f8fbfd; }
+  .team-report-table tbody td.grp-executive { background: #f6fcf7; }
+  .team-report-table tbody td.grp-telecaller { background: #fffdf5; }
+  .team-report-table tbody td.grp-total { background: #faf8fc; }
+  .team-member-card { border-left: 4px solid #29577f; }
+  .team-member-card.executive { border-left-color: #28a745; }
+  .team-member-card.telecaller { border-left-color: #ffc107; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Team Report</h1>
+                <p class="text-muted mb-0">Manager team — bookings with Manager, Executive &amp; Telecaller commission combined</p>
+            </div>
+            <div class="col-sm-6 text-right">
+                <a href="{% url 'all_reports' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to Reports
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card card-outline card-maroon">
+            <div class="card-header">
+                <h3 class="card-title">Filter Options</h3>
+            </div>
+            <div class="card-body">
+                <form method="GET">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Manager (Team Lead)</label>
+                                <select name="manager" class="form-control select2">
+                                    <option value="">-- Select Manager --</option>
+                                    {% for m in managers %}
+                                    <option value="{{ m.u_id.u_id }}" {% if manager_id == m.u_id.u_id|stringformat:"s" %}selected{% endif %}>
+                                        {{ m.u_id.full_name }} ({{ m.u_id.phone }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>From Date</label>
+                                <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>To Date</label>
+                                <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <button type="submit" class="btn btn-block" style="background-color: #29577f; color: white;">Show Report</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if selected_manager %}
+        <div class="row">
+            <div class="col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info"><i class="fas fa-file-invoice"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Team Bookings</span>
+                        <span class="info-box-number">{{ bookings|length }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Collected</span>
+                        <span class="info-box-number">₹{{ total_paid|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-warning"><i class="fas fa-hand-holding-usd"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Team Commission</span>
+                        <span class="info-box-number">₹{{ total_team_commission|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-primary"><i class="fas fa-balance-scale"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Team Balance</span>
+                        <span class="info-box-number {% if total_balance < 0 %}text-danger{% endif %}">
+                            ₹{{ total_balance|floatformat:2 }} {{ total_balance_type }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h5 class="mb-3 font-weight-bold text-secondary"><i class="fas fa-users mr-1"></i> Your team — Manager, Executive, Telecaller</h5>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="card team-member-card h-100 mb-0">
+                    <div class="card-body py-3">
+                        <h6 class="text-muted text-uppercase small mb-1"><i class="fas fa-user-tie text-primary"></i> Manager (Team Lead)</h6>
+                        <p class="mb-0 font-weight-bold">{{ selected_manager.full_name }}</p>
+                        <small class="text-muted d-block">Commission earned: ₹{{ total_manager_commission|floatformat:2 }}</small>
+                        {% for m in team_debit_breakdown %}
+                        {% if m.role == "manager" %}
+                        <small class="d-block mt-1 font-weight-bold {% if m.balance < 0 %}text-danger{% else %}text-success{% endif %}">
+                            Balance after debits: ₹{{ m.balance|floatformat:2 }} {{ m.balance_type }}
+                        </small>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card team-member-card executive h-100 mb-0">
+                    <div class="card-body py-3">
+                        <h6 class="text-muted text-uppercase small mb-1"><i class="fas fa-user-ninja text-success"></i> Executive(s)</h6>
+                        {% if team_executive_names %}
+                            {% for name in team_executive_names %}
+                            <span class="badge badge-success mr-1 mb-1">{{ name }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <p class="mb-0 text-muted">—</p>
+                        {% endif %}
+                        <small class="d-block text-muted mt-1">Commission earned: ₹{{ total_executive_commission|floatformat:2 }}</small>
+                        {% for m in team_debit_breakdown %}
+                        {% if m.role == "executive" %}
+                        <small class="d-block {% if not forloop.last %}mb-1{% else %}mt-1{% endif %} font-weight-bold {% if m.balance < 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ m.user.full_name }} — Balance: ₹{{ m.balance|floatformat:2 }} {{ m.balance_type }}
+                        </small>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card team-member-card telecaller h-100 mb-0">
+                    <div class="card-body py-3">
+                        <h6 class="text-muted text-uppercase small mb-1"><i class="fas fa-headset text-warning"></i> Telecaller(s)</h6>
+                        {% if team_telecaller_names %}
+                            {% for name in team_telecaller_names %}
+                            <span class="badge badge-warning text-dark mr-1 mb-1">{{ name }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <p class="mb-0 text-muted">—</p>
+                        {% endif %}
+                        <small class="d-block text-muted mt-1">Commission earned: ₹{{ total_telecaller_commission|floatformat:2 }}</small>
+                        {% for m in team_debit_breakdown %}
+                        {% if m.role == "telecaller" %}
+                        <small class="d-block {% if not forloop.last %}mb-1{% else %}mt-1{% endif %} font-weight-bold {% if m.balance < 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ m.user.full_name }} — Balance: ₹{{ m.balance|floatformat:2 }} {{ m.balance_type }}
+                        </small>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-outline card-maroon mb-3">
+            <div class="card-header">
+                <h3 class="card-title mb-0">Booking-wise commission</h3>
+                <p class="text-muted small mb-0 mt-1">Each row shows one booking — Manager, Executive, and Telecaller share for that booking, then team total.</p>
+            </div>
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-bordered table-sm team-report-table mb-0">
+                    <thead>
+                        <tr class="text-center">
+                            <th colspan="6" class="grp-booking">Booking details</th>
+                            <th colspan="3" class="grp-manager">Manager</th>
+                            <th colspan="3" class="grp-executive">Executive</th>
+                            <th colspan="3" class="grp-telecaller">Telecaller</th>
+                            <th colspan="4" class="grp-total">Team total</th>
+                        </tr>
+                        <tr class="text-center small">
+                            <th class="grp-booking">#</th>
+                            <th class="grp-booking">Bkg No</th>
+                            <th class="grp-booking">Date</th>
+                            <th class="grp-booking">Project</th>
+                            <th class="grp-booking">Plot/Flat</th>
+                            <th class="grp-booking">Paid</th>
+                            <th class="grp-manager">Name</th>
+                            <th class="grp-manager">%</th>
+                            <th class="grp-manager">Commission</th>
+                            <th class="grp-executive">Name</th>
+                            <th class="grp-executive">%</th>
+                            <th class="grp-executive">Commission</th>
+                            <th class="grp-telecaller">Name</th>
+                            <th class="grp-telecaller">%</th>
+                            <th class="grp-telecaller">Commission</th>
+                            <th class="grp-total">Commission</th>
+                            <th class="grp-total">TDS</th>
+                            <th class="grp-total">Security</th>
+                            <th class="grp-total">Net</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in bookings %}
+                        <tr>
+                            <td class="grp-booking">{{ forloop.counter }}</td>
+                            <td class="grp-booking">{{ b.booking_no }}</td>
+                            <td class="grp-booking">{{ b.booking_date|date:"d-m-Y" }}</td>
+                            <td class="grp-booking">{{ b.p_id.name|default:"—" }}</td>
+                            <td class="grp-booking">{{ b.balance.display_plot_number|default:b.balance.plot_number|default:"—" }}</td>
+                            <td class="grp-booking text-success font-weight-bold">₹{{ b.balance.paid_amount|floatformat:2 }}</td>
+                            <td class="grp-manager">{{ b.manager_name }}</td>
+                            <td class="grp-manager text-center">{{ b.manager_pct }}%</td>
+                            <td class="grp-manager text-right text-warning font-weight-bold">₹{{ b.manager_commission|floatformat:2 }}</td>
+                            <td class="grp-executive">{{ b.executive_name }}</td>
+                            <td class="grp-executive text-center">{{ b.executive_pct }}%</td>
+                            <td class="grp-executive text-right text-warning font-weight-bold">₹{{ b.executive_commission|floatformat:2 }}</td>
+                            <td class="grp-telecaller">{{ b.telecaller_name }}</td>
+                            <td class="grp-telecaller text-center">{{ b.telecaller_pct }}%</td>
+                            <td class="grp-telecaller text-right text-warning font-weight-bold">₹{{ b.telecaller_commission|floatformat:2 }}</td>
+                            <td class="grp-total text-right font-weight-bold text-warning">₹{{ b.team_commission|floatformat:2 }}</td>
+                            <td class="grp-total text-right text-danger">₹{{ b.team_tds|floatformat:2 }}</td>
+                            <td class="grp-total text-right text-danger">₹{{ b.team_security|floatformat:2 }}</td>
+                            <td class="grp-total text-right font-weight-bold {% if b.team_net < 0 %}text-danger{% else %}text-primary{% endif %}">₹{{ b.team_net|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="19" class="text-center text-muted py-4">No bookings for this manager in the selected period.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    {% if bookings %}
+                    <tfoot class="font-weight-bold text-center">
+                        <tr>
+                            <td colspan="5" class="grp-booking text-right">Totals</td>
+                            <td class="grp-booking text-success">₹{{ total_paid|floatformat:2 }}</td>
+                            <td colspan="2" class="grp-manager"></td>
+                            <td class="grp-manager text-warning">₹{{ total_manager_commission|floatformat:2 }}</td>
+                            <td colspan="2" class="grp-executive"></td>
+                            <td class="grp-executive text-warning">₹{{ total_executive_commission|floatformat:2 }}</td>
+                            <td colspan="2" class="grp-telecaller"></td>
+                            <td class="grp-telecaller text-warning">₹{{ total_telecaller_commission|floatformat:2 }}</td>
+                            <td class="grp-total text-warning">₹{{ total_team_commission|floatformat:2 }}</td>
+                            <td class="grp-total text-danger">₹{{ total_team_tds|floatformat:2 }}</td>
+                            <td class="grp-total text-danger">₹{{ total_team_security|floatformat:2 }}</td>
+                            <td class="grp-total text-primary">₹{{ total_team_net|floatformat:2 }}</td>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+
+        {% if team_debit_breakdown %}
+        <div class="card card-outline card-secondary mb-3">
+            <div class="card-header">
+                <h3 class="card-title mb-0">Team accounts payments &amp; balance</h3>
+                <p class="text-muted small mb-0 mt-1">Commission earned, debits paid, and remaining balance for each team member</p>
+            </div>
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-sm table-bordered mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Role</th>
+                            <th>Name</th>
+                            <th>TDS %</th>
+                            <th>Security %</th>
+                            <th>Commission Earned</th>
+                            <th>TDS</th>
+                            <th>Security</th>
+                            <th>Net</th>
+                            <th>Commission (Debit)</th>
+                            <th>Security (Debit)</th>
+                            <th>Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in team_debit_breakdown %}
+                        <tr>
+                            <td>{{ m.role_display }}</td>
+                            <td>{{ m.user.full_name }}</td>
+                            <td>{{ m.tds_pct|floatformat:2 }}%</td>
+                            <td>{{ m.security_pct|floatformat:2 }}%</td>
+                            <td class="text-warning font-weight-bold">₹{{ m.commission_earned|floatformat:2 }}</td>
+                            <td class="text-danger">₹{{ m.tds|floatformat:2 }}</td>
+                            <td class="text-danger">₹{{ m.security|floatformat:2 }}</td>
+                            <td class="font-weight-bold">₹{{ m.net_commission|floatformat:2 }}</td>
+                            <td class="text-danger">₹{{ m.commission_debit|floatformat:2 }}</td>
+                            <td class="text-danger">₹{{ m.security_debit|floatformat:2 }}</td>
+                            <td class="font-weight-bold {% if m.balance < 0 %}text-danger{% else %}text-success{% endif %}">
+                                ₹{{ m.balance|floatformat:2 }} {{ m.balance_type }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="font-weight-bold bg-light">
+                        <tr>
+                            <td colspan="4" class="text-right">Team totals:</td>
+                            <td class="text-warning">₹{{ total_team_commission|floatformat:2 }}</td>
+                            <td class="text-danger">₹{{ total_team_tds|floatformat:2 }}</td>
+                            <td class="text-danger">₹{{ total_team_security|floatformat:2 }}</td>
+                            <td>₹{{ total_team_net|floatformat:2 }}</td>
+                            <td class="text-danger">₹{{ total_commission_debit|floatformat:2 }}</td>
+                            <td class="text-danger">₹{{ total_security_debit|floatformat:2 }}</td>
+                            <td class="{% if total_balance < 0 %}text-danger{% else %}text-success{% endif %}">
+                                ₹{{ total_balance|floatformat:2 }} {{ total_balance_type }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card card-outline card-primary mb-3">
+            <div class="card-header">
+                <h3 class="card-title mb-0">Team commission summary</h3>
+                <p class="text-muted small mb-0 mt-1">Overall totals for {{ selected_manager.full_name }}'s team</p>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-bordered mb-0">
+                        <thead class="bg-light text-center">
+                            <tr>
+                                <th>Role</th>
+                                <th>Name</th>
+                                <th>Commission</th>
+                                <th>TDS + Security</th>
+                                <th>Debits Paid</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in team_debit_breakdown %}
+                            <tr>
+                                <td>{{ m.role_display }}</td>
+                                <td>{{ m.user.full_name }}</td>
+                                <td class="text-right text-warning font-weight-bold">₹{{ m.commission_earned|floatformat:2 }}</td>
+                                <td class="text-right text-danger">₹{{ m.tds|floatformat:2 }} + ₹{{ m.security|floatformat:2 }}</td>
+                                <td class="text-right text-danger">₹{{ m.commission_debit|floatformat:2 }} + ₹{{ m.security_debit|floatformat:2 }}</td>
+                                <td class="text-right font-weight-bold {% if m.balance < 0 %}text-danger{% else %}text-success{% endif %}">
+                                    ₹{{ m.balance|floatformat:2 }} {{ m.balance_type }}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No team members in selected bookings.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        {% if team_debit_breakdown %}
+                        <tfoot class="font-weight-bold bg-light">
+                            <tr>
+                                <td colspan="2" class="text-right">Team total</td>
+                                <td class="text-right text-warning">₹{{ total_team_commission|floatformat:2 }}</td>
+                                <td class="text-right text-danger">₹{{ total_team_tds|floatformat:2 }} + ₹{{ total_team_security|floatformat:2 }}</td>
+                                <td class="text-right text-danger">₹{{ total_commission_debit|floatformat:2 }} + ₹{{ total_security_debit|floatformat:2 }}</td>
+                                <td class="text-right {% if total_balance < 0 %}text-danger{% else %}text-success{% endif %}">
+                                    ₹{{ total_balance|floatformat:2 }} {{ total_balance_type }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    $(function () {
+        $('.select2').select2({ theme: 'bootstrap4' });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Incentive Withdrawal{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Incentive Withdrawal</h1>
+                <p>Withdraw earned commission for your role.</p>
+            </div>
+            <div class="col-sm-6 text-right">
+                <a href="{% url 'home' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info"><i class="fas fa-user"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Agent</span>
+                        <span class="info-box-number">{{ agent.u_id.full_name }}</span>
+                        <span>{{ agent.u_id.phone }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success"><i class="fas fa-coins"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Commission Earned</span>
+                        <span class="info-box-number">₹{{ total_commission_earned|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="info-box">
+                    <span class="info-box-icon bg-warning"><i class="fas fa-wallet"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Available Balance</span>
+                        <span class="info-box-number">₹{{ available_balance|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Withdrawal Summary</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="small-box bg-secondary">
+                            <div class="inner">
+                                <h3>₹{{ total_commission_earned|floatformat:2 }}</h3>
+                                <p>Total Commission Earned</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="small-box bg-danger">
+                            <div class="inner">
+                                <h3>₹{{ total_withdrawn|floatformat:2 }}</h3>
+                                <p>Total Withdrawn</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="small-box bg-warning">
+                            <div class="inner">
+                                <h3>₹{{ pending_withdrawals|floatformat:2 }}</h3>
+                                <p>Pending Withdrawals</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="small-box bg-success">
+                            <div class="inner">
+                                <h3>₹{{ available_balance|floatformat:2 }}</h3>
+                                <p>Available Balance</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Withdrawal Requests</h3>
+            </div>
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Requested At</th>
+                            <th>Processed At</th>
+                            <th>Proof</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in withdrawal_requests %}
+                        <tr>
+                            <td>{{ r.iwr_id }}</td>
+                            <td>₹{{ r.amount|floatformat:2 }}</td>
+                            <td>{{ r.get_status_display }}</td>
+                            <td>{{ r.requested_at|date:"d-m-Y H:i" }}</td>
+                            <td>{{ r.processed_at|date:"d-m-Y H:i" }}</td>
+                            <td>
+                                {% if r.proof_image %}
+                                    <a href="{{ r.proof_image.url }}" target="_blank">View</a>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ r.remarks }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No withdrawal requests yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

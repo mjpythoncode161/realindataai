@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Unified Ledger{% endblock %}
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6"><h1>Unified Ledger</h1></div>
+      <div class="col-sm-6 text-right">
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm"><i class="fas fa-print"></i> Print</button>
+        <a href="{% url 'tally_create_master' %}" class="btn btn-primary btn-sm ml-1"><i class="fas fa-plus"></i> Add Ledger</a>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="content">
+  <div class="container-fluid">
+    {% regroup ledger_data by ledger.get_group_display as by_group %}
+    {% for group in by_group %}
+    <div class="card card-outline card-primary">
+      <div class="card-header"><h3 class="card-title">{{ group.grouper }}</h3></div>
+      <div class="card-body p-0 table-responsive">
+        <table class="table table-hover table-striped mb-0">
+          <thead class="bg-light">
+            <tr><th>Ledger Name</th><th class="text-right">Total Dr (₹)</th><th class="text-right">Total Cr (₹)</th><th class="text-right">Balance</th></tr>
+          </thead>
+          <tbody>
+            {% for d in group.list %}
+            <tr>
+              <td><a href="{% url 'tally_account_statement' %}?ledger={{ d.ledger.l_id }}">{{ d.ledger.name }}</a></td>
+              <td class="text-right">₹{{ d.total_dr|floatformat:2 }}</td>
+              <td class="text-right">₹{{ d.total_cr|floatformat:2 }}</td>
+              <td class="text-right {% if d.balance_type == 'Dr' %}text-success{% else %}text-danger{% endif %}">
+                <strong>₹{{ d.balance|floatformat:2 }} {{ d.balance_type }}</strong>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-info">No ledger masters found. <a href="{% url 'tally_create_master' %}">Create one</a>.</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

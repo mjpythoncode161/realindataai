@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}BookingMaster View{% endblock %}
+
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>BookingMaster View</h1>
+      </div>
+      <div class="col-sm-6 text-right">
+        <a href="{% url 'booking_list' %}" class="btn btn-secondary">Back</a>
+        {% if request.user.role != "customer" %}
+          <a href="{% url 'booking_client_copy' booking.b_id %}" class="btn btn-info" target="_blank" rel="noopener">
+            Client Copy
+          </a>
+          {% include "bookings/includes/share_buttons.html" %}
+          <a href="{% url 'booking_edit' booking.b_id %}" class="btn btn-maroon-custom">Edit</a>
+          {% if booking.kgp_completed %}
+            <a href="{% url 'booking_kgp_swap' booking.b_id %}" class="btn btn-warning">Swap Plot/Flat (KGP)</a>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-outline card-maroon">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3"><strong>BookingMaster No.</strong><br />{{ booking.b_id }}</div>
+          <div class="col-md-3"><strong>BookingMaster Date</strong><br />{% if booking.booking_date %}{{ booking.booking_date|date:"d-m-Y" }}{% else %}-{% endif %}</div>
+          <div class="col-md-3"><strong>Customer Name</strong><br />{{ booking.customer_full_name|default:"-" }}</div>
+          <div class="col-md-3"><strong>Mobile No.</strong><br />{{ booking.customer_phone|default:"-" }}</div>
+        </div>
+        <hr />
+        <div class="row">
+          <div class="col-md-3"><strong>Email</strong><br />{{ booking.customer_email|default:"-" }}</div>
+          <div class="col-md-3"><strong>Aadhaar No.</strong><br />{{ booking.customer_aadhar|default:"-" }}</div>
+          <div class="col-md-3"><strong>Apartment/Layout</strong><br />{% if booking.p_id %}{{ booking.p_id.name }}{% else %}-{% endif %}</div>
+          <div class="col-md-3"><strong>Location</strong><br />{{ booking.project_location|default:"-" }}</div>
+        </div>
+        {% if booking.kgp_completed %}
+        <div class="row mt-2">
+          <div class="col-md-12">
+            <span class="badge badge-info">
+              KGP Completed
+              {% if booking.kgp_completed_at %} — {{ booking.kgp_completed_at|date:"d-m-Y" }}{% endif %}
+            </span>
+          </div>
+        </div>
+        {% endif %}
+
+        <hr />
+        <h5>Property Details</h5>
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Project Name</th>
+              <th>Plot No</th>
+              <th>Plot Name</th>
+              <th>Area(sq.ft)</th>
+              <th>Rate</th>
+              <th>BookingMaster Amount</th>
+              <th>Total Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for it in booking.items.all %}
+              <tr>
+                <td>{% if it.p_id %}{{ it.p_id.name }}{% else %}-{% endif %}</td>
+                <td>{{ it.plot_number|default:"-" }}</td>
+                <td>{{ it.plot_name|default:"-" }}</td>
+                <td>{{ it.area_sqft }}</td>
+                <td>{{ it.rate }}</td>
+                <td>{{ it.booking_amount }}</td>
+                <td>{{ it.total_amount }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7" class="text-center">No items</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <hr />
+        <h5>Agent Details</h5>
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Agent Name</th>
+              <th>Commission (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if booking.manager_u_id %}
+            <tr>
+              <td>Manager</td>
+              <td>{{ booking.manager_u_id.full_name }}</td>
+              <td>{{ booking.manager_percentage }}%</td>
+            </tr>
+            {% endif %}
+            {% if booking.executive_u_id %}
+            <tr>
+              <td>Executive</td>
+              <td>{{ booking.executive_u_id.full_name }}</td>
+              <td>{{ booking.executive_percentage }}%</td>
+            </tr>
+            {% endif %}
+            {% if booking.telecaller_u_id %}
+            <tr>
+              <td>Telecaller</td>
+              <td>{{ booking.telecaller_u_id.full_name }}</td>
+              <td>{{ booking.telecaller_percentage }}%</td>
+            </tr>
+            {% endif %}
+            {% if not booking.manager_u_id and not booking.executive_u_id and not booking.telecaller_u_id %}
+            <tr>
+              <td colspan="3" class="text-center">No agents assigned</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+
+        <a href="{% url 'booking_download' booking.b_id %}" class="btn btn-success" target="_blank" rel="noopener">
+          Download
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+{% include "bookings/includes/share_email_script.html" %}
+{% endblock %}

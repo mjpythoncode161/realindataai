@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}BookingMaster List{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}" />
+<link rel="stylesheet" href="{% static 'assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}" />
+{% endblock %}
+
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>BookingMaster List</h1>
+      </div>
+      <div class="col-sm-6 text-right">
+        {% if request.user.role != "customer" %}
+        <a href="{% url 'booking_add' %}" class="btn btn-maroon-custom" style="background-color: #29577f; color: white; border: none; padding: 6px 15px; font-weight: 500;"><i class="fas fa-plus mr-1"></i> Add New</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-outline card-maroon">
+      <div class="card-body">
+
+
+        <table id="bookingTable" class="table table-striped table-bordered">
+          <thead>
+            <tr>
+              <th>SL No.</th>
+              <th>BookingMaster Date</th>
+              <th>BookingMaster No.</th>
+              <th>Customer Name</th>
+              <th>Booked Flat/Plot</th>
+              <th>Mobile No.</th>
+              <th>Project Name</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in bookings %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  {% if b.booking_date %}
+                    {{ b.booking_date|date:"d-m-Y" }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>{{ b.booking_no }}</td>
+                <td>{{ b.customer_full_name|default:"-" }}</td>
+                <td>
+                  {% with items=b.items.all %}
+                    {% for it in items %}
+                      {{ it.plot_number }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                      -
+                    {% endfor %}
+                  {% endwith %}
+                </td>
+                <td>{{ b.customer_phone|default:"-" }}</td>
+                <td>
+                  {% if b.p_id %}
+                    {{ b.p_id.name }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-maroon-custom dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                      Action <i class="fas fa-caret-down ml-1"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right">
+                      <a class="dropdown-item" href="{% url 'booking_view' b.b_id %}">
+                        <i class="fas fa-eye mr-2 text-info"></i> View
+                      </a>
+                      {% if request.user.role != "customer" %}
+                        <a class="dropdown-item" href="{% url 'booking_edit' b.b_id %}">
+                          <i class="fas fa-pencil-alt mr-2 text-primary"></i> Edit
+                        </a>
+                        {% if b.kgp_completed %}
+                          <a class="dropdown-item text-warning" href="{% url 'booking_kgp_swap' b.b_id %}">
+                            <i class="fas fa-exchange-alt mr-2"></i> Swap Plot/Flat (KGP)
+                          </a>
+                        {% else %}
+                          <button type="button" class="dropdown-item text-primary mark-kgp"
+                            data-url="{% url 'booking_mark_kgp' b.b_id %}" data-no="{{ b.booking_no }}">
+                            <i class="fas fa-clipboard-check mr-2"></i> Mark KGP Complete
+                          </button>
+                        {% endif %}
+                        <button type="button" class="dropdown-item text-warning cancel-booking"
+                          data-url="{% url 'booking_cancel' b.b_id %}" data-no="{{ b.booking_no }}">
+                          <i class="fas fa-ban mr-2"></i> Cancel Plot
+                        </button>
+                        <button type="button" class="dropdown-item text-danger delete-booking"
+                          data-url="{% url 'booking_delete' b.b_id %}" data-no="{{ b.booking_no }}">
+                          <i class="fas fa-trash-alt mr-2"></i> Delete
+                        </button>
+                      {% endif %}
+                      <a class="dropdown-item text-success" href="{% url 'booking_download' b.b_id %}" target="_blank" rel="noopener">
+                        <i class="fas fa-download mr-2"></i> Download
+                      </a>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'assets/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script>
+  $(function () {
+    $("#bookingTable").DataTable({
+      paging: true,
+      searching: true,
+      ordering: true,
+      responsive: true,
+    });
+
+    function submitAction(actionUrl, reasonStr) {
+      $.ajax({
+        url: actionUrl,
+        method: 'POST',
+        data: {
+          csrfmiddlewaretoken: '{{ csrf_token }}',
+          reason: reasonStr
+        },
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function (resp) {
+          if (resp.status === 'success') {
+            Swal.fire('Done!', resp.message, 'success').then(() => {
+              location.reload();
+            });
+          } else {
+            Swal.fire('Error!', resp.message, 'error');
+          }
+        },
+        error: function () {
+          Swal.fire('Error!', 'Something went wrong', 'error');
+        }
+      });
+    }
+
+    $('.mark-kgp').on('click', function () {
+      var btn = $(this);
+      var url = btn.data('url');
+      var no = btn.data('no');
+      Swal.fire({
+        title: 'Mark KGP Complete?',
+        text: 'Confirm Government Survey (KGP) is completed for booking ' + no + '. After this, only Plot/Flat, Area, and Rate can be edited.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#29577f',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, mark KGP complete'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          submitAction(url, '');
+        }
+      });
+    });
+
+    $('.cancel-booking, .delete-booking').on('click', function () {
+      var btn = $(this);
+      var url = btn.data('url');
+      var no = btn.data('no');
+      var isCancel = btn.hasClass('cancel-booking');
+      var title = isCancel ? 'Cancel Booking?' : 'Delete Booking?';
+      var text = isCancel ? "Are you sure you want to cancel booking " + no + "?" : "Delete booking " + no + "?";
+      
+      if (isCancel) {
+        Swal.fire({
+          title: title,
+          text: text,
+          input: 'textarea',
+          inputPlaceholder: 'Enter reason for cancellation...',
+          inputAttributes: {
+            'aria-label': 'Enter reason for cancellation'
+          },
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#29577f',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Yes, cancel it!',
+          preConfirm: (reason) => {
+            if (!reason) {
+              Swal.showValidationMessage('Reason is required to cancel a booking')
+            }
+            return reason
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            submitAction(url, result.value);
+          }
+        });
+      } else {
+        Swal.fire({
+          title: title,
+          text: text,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#29577f',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            submitAction(url, '');
+          }
+        });
+      }
+    });
+  });
+</script>
+{% endblock %}

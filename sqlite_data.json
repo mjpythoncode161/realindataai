@@ -1,0 +1,594 @@
+[
+{
+  "model": "sessions.session",
+  "pk": "1dacitrxk5xhnn0t5i0bnkufvudfwzob",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQRf9l1obwKEK7dO83kBkYLWrAlDbRGP9dm3TT7T3n3A-Exq3lWgK_nnl6wyAPEHCZx7A0nkJOMICC3UYY71xWkG5YrlXEWuYpk1gVsdEmzjXx47S5u4MR2_ivtY7IxqJl0pKVTSSjI6n7zpFz2mLvdSLje2WNJcX-GPEilWPvFZtOwvcHB_Y-ng:1wWbqr:hvqtKwIFPvZlVwIsdW0va2xsFcMZrdWjSLruPFVQLkg",
+    "expire_date": "2026-06-09T15:25:21.738Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "266ejd5a9jy89glpey29zg4a4whnhfb4",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQRf9l1obwKEK7dO83kBkYLWrAlDbRGP9dm3TT7T3n3A-Exq3lWgK_nnl6wyAPEHCZx7A0nkJOMICC3UYY71xWkG5YrlXEWuYpk1gVsdEmzjXx47S5u4MR2_ivtY7IxqJl0pKVTSSjI6n7zpFz2mLvdSLje2WNJcX-GPEilWPvFZtOwvcHB_Y-ng:1wTBez:KEmWxpckfOtxOOisCzRfTZjousIHed9YnLfMhcfOj1g",
+    "expire_date": "2026-05-31T04:50:57.983Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "2p07rwbwuoh6n3147kyrwandk9t8lz63",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQRf9l1obwKEK7dO83kBkYLWrAlDbRGP9dm3TT7T3n3A-Exq3lWgK_nnl6wyAPEHCZx7A0nkJOMICC3UYY71xWkG5YrlXEWuYpk1gVsdEmzjXx47S5u4MR2_ivtY7IxqJl0pKVTSSjI6n7zpFz2mLvdSLje2WNJcX-GPEilWPvFZtOwvcHB_Y-ng:1wTCaR:xqO7DZ_LcN7ZP260Q17JVAbzZfPS5-akfKsbocognqg",
+    "expire_date": "2026-05-31T05:50:19.874Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "br1i1jvi5g95ge27vwtckuol7j8t36sr",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQRf9l1obwKEK7dO83kBkYLWrAlDbRGP9dm3TT7T3n3A-Exq3lWgK_nnl6wyAPEHCZx7A0nkJOMICC3UYY71xWkG5YrlXEWuYpk1gVsdEmzjXx47S5u4MR2_ivtY7IxqJl0pKVTSSjI6n7zpFz2mLvdSLje2WNJcX-GPEilWPvFZtOwvcHB_Y-ng:1wT1Kc:rAnbWZduOpbwuqQNbQkIFG7BpIRXY219FhB79mdmkDU",
+    "expire_date": "2026-05-30T17:49:14.577Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "p4qke9c3t4p3y0sus2dnwmxoniwbu4e8",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQRf9l1obwKEK7dO83kBkYLWrAlDbRGP9dm3TT7T3n3A-Exq3lWgK_nnl6wyAPEHCZx7A0nkJOMICC3UYY71xWkG5YrlXEWuYpk1gVsdEmzjXx47S5u4MR2_ivtY7IxqJl0pKVTSSjI6n7zpFz2mLvdSLje2WNJcX-GPEilWPvFZtOwvcHB_Y-ng:1wT142:sf_7mkl_75TYRnv50TNX2xkxvx0KMlFu4HONGAt2INQ",
+    "expire_date": "2026-05-30T17:32:06.478Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "zdhiawp0vc6ci0f4mh21pmojaj53y58v",
+  "fields": {
+    "session_data": ".eJxVjMsOwiAQRf9l1obwKEK7dO83kBkYLWrAlDbRGP9dm3TT7T3n3A-Exq3lWgK_nnl6wyAPEHCZx7A0nkJOMICC3UYY71xWkG5YrlXEWuYpk1gVsdEmzjXx47S5u4MR2_ivtY7IxqJl0pKVTSSjI6n7zpFz2mLvdSLje2WNJcX-GPEilWPvFZtOwvcHB_Y-ng:1wTEnz:_eSU5UHiVP4xVZtL9rzpMxxKOMsU_YcsJz6tMhmwqqI",
+    "expire_date": "2026-05-31T08:12:27.389Z"
+  }
+},
+{
+  "model": "accounts.users",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$wzpSxfcI6CKREuzWrW0nKJ$oC2hVVCz+N17M25G1qUbjnE+auoFUQRoAnqXwBYPxds=",
+    "last_login": "2026-06-08T15:25:21.731Z",
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-05-29T17:16:11.050Z",
+    "full_name": "mhiremath",
+    "email": "admin@admin.com",
+    "phone": "9535347161",
+    "role": "admin",
+    "roles": [
+      "admin"
+    ],
+    "created_by": null,
+    "company_name": "",
+    "is_trial_account": false,
+    "trial_started_at": null,
+    "trial_ends_at": null,
+    "signup_approved": true,
+    "signup_approved_at": null,
+    "signup_approved_by": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.users",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$YeBbAhox1dLggFkWUHjule$xMRqRI3Up0BTG8dzSaW4d31jxW19zPMti+GD5O5dWWw=",
+    "last_login": "2026-05-30T05:49:38.292Z",
+    "is_superuser": false,
+    "username": "h@gmail.com",
+    "first_name": "",
+    "last_name": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-29T17:51:42.421Z",
+    "full_name": "Harish manager",
+    "email": "h@gmail.com",
+    "phone": "9845332545",
+    "role": "manager",
+    "roles": [
+      "manager"
+    ],
+    "created_by": [
+      "admin"
+    ],
+    "company_name": "",
+    "is_trial_account": false,
+    "trial_started_at": null,
+    "trial_ends_at": null,
+    "signup_approved": true,
+    "signup_approved_at": null,
+    "signup_approved_by": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.users",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$E2m2Blbq2IM6De5y7VZlB3$cU0tJnzFnOWVcHx1vistLMFkQapYinon3Waj0xpOzfY=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "r@gmail.com",
+    "first_name": "",
+    "last_name": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-29T17:52:18.331Z",
+    "full_name": "Rekha Excutive",
+    "email": "r@gmail.com",
+    "phone": "98475451524",
+    "role": "executive",
+    "roles": [
+      "executive"
+    ],
+    "created_by": [
+      "admin"
+    ],
+    "company_name": "",
+    "is_trial_account": false,
+    "trial_started_at": null,
+    "trial_ends_at": null,
+    "signup_approved": true,
+    "signup_approved_at": null,
+    "signup_approved_by": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.users",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$mHyjnzcM4Yt7Cz6rUwl83a$4kP5f2F8z1OEd6Yo/AfP08LIbpCntkGFyvv3dPLOVjA=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "a@gmail.com",
+    "first_name": "",
+    "last_name": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-29T17:53:01.338Z",
+    "full_name": "Anjali Telecallera",
+    "email": "a@gmail.com",
+    "phone": "7845121478",
+    "role": "telecaller",
+    "roles": [
+      "telecaller"
+    ],
+    "created_by": [
+      "admin"
+    ],
+    "company_name": "",
+    "is_trial_account": false,
+    "trial_started_at": null,
+    "trial_ends_at": null,
+    "signup_approved": true,
+    "signup_approved_at": null,
+    "signup_approved_by": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.users",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$VqzBFT2joUY4fxiCyNlgpi$0+0dCM7XwY1hmFea9k9C4SpWqNpPzLMjEK8fP02lI28=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "hh@gmail.com",
+    "first_name": "",
+    "last_name": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-29T17:55:47.149Z",
+    "full_name": "Harshita",
+    "email": "hh@gmail.com",
+    "phone": "9845787454",
+    "role": "customer",
+    "roles": [],
+    "created_by": [
+      "admin"
+    ],
+    "company_name": "",
+    "is_trial_account": false,
+    "trial_started_at": null,
+    "trial_ends_at": null,
+    "signup_approved": true,
+    "signup_approved_at": null,
+    "signup_approved_by": null,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.activitylog",
+  "pk": 1,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "EDIT",
+    "model_name": "Test",
+    "object_id": "1",
+    "object_repr": "Test Record",
+    "changes": "test change",
+    "timestamp": "2026-05-30T04:11:10.239Z"
+  }
+},
+{
+  "model": "accounts.activitylog",
+  "pk": 2,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "EDIT",
+    "model_name": "Booking",
+    "object_id": "1",
+    "object_repr": "BK20260529-0001",
+    "changes": "Customer: Harshita | Project: Janvali Emp | Payment Status: PARTIAL | Total: ₹11000000.0000 | Paid: ₹40000.00 | Balance: ₹10960000.0000 | Plot 1 | Rate: ₹1000.00 | Area: 1101.00 → 11000.00 sqft | Total: ₹11000000.00",
+    "timestamp": "2026-05-30T04:11:16.554Z"
+  }
+},
+{
+  "model": "accounts.activitylog",
+  "pk": 3,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "EDIT",
+    "model_name": "Lead",
+    "object_id": "1",
+    "object_repr": "Test Lead",
+    "changes": "test edit",
+    "timestamp": "2026-05-30T04:12:01.318Z"
+  }
+},
+{
+  "model": "accounts.activitylog",
+  "pk": 4,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "EDIT",
+    "model_name": "Booking",
+    "object_id": "1",
+    "object_repr": "BK-0001",
+    "changes": "Rate: ₹500 → ₹600",
+    "timestamp": "2026-05-30T04:12:57.164Z"
+  }
+},
+{
+  "model": "accounts.activitylog",
+  "pk": 5,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "EDIT",
+    "model_name": "Booking",
+    "object_id": "99",
+    "object_repr": "BK-TEST",
+    "changes": "Rate: 500 -> 600 | Area: 1200",
+    "timestamp": "2026-05-30T04:16:20.511Z"
+  }
+},
+{
+  "model": "accounts.activitylog",
+  "pk": 6,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "EDIT",
+    "model_name": "Booking",
+    "object_id": "1",
+    "object_repr": "BK20260529-0001",
+    "changes": "Customer: Harshita | Project: Janvali Emp | Status: PARTIAL | Total: 13200000.0000 | Paid: 40000.00 | Balance: 13160000.0000 | Plot 1 | Rate: 1000.00 -> 1200.00 | Area: 11000.00 | Total: 13200000.00",
+    "timestamp": "2026-05-30T05:14:25.184Z"
+  }
+},
+{
+  "model": "accounts.activitylog",
+  "pk": 7,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "DELETE",
+    "model_name": "Booking",
+    "object_id": "1",
+    "object_repr": "BK20260529-0001",
+    "changes": "Booking deleted.",
+    "timestamp": "2026-05-30T05:42:02.139Z"
+  }
+},
+{
+  "model": "bookings.project",
+  "pk": 1,
+  "fields": {
+    "name": "Janvali Emp",
+    "location": "HUBLI",
+    "num_plots": 50
+  }
+},
+{
+  "model": "bookings.project",
+  "pk": 2,
+  "fields": {
+    "name": "Shambhavi Layout",
+    "location": "Dharwad",
+    "num_plots": 20
+  }
+},
+{
+  "model": "bookings.agentmaster",
+  "pk": 1,
+  "fields": {
+    "u_id": [
+      "h@gmail.com"
+    ],
+    "role": "manager",
+    "commission_percentage": "0.5250",
+    "tds_amount": "2.00",
+    "security_amount": "20.00",
+    "effective_date": null,
+    "payment_method": "",
+    "remarks": ""
+  }
+},
+{
+  "model": "bookings.agentmaster",
+  "pk": 2,
+  "fields": {
+    "u_id": [
+      "r@gmail.com"
+    ],
+    "role": "executive",
+    "commission_percentage": "0.4875",
+    "tds_amount": "2.00",
+    "security_amount": "20.00",
+    "effective_date": null,
+    "payment_method": "",
+    "remarks": ""
+  }
+},
+{
+  "model": "bookings.agentmaster",
+  "pk": 3,
+  "fields": {
+    "u_id": [
+      "a@gmail.com"
+    ],
+    "role": "telecaller",
+    "commission_percentage": "0.4875",
+    "tds_amount": "2.00",
+    "security_amount": "20.00",
+    "effective_date": null,
+    "payment_method": "",
+    "remarks": ""
+  }
+},
+{
+  "model": "bookings.agentmaster",
+  "pk": 4,
+  "fields": {
+    "u_id": [
+      "a@gmail.com"
+    ],
+    "role": "accounts",
+    "commission_percentage": "0.0000",
+    "tds_amount": "0.00",
+    "security_amount": "0.00",
+    "effective_date": "2026-05-30",
+    "payment_method": "",
+    "remarks": ""
+  }
+},
+{
+  "model": "bookings.accountsdebitpayment",
+  "pk": 1,
+  "fields": {
+    "agent_master": 4,
+    "debit_type": "COMMISSION",
+    "amount": "1000.00",
+    "payment_date": "2026-05-30",
+    "payment_method": "CASH",
+    "remarks": "",
+    "created_at": "2026-05-30T04:14:05.940Z"
+  }
+},
+{
+  "model": "bookings.bookingmaster",
+  "pk": 2,
+  "fields": {
+    "booking_date": "2026-05-30",
+    "phone": "9845787454",
+    "full_name": "Harshita",
+    "email": "hh@gmail.com",
+    "date_of_birth": "2012-01-01",
+    "occupation": "business",
+    "present_address": "prsernt",
+    "permanent_address": "rser",
+    "aadhar_number": "123131564648",
+    "pin_code": "580020",
+    "u_id": [
+      "hh@gmail.com"
+    ],
+    "manager_u_id": [
+      "h@gmail.com"
+    ],
+    "manager_percentage": "0.5250",
+    "manager_tds": "2.00",
+    "manager_security_amount": "20.00",
+    "executive_u_id": [
+      "r@gmail.com"
+    ],
+    "executive_percentage": "0.4875",
+    "executive_tds": "2.00",
+    "executive_security_amount": "20.00",
+    "telecaller_u_id": [
+      "a@gmail.com"
+    ],
+    "telecaller_percentage": "0.4875",
+    "telecaller_tds": "2.00",
+    "telecaller_security_amount": "20.00",
+    "payment_method": "CASH",
+    "payment_status": "PARTIAL",
+    "status": "ACTIVE",
+    "payment_details": "",
+    "nominee": "rekadd",
+    "relationship": "re",
+    "p_id": 1,
+    "location": "HUBLI",
+    "next_payment_date": "2026-06-29",
+    "kgp_completed": false,
+    "kgp_completed_at": null,
+    "created_at": "2026-05-30T05:43:05.738Z",
+    "created_by": [
+      "admin"
+    ]
+  }
+},
+{
+  "model": "bookings.bookingitem",
+  "pk": 2,
+  "fields": {
+    "b_id": 2,
+    "p_id": 1,
+    "plot_number": "1",
+    "plot_name": "",
+    "area_sqft": "2500.00",
+    "rate": "1000.00",
+    "booking_amount": "10000.00",
+    "total_amount": "2500000.00"
+  }
+},
+{
+  "model": "bookings.balancemaster",
+  "pk": 2,
+  "fields": {
+    "b_id": 2,
+    "plot_number": "1",
+    "plot_name": "Janvali Emp",
+    "project_name": "Janvali Emp",
+    "total_amount": "2500000.00",
+    "paid_amount": "10000.00",
+    "balance_amount": "2490000.00",
+    "booking_advance": "10000.00"
+  }
+},
+{
+  "model": "bookings.bookingagentsettings",
+  "pk": 1,
+  "fields": {
+    "company_name": "LANDLINK",
+    "company_address": "",
+    "company_phone": "",
+    "company_email": "",
+    "enable_manager": true,
+    "enable_executive": true,
+    "enable_telecaller": true
+  }
+},
+{
+  "model": "tally.ledgermaster",
+  "pk": 1,
+  "fields": {
+    "name": "Bank Account",
+    "group": "BANK_CASH",
+    "opening_balance": "0.00",
+    "opening_balance_type": "Dr",
+    "description": "",
+    "is_active": true,
+    "is_system": true,
+    "created_at": "2026-05-29T17:50:52.949Z"
+  }
+},
+{
+  "model": "tally.ledgermaster",
+  "pk": 2,
+  "fields": {
+    "name": "Cash in Hand",
+    "group": "BANK_CASH",
+    "opening_balance": "0.00",
+    "opening_balance_type": "Dr",
+    "description": "",
+    "is_active": true,
+    "is_system": true,
+    "created_at": "2026-05-29T17:50:52.952Z"
+  }
+},
+{
+  "model": "tally.ledgermaster",
+  "pk": 3,
+  "fields": {
+    "name": "Harish manager (Manager)",
+    "group": "STAFF",
+    "opening_balance": "0.00",
+    "opening_balance_type": "Dr",
+    "description": "",
+    "is_active": true,
+    "is_system": false,
+    "created_at": "2026-05-29T18:00:24.945Z"
+  }
+},
+{
+  "model": "tally.ledgermaster",
+  "pk": 4,
+  "fields": {
+    "name": "Rekha Excutive (Executive)",
+    "group": "STAFF",
+    "opening_balance": "0.00",
+    "opening_balance_type": "Dr",
+    "description": "",
+    "is_active": true,
+    "is_system": false,
+    "created_at": "2026-05-29T18:00:24.947Z"
+  }
+},
+{
+  "model": "tally.ledgermaster",
+  "pk": 5,
+  "fields": {
+    "name": "Anjali Telecallera (Telecaller)",
+    "group": "STAFF",
+    "opening_balance": "0.00",
+    "opening_balance_type": "Dr",
+    "description": "",
+    "is_active": true,
+    "is_system": false,
+    "created_at": "2026-05-29T18:00:24.948Z"
+  }
+},
+{
+  "model": "accounts.customer",
+  "pk": 1,
+  "fields": {
+    "u_id": [
+      "hh@gmail.com"
+    ],
+    "full_name": "Harshita",
+    "phone": "9845787454",
+    "email": "hh@gmail.com",
+    "aadhar_number": "123131564648",
+    "date_of_birth": "2012-01-01",
+    "occupation": "business",
+    "present_address": "prsernt",
+    "permanent_address": "rser",
+    "pin_code": "580020",
+    "nominee": "rekadd",
+    "relationship": "re"
+  }
+}
+]

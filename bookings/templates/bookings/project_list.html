@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Project List{% endblock %}
+
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Project List</h1>
+      </div>
+      <div class="col-sm-6 text-right">
+        <a href="{% url 'project_add' %}" class="btn btn-sm btn-maroon-custom" style="background-color: #29577f; color: white; border: none; padding: 6px 15px; font-weight: 500;">
+          <i class="fas fa-plus"></i> Add Project
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-outline card-maroon">
+      <div class="card-body">
+
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered table-sm align-middle">
+            <thead class="bg-light">
+              <tr>
+                <th style="width: 60px;">SI No.</th>
+                <th>Project Name</th>
+                <th>No. of plots</th>
+                <th>Location</th>
+                <th class="text-center" style="width: 120px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in projects %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ p.name }}</td>
+                <td>{{ p.num_plots|default:'0' }}</td>
+                <td>{{ p.location|default:'-' }}</td>
+                <td class="text-center">
+                  <a href="{% url 'project_edit' p.p_id %}" class="btn btn-sm btn-light" title="Edit"><i class="fas fa-edit text-primary"></i></a>
+                  <form method="POST" action="{% url 'project_delete' p.p_id %}" class="delete-form" data-name="{{ p.name }}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-light" title="Delete"><i class="fas fa-trash text-danger"></i></button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" class="text-center text-muted">No projects found</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  $(function () {
+    $('.delete-form').on('submit', function (e) {
+      e.preventDefault();
+      var form = $(this);
+      var name = form.data('name');
+      
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "Delete project " + name + "?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#29577f',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function (resp) {
+              if (resp.status === 'success') {
+                Swal.fire({
+                  title: 'Deleted!',
+                  text: resp.message,
+                  icon: 'success',
+                  confirmButtonColor: '#29577f'
+                }).then(() => {
+                  location.reload();
+                });
+              } else {
+                Swal.fire('Error!', resp.message || 'Something went wrong', 'error');
+              }
+            },
+            error: function () {
+              Swal.fire('Error!', 'Network error or server error', 'error');
+            }
+          });
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

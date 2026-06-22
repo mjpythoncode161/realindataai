@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Customer Dashboard{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Welcome, {{ user.full_name }}!</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Stats Row -->
+        <div class="row">
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box shadow-sm">
+                    <span class="info-box-icon bg-primary"><i class="fas fa-home"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Plots</span>
+                        <span class="info-box-number">{{ bookings.count }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box shadow-sm">
+                    <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Paid</span>
+                        <span class="info-box-number">₹{{ total_paid|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box shadow-sm">
+                    <span class="info-box-icon bg-danger"><i class="fas fa-wallet"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Pending Balance</span>
+                        <span class="info-box-number">₹{{ total_balance|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+                <div class="info-box shadow-sm">
+                    <span class="info-box-icon bg-info"><i class="fas fa-chart-pie"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Payment Progress</span>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" style="width: {{ payment_progress }}%"></div>
+                        </div>
+                        <span class="progress-description">
+                            {{ payment_progress|floatformat:1 }}% Complete
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <!-- Bookings List -->
+            <div class="col-lg-8">
+                <div class="card card-outline card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">My Bookings</h3>
+                    </div>
+                    <div class="card-body p-0 table-responsive">
+                        <table class="table table-hover table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Booking No</th>
+                                    <th>Project</th>
+                                    <th>Plot No</th>
+                                    <th>Status</th>
+                                    <th>Total Value</th>
+                                    <th>Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for b in bookings %}
+                                <tr>
+                                    <td><b>{{ b.booking_no }}</b></td>
+                                    <td>{{ b.p_id.name }}</td>
+                                    <td>{{ b.items.all.0.plot_number|default:"N/A" }}</td>
+                                    <td>
+                                        {% if b.status == 'CANCELLED' %}
+                                            <span class="badge badge-danger">CANCELLED</span>
+                                        {% else %}
+                                            <span class="badge {% if b.payment_status == 'FULL' %}badge-success{% else %}badge-warning{% endif %}">
+                                                {{ b.payment_status }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>₹{{ b.balance.total_amount|floatformat:2 }}</td>
+                                    <td class="text-danger font-weight-bold">₹{{ b.balance.balance_amount|floatformat:2 }}</td>
+                                </tr>
+                                {% if b.status == 'CANCELLED' and b.cancelled_details %}
+                                <tr class="bg-light">
+                                    <td colspan="6" class="small text-muted py-2">
+                                        <strong>Cancellation Reason:</strong> {{ b.cancelled_details.reason }} <br>
+                                        <strong>Refund Status:</strong> 
+                                        <span class="badge {% if b.cancelled_details.refund_status == 'PENDING' %}badge-warning{% elif b.cancelled_details.refund_status == 'PARTIAL' %}badge-info{% else %}badge-success{% endif %}">
+                                            {{ b.cancelled_details.refund_status }}
+                                        </span>
+                                        | <strong>Refunded Amount:</strong> ₹{{ b.cancelled_details.refund_amount_paid|floatformat:2 }}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No bookings found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Receipts -->
+            <div class="col-lg-4">
+                <div class="card card-outline card-success">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Payments</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            {% for r in receipts %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">{{ r.receipt_date|date:"d M Y" }}</small><br>
+                                    <strong>{{ r.get_payment_method_display }}</strong>
+                                </div>
+                                <span class="text-success font-weight-bold">+ ₹{{ r.pay_amount|floatformat:2 }}</span>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item text-center text-muted">No recent payments.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% if receipts %}
+                    <div class="card-footer text-center">
+                        <a href="{% url 'receipt_list' %}" class="small-box-footer text-primary">View Payment History <i class="fas fa-arrow-circle-right"></i></a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Support Contact -->
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-muted mb-2">Need Help?</h5>
+                        <p class="card-text">Contact your relationship manager for any queries.</p>
+                        <a href="#" class="btn btn-primary btn-sm btn-block"><i class="fas fa-envelope mr-2"></i> Contact Support</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

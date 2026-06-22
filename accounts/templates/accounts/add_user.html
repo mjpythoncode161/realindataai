@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add User{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">Add User</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-primary card-outline">
+      <div class="card-header">
+        <h3 class="card-title">User</h3>
+      </div>
+      <form action="{% url 'add_user' %}" method="POST" id="addUserForm">
+        {% csrf_token %}
+        <div class="card-body">
+
+          <div class="row">
+            <div class="col-md-6 form-group">
+              <label for="full_name">Full Name</label>
+              <input type="text" id="full_name" name="full_name" class="form-control" placeholder="Enter full name" required>
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="contact">Contact No.</label>
+              <input type="text" id="contact" name="contact" class="form-control" placeholder="Enter contact number" required>
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="email">Email ID</label>
+              <input type="email" id="email" name="email" class="form-control" placeholder="Enter email ID" required>
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="password">Password</label>
+              <input type="password" id="password" name="password" class="form-control" placeholder="Enter password" required>
+            </div>
+            <div class="col-md-6 form-group">
+              <label for="confirm_password">Confirm Password</label>
+              <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Re-enter password" required>
+            </div>
+            <div class="col-md-12 form-group">
+              <label>Assign Roles <span class="text-danger">*</span></label>
+              <div class="border rounded p-3">
+                {% for opt in role_options %}
+                <label class="mr-3 mb-2 d-inline-block font-weight-normal">
+                  <input type="checkbox" name="roles" value="{{ opt.key }}" />
+                  {{ opt.label }}
+                </label>
+                {% endfor %}
+              </div>
+              <small class="text-muted">You can select more than one role for a user.</small>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer text-center">
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <a href="{% url 'user_list' %}" class="btn btn-secondary">Close</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  $(function () {
+    $('#addUserForm').on('submit', function (e) {
+      e.preventDefault();
+      var form = $(this);
+      
+      var roles = form.find('input[name="roles"]:checked');
+      if (!roles.length) {
+        Swal.fire('Error!', 'Select at least one role.', 'error');
+        return;
+      }
+
+      $.ajax({
+        url: form.attr('action'),
+        method: 'POST',
+        data: form.serialize(),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function (resp) {
+          if (resp.status === 'success') {
+            Swal.fire({
+              title: 'Success!',
+              text: resp.message,
+              icon: 'success'
+            }).then(() => {
+              window.location.href = "{% url 'user_list' %}";
+            });
+          } else {
+            Swal.fire('Error!', resp.message, 'error');
+          }
+        },
+        error: function () {
+          Swal.fire('Error!', 'Something went wrong', 'error');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,938 @@
+{% extends "website/landing_base.html" %}
+{% block title %}Land Link | AI-Powered Real Estate CRM — Karnataka{% endblock %}
+{% block extra_head %}
+<style>
+  .ll-hero {
+    background: linear-gradient(135deg, #29577f 0%, #1e3f5c 55%, #163044 100%);
+    color: #fff;
+    padding: 3.5rem 0 4.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .ll-hero::after {
+    content: "";
+    position: absolute;
+    right: -10%;
+    top: -20%;
+    width: 50%;
+    height: 140%;
+    background: radial-gradient(circle, rgba(232, 168, 56, 0.18) 0%, transparent 70%);
+  }
+  .ll-hero-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 2.5rem;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  @media (max-width: 900px) { .ll-hero-grid { grid-template-columns: 1fr; } }
+  .ll-hero h1 {
+    font-size: clamp(1.85rem, 4.5vw, 2.75rem);
+    line-height: 1.2;
+    margin: 0 0 1rem;
+    font-weight: 800;
+  }
+  .ll-hero p.lead { font-size: 1.08rem; opacity: 0.95; line-height: 1.7; margin-bottom: 1.25rem; }
+  .ll-hero-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+  .ll-hero-trust {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    font-size: 0.88rem;
+    opacity: 0.92;
+  }
+  .ll-hero-trust span { display: flex; align-items: center; gap: 0.35rem; }
+  .ll-hero-trust i { color: var(--ll-accent); }
+  .ll-badge-trial {
+    display: inline-block;
+    background: var(--ll-accent);
+    color: #1a2b3c;
+    font-weight: 700;
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    font-size: 0.88rem;
+    margin-bottom: 1rem;
+  }
+  .ll-badge-local {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.35);
+    color: #fff;
+    font-weight: 600;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    margin-bottom: 0.75rem;
+    margin-left: 0.5rem;
+  }
+  .ll-hero-card {
+    background: #fff;
+    color: var(--ll-text);
+    border-radius: 16px;
+    padding: 1.75rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  }
+  .ll-hero-card ul { list-style: none; padding: 0; margin: 0; }
+  .ll-hero-card li {
+    padding: 0.55rem 0;
+    border-bottom: 1px solid #eef2f6;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.92rem;
+  }
+  .ll-hero-card li i { color: var(--ll-primary); margin-top: 0.2rem; min-width: 1rem; }
+  .ll-section { padding: 4rem 0; }
+  .ll-section-alt { background: #fff; }
+  .ll-section h2 {
+    text-align: center;
+    font-size: clamp(1.6rem, 3vw, 2rem);
+    margin-bottom: 0.5rem;
+    color: var(--ll-primary);
+    font-weight: 800;
+  }
+  .ll-section .subtitle {
+    text-align: center;
+    color: var(--ll-muted);
+    max-width: 780px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.65;
+    font-size: 1.02rem;
+  }
+  .ll-highlight-box {
+    background: linear-gradient(135deg, rgba(41,87,127,0.08), rgba(232,168,56,0.12));
+    border: 1px solid #dde5ee;
+    border-radius: 14px;
+    padding: 2rem;
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto 2.5rem;
+  }
+  .ll-highlight-box h3 {
+    color: var(--ll-primary);
+    margin: 0 0 0.75rem;
+    font-size: 1.35rem;
+  }
+  .ll-highlight-box p { margin: 0; color: var(--ll-muted); line-height: 1.7; font-size: 1.05rem; }
+  .ll-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+  }
+  .ll-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.75rem;
+    border: 1px solid #e8edf3;
+    transition: box-shadow 0.2s, transform 0.2s;
+    height: 100%;
+  }
+  .ll-section-alt .ll-card { background: var(--ll-bg); }
+  .ll-card:hover {
+    box-shadow: 0 12px 30px rgba(41, 87, 127, 0.12);
+    transform: translateY(-3px);
+  }
+  .ll-card-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: rgba(41, 87, 127, 0.12);
+    color: var(--ll-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    margin-bottom: 1rem;
+  }
+  .ll-about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    align-items: center;
+  }
+  @media (max-width: 768px) { .ll-about-grid { grid-template-columns: 1fr; } }
+  .ll-stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  @media (max-width: 768px) { .ll-stat-row { grid-template-columns: repeat(2, 1fr); } }
+  .ll-stat {
+    text-align: center;
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.25rem;
+    border: 1px solid #e8edf3;
+  }
+  .ll-stat strong { display: block; font-size: 1.75rem; color: var(--ll-primary); }
+  .ll-stat span { font-size: 0.85rem; color: var(--ll-muted); }
+  .ll-dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  .ll-dash-item {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    background: #fff;
+    padding: 1.25rem;
+    border-radius: 10px;
+    border-left: 4px solid var(--ll-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .ll-dash-item i { font-size: 1.25rem; color: var(--ll-primary); margin-top: 0.15rem; min-width: 1.25rem; }
+  .ll-dash-item h4 { margin: 0 0 0.35rem; font-size: 1rem; }
+  .ll-dash-item p { margin: 0; font-size: 0.88rem; color: var(--ll-muted); line-height: 1.5; }
+  .ll-lead-flow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin: 2rem 0;
+  }
+  .ll-lead-step {
+    text-align: center;
+    background: #fff;
+    border-radius: 10px;
+    padding: 1rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ll-primary);
+  }
+  .ll-lead-step i { display: block; font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--ll-accent); }
+  .ll-story-card {
+    background: linear-gradient(145deg, #fff 0%, #f0f5fa 100%);
+    border-radius: 14px;
+    padding: 2rem;
+    border: 1px solid #e2e8f0;
+    height: 100%;
+  }
+  .ll-story-card .metric {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--ll-accent);
+    line-height: 1;
+  }
+  .ll-review-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.75rem;
+    border: 1px solid #e8edf3;
+    height: 100%;
+    position: relative;
+  }
+  .ll-review-card .stars { color: var(--ll-accent); margin-bottom: 0.75rem; letter-spacing: 2px; }
+  .ll-review-card .quote { font-size: 2rem; color: rgba(41,87,127,0.15); line-height: 1; margin-bottom: 0.25rem; }
+  .ll-review-card .author {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eef2f6;
+    font-weight: 600;
+    color: var(--ll-primary);
+  }
+  .ll-review-card .role { font-size: 0.85rem; color: var(--ll-muted); font-weight: 400; }
+  .ll-rating-banner {
+    background: var(--ll-primary);
+    color: #fff;
+    border-radius: 14px;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+  .ll-rating-banner .big { font-size: 3rem; font-weight: 800; color: var(--ll-accent); line-height: 1; }
+  .ll-contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .ll-contact-grid { grid-template-columns: 1fr; } }
+  .ll-contact-info {
+    background: var(--ll-primary);
+    color: #fff;
+    border-radius: 16px;
+    padding: 2rem;
+  }
+  .ll-contact-info a { color: #fff; }
+  .ll-contact-form {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 8px 30px rgba(41, 87, 127, 0.1);
+    border: 1px solid #e8edf3;
+  }
+  .ll-contact-form .form-group { margin-bottom: 1rem; }
+  .ll-contact-form label { font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.35rem; }
+  .ll-contact-form .form-control {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+  .ll-cta {
+    text-align: center;
+    background: linear-gradient(135deg, #29577f, #1e3f5c);
+    color: #fff;
+    padding: 3.5rem 1.5rem;
+    border-radius: 16px;
+    margin: 0 auto 3rem;
+    max-width: 1100px;
+  }
+  .ll-cta h2 { color: #fff; margin-bottom: 0.75rem; font-weight: 800; }
+  .ll-cta p { opacity: 0.92; margin-bottom: 1.5rem; max-width: 640px; margin-left: auto; margin-right: auto; line-height: 1.65; }
+  .ll-cta-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+  .ll-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+  .ll-pill {
+    background: rgba(41,87,127,0.1);
+    color: var(--ll-primary);
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+  .ll-badge-ai {
+    display: inline-block;
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    color: #fff;
+    font-weight: 700;
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    font-size: 0.88rem;
+    margin-bottom: 1rem;
+    margin-right: 0.5rem;
+    box-shadow: 0 4px 14px rgba(108, 92, 231, 0.4);
+  }
+  .ll-ai-section {
+    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 45%, #0f3460 100%);
+    color: #fff;
+    padding: 4.5rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .ll-ai-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 50%, rgba(108, 92, 231, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(232, 168, 56, 0.12) 0%, transparent 40%);
+    pointer-events: none;
+  }
+  .ll-ai-section h2 { color: #fff; position: relative; z-index: 1; }
+  .ll-ai-section .subtitle { color: rgba(255,255,255,0.85); position: relative; z-index: 1; }
+  .ll-ai-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.25rem;
+    position: relative;
+    z-index: 1;
+  }
+  .ll-ai-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    padding: 1.5rem;
+    backdrop-filter: blur(8px);
+    transition: transform 0.2s, border-color 0.2s, background 0.2s;
+    height: 100%;
+  }
+  .ll-ai-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(232, 168, 56, 0.5);
+    background: rgba(255, 255, 255, 0.12);
+  }
+  .ll-ai-card.ll-ai-featured {
+    border-color: var(--ll-accent);
+    background: rgba(232, 168, 56, 0.12);
+    grid-column: span 1;
+  }
+  @media (min-width: 992px) {
+    .ll-ai-card.ll-ai-featured { grid-column: span 2; }
+  }
+  .ll-ai-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: #fff;
+  }
+  .ll-ai-card.ll-ai-featured .ll-ai-icon {
+    background: linear-gradient(135deg, var(--ll-accent), #f0b429);
+    color: #1a2b3c;
+  }
+  .ll-ai-card h3 { margin: 0 0 0.5rem; font-size: 1.05rem; color: #fff; }
+  .ll-ai-card p { margin: 0; font-size: 0.9rem; line-height: 1.6; color: rgba(255,255,255,0.82); }
+  .ll-ai-tag {
+    display: inline-block;
+    background: rgba(108, 92, 231, 0.35);
+    color: #dfe6ff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .ll-ai-banner {
+    text-align: center;
+    background: rgba(232, 168, 56, 0.15);
+    border: 1px solid rgba(232, 168, 56, 0.4);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-top: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+  .ll-ai-banner strong { color: var(--ll-accent); }
+</style>
+{% endblock %}
+{% block body %}
+
+<!-- HOME -->
+<section class="ll-hero" id="home">
+  <div class="ll-container ll-hero-grid">
+    <div>
+      <span class="ll-badge-ai"><i class="fas fa-robot mr-1"></i> AI Technology · New Generation CRM</span>
+      <span class="ll-badge-trial"><i class="fas fa-gift mr-1"></i> 7-day free trial — full dashboard</span>
+      <span class="ll-badge-local"><i class="fas fa-map-marker-alt"></i> Trusted across Karnataka</span>
+      <h1>Karnataka's Best AI-Powered Real Estate CRM — Simple, Smart &amp; Powerful</h1>
+      <p class="lead">
+        <strong>Built with AI technology &amp; new-generation tools</strong> — auto calling, WhatsApp AI follow-up, smart lead alerts &amp; intelligent payment reminders. More customers use Land Link daily in Hubli Dharwad, Bangalore, Ranebennur, Jamkhandi, Bijapur &amp; all cities. <strong>Best AI follow-up — no missed enquiry, no tension business.</strong>
+      </p>
+      <div class="ll-hero-actions">
+        <a class="ll-btn ll-btn-highlight-trial" href="{% url 'public_signup' %}"><i class="fas fa-gift"></i> Free Trial — 7 Days</a>
+        <a class="ll-btn ll-btn-highlight-login" href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
+      </div>
+      <div class="ll-hero-trust">
+        <span><i class="fas fa-robot"></i> AI-powered follow-up</span>
+        <span><i class="fab fa-whatsapp"></i> WhatsApp AI messages</span>
+        <span><i class="fas fa-phone-volume"></i> Auto calling alerts</span>
+        <span><i class="fas fa-star"></i> 5-star rated CRM</span>
+      </div>
+    </div>
+    <div class="ll-hero-card">
+      <h3 class="mt-0 mb-3" style="color:var(--ll-primary);font-size:1.15rem;"><i class="fas fa-brain text-purple" style="color:#6c5ce7;"></i> AI Highlights — Why teams switch to Land Link</h3>
+      <ul>
+        <li><i class="fas fa-robot"></i> <strong>AI Follow-up Engine</strong> — never miss a lead or payment date</li>
+        <li><i class="fab fa-whatsapp"></i> <strong>WhatsApp AI Follow-up</strong> — auto reminders to customers &amp; staff</li>
+        <li><i class="fas fa-phone-alt"></i> <strong>Auto Calling</strong> — smart call alerts for telecallers &amp; executives</li>
+        <li><i class="fas fa-user-plus"></i> <strong>AI Lead Management</strong> — assign, track &amp; convert automatically</li>
+        <li><i class="fas fa-bell"></i> <strong>Smart Alerts</strong> — today, 7, 15 &amp; 30-day AI follow-up buckets</li>
+        <li><i class="fas fa-chart-line"></i> Full CRM — bookings, accounts, Tally &amp; commission reports</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- AI TECHNOLOGY -->
+<section class="ll-ai-section" id="ai-technology">
+  <div class="ll-container">
+    <h2><i class="fas fa-robot"></i> AI Technology — New Generation Real Estate CRM</h2>
+    <p class="subtitle">
+      Land Link uses the latest AI technology so your team works smarter, not harder. Best AI follow-up in Karnataka — auto calling, WhatsApp AI messages, smart reminders &amp; intelligent lead tracking. Everything AI-wise, one dashboard.
+    </p>
+    <div class="ll-ai-grid">
+      <div class="ll-ai-card ll-ai-featured">
+        <span class="ll-ai-tag">#1 Highlight</span>
+        <div class="ll-ai-icon"><i class="fas fa-brain"></i></div>
+        <h3>Best AI Follow-up System</h3>
+        <p>
+          AI tracks every lead, booking &amp; partial payment — and tells your team exactly who to call today. Follow-up department, managers, executives &amp; telecallers get smart priority lists. No enquiry forgotten. No collection missed. This is why customers call Land Link the best AI CRM in Karnataka.
+        </p>
+      </div>
+      <div class="ll-ai-card">
+        <span class="ll-ai-tag">Auto</span>
+        <div class="ll-ai-icon"><i class="fas fa-phone-volume"></i></div>
+        <h3>Auto Calling Alerts</h3>
+        <p>AI sends auto calling reminders to telecallers &amp; executives when a lead or payment follow-up is due. Your team calls on time, every time — without manual Excel tracking.</p>
+      </div>
+      <div class="ll-ai-card">
+        <span class="ll-ai-tag">WhatsApp</span>
+        <div class="ll-ai-icon"><i class="fab fa-whatsapp"></i></div>
+        <h3>WhatsApp AI Follow-up</h3>
+        <p>Automated WhatsApp AI messages for lead follow-up, payment reminders &amp; booking updates. Reach customers on the app they use daily — professional, fast, zero manual typing.</p>
+      </div>
+      <div class="ll-ai-card">
+        <span class="ll-ai-tag">Smart</span>
+        <div class="ll-ai-icon"><i class="fas fa-user-clock"></i></div>
+        <h3>AI Lead Priority</h3>
+        <p>AI ranks open leads by follow-up date, project interest &amp; activity. Managers assign smarter. Executives close faster. More conversions from the same enquiry list.</p>
+      </div>
+      <div class="ll-ai-card">
+        <span class="ll-ai-tag">Payment</span>
+        <div class="ll-ai-icon"><i class="fas fa-rupee-sign"></i></div>
+        <h3>AI Payment Reminders</h3>
+        <p>Partial payment due? AI alerts staff &amp; can trigger WhatsApp follow-up automatically. Collections improve — customers pay on time, your cash flow stays healthy.</p>
+      </div>
+      <div class="ll-ai-card">
+        <span class="ll-ai-tag">Reports</span>
+        <div class="ll-ai-icon"><i class="fas fa-chart-pie"></i></div>
+        <h3>AI Dashboard Insights</h3>
+        <p>Smart dashboard shows follow-ups today, 7, 15 &amp; 30 days, open leads count &amp; booking trends. AI-wise reporting — see problems before they cost you business.</p>
+      </div>
+      <div class="ll-ai-card">
+        <span class="ll-ai-tag">New Tech</span>
+        <div class="ll-ai-icon"><i class="fas fa-microchip"></i></div>
+        <h3>New Technology Stack</h3>
+        <p>Cloud-based, mobile-friendly, role-based AI CRM. Login from anywhere in Karnataka. New technology built for 2026 real estate — layouts, apartments &amp; channel sales.</p>
+      </div>
+    </div>
+    <div class="ll-ai-banner">
+      <p class="mb-0" style="color:#fff;line-height:1.7;font-size:1.05rem;">
+        <strong><i class="fas fa-star"></i> Best AI Follow-up CRM</strong> — Auto calling + WhatsApp AI + smart lead management + full accounts &amp; Tally.
+        Don't waste time on old methods. <strong>Get more business with AI. No tension.</strong>
+      </p>
+    </div>
+    <p class="text-center mt-4 mb-0" style="position:relative;z-index:1;">
+      <a class="ll-btn ll-btn-highlight-trial" href="{% url 'public_signup' %}"><i class="fas fa-gift"></i> Try AI CRM Free — 7 Days</a>
+    </p>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="ll-section ll-section-alt" id="about">
+  <div class="ll-container">
+    <h2>Karnataka's #1 Real Estate Management Software</h2>
+    <p class="subtitle">
+      Land Link is a complete CRM used daily after login — trusted by developers and sales teams in Hubli Dharwad, Bangalore, Ranebennur, Jamkhandi, Bijapur, Belagavi, Mangaluru and more. Simple design, powerful features, ultimate service.
+    </p>
+    <div class="ll-highlight-box">
+      <h3><i class="fas fa-robot" style="color:#6c5ce7;"></i> AI + CRM = More Business, Zero Tension</h3>
+      <p>
+        Old CRMs just store data. Land Link <strong>thinks ahead with AI</strong> — auto calling when follow-up is due, WhatsApp AI messages to customers, smart lead alerts for your team. Every missed follow-up is lost revenue. Land Link's AI follow-up makes sure that never happens. <strong>Best AI technology. Best service. No doubt at all.</strong>
+      </p>
+    </div>
+    <div class="ll-about-grid">
+      <div>
+        <p style="line-height:1.75;color:var(--ll-muted);font-size:1.02rem;">
+          From layout promoters in Ranebennur and Jamkhandi to apartment developers in Bangalore and Bijapur — Land Link handles your entire sales cycle. Hubli Dharwad teams use it every day. From first enquiry to final receipt, everything is tracked, reported, and printable.
+        </p>
+        <p style="line-height:1.75;color:var(--ll-muted);font-size:1.02rem;">
+          Our office is in <strong>Stellar Mall, Hubballi</strong>. We understand Karnataka real estate — partial payments, agent commissions, plot cancellations, KGP completion, and Tally accounting. Growing number of customers across the state call us the <strong>best CRM software</strong>.
+        </p>
+      </div>
+      <div class="ll-card" style="background:var(--ll-bg);">
+        <div class="ll-card-icon"><i class="fas fa-award"></i></div>
+        <h3>Easy. Simple. Best.</h3>
+        <ul style="padding-left:1.2rem;color:var(--ll-muted);line-height:1.9;margin-bottom:0;font-size:0.95rem;">
+          <li><strong>AI follow-up</strong> — auto alerts for leads &amp; payments</li>
+          <li><strong>WhatsApp AI</strong> — automated customer messages</li>
+          <li><strong>Auto calling</strong> — telecaller &amp; executive reminders</li>
+          <li>Lead → confirm → auto customer in admin panel</li>
+          <li>Manager, executive, telecaller &amp; accounts roles</li>
+          <li>7-day free trial — full AI CRM dashboard, no risk</li>
+        </ul>
+      </div>
+    </div>
+    <div class="ll-stat-row">
+      <div class="ll-stat"><strong>AI</strong><span>Follow-up engine</span></div>
+      <div class="ll-stat"><strong>7</strong><span>User roles</span></div>
+      <div class="ll-stat"><strong>15+</strong><span>Report types</span></div>
+      <div class="ll-stat"><strong>24/7</strong><span>Cloud access</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES / SERVICES -->
+<section class="ll-section" id="features">
+  <div class="ll-container">
+    <h2>Complete Real Estate Management Software</h2>
+    <p class="subtitle">Everything your team needs — from lead capture to final accounts. Used in Hubli Dharwad, Bangalore, Ranebennur, Jamkhandi, Bijapur &amp; all cities. Simple menus, no complicated setup.</p>
+    <div class="ll-pill-row">
+      <span class="ll-pill"><i class="fas fa-map-pin"></i> Hubli Dharwad</span>
+      <span class="ll-pill"><i class="fas fa-map-pin"></i> Bangalore</span>
+      <span class="ll-pill"><i class="fas fa-map-pin"></i> Ranebennur</span>
+      <span class="ll-pill"><i class="fas fa-map-pin"></i> Jamkhandi</span>
+      <span class="ll-pill"><i class="fas fa-map-pin"></i> Bijapur</span>
+      <span class="ll-pill"><i class="fas fa-map-pin"></i> All Karnataka Cities</span>
+    </div>
+    <div class="ll-pill-row">
+      <span class="ll-pill"><i class="fas fa-robot"></i> AI Follow-up</span>
+      <span class="ll-pill"><i class="fab fa-whatsapp"></i> WhatsApp AI</span>
+      <span class="ll-pill"><i class="fas fa-phone-volume"></i> Auto Calling</span>
+      <span class="ll-pill">Lead Management</span>
+      <span class="ll-pill">Booking Master</span>
+      <span class="ll-pill">Customer Portal</span>
+      <span class="ll-pill">Commission Reports</span>
+      <span class="ll-pill">Accounts Module</span>
+      <span class="ll-pill">Tally Vouchers</span>
+      <span class="ll-pill">Follow-up Alerts</span>
+    </div>
+    <div class="ll-cards">
+      <div class="ll-card">
+        <div class="ll-card-icon" style="background:rgba(108,92,231,0.15);color:#6c5ce7;"><i class="fas fa-robot"></i></div>
+        <h3>AI Follow-up &amp; Auto Calling</h3>
+        <p class="mb-0" style="color:var(--ll-muted);">Best AI follow-up in Karnataka — smart alerts for leads &amp; partial payments. Auto calling reminders for telecallers. WhatsApp AI messages to customers. Never miss an enquiry again.</p>
+      </div>
+      <div class="ll-card">
+        <div class="ll-card-icon"><i class="fas fa-user-plus"></i></div>
+        <h3>AI Lead Management</h3>
+        <p class="mb-0" style="color:var(--ll-muted);">Capture enquiries, AI-prioritize open leads, assign to executive or telecaller. Confirm lead → customer auto-created. Duplicate booking alert on same project.</p>
+      </div>
+      <div class="ll-card">
+        <div class="ll-card-icon"><i class="fas fa-user-friends"></i></div>
+        <h3>Customer Management</h3>
+        <p class="mb-0" style="color:var(--ll-muted);">Full customer profile — Aadhaar, address, nominee, DOB. Edit anytime. Manager sees only their customers. Admin sees all.</p>
+      </div>
+      <div class="ll-card">
+        <div class="ll-card-icon"><i class="fas fa-clipboard-list"></i></div>
+        <h3>Booking &amp; Plots</h3>
+        <p class="mb-0" style="color:var(--ll-muted);">Multi-plot bookings, balances, next payment dates, cancellations, KGP mark complete, printable booking documents.</p>
+      </div>
+      <div class="ll-card">
+        <div class="ll-card-icon"><i class="fas fa-receipt"></i></div>
+        <h3>Receipts &amp; Ledger</h3>
+        <p class="mb-0" style="color:var(--ll-muted);">Record receipts, view customer ledger, print statements. Paid vs balance updated in real time — no manual calculation.</p>
+      </div>
+      <div class="ll-card">
+        <div class="ll-card-icon"><i class="fas fa-money-check-alt"></i></div>
+        <h3>Accounts &amp; Payments</h3>
+        <p class="mb-0" style="color:var(--ll-muted);">Payment requests, approval workflow, accounts dashboard, agent debit payments, commission &amp; security tracking.</p>
+      </div>
+      <div class="ll-card">
+        <div class="ll-card-icon"><i class="fas fa-calculator"></i></div>
+        <h3>Tally / Voucher Entry</h3>
+        <p class="mb-0" style="color:var(--ll-muted);">Simple payment voucher, receipt voucher &amp; journal entry. Account statements with correct running balance. Create ledger masters easily.</p>
+      </div>
+      <div class="ll-card">
+        <div class="ll-card-icon"><i class="fas fa-chart-line"></i></div>
+        <h3>Reports &amp; Follow-ups</h3>
+        <p class="mb-0" style="color:var(--ll-muted);">Follow-up today / 7 / 15 / 30 days. Percentage &amp; advance follow-up. Agent, team &amp; project-wise commission reports.</p>
+      </div>
+      <div class="ll-card">
+        <div class="ll-card-icon"><i class="fas fa-user-tie"></i></div>
+        <h3>Team &amp; Roles</h3>
+        <p class="mb-0" style="color:var(--ll-muted);">Admin, manager, executive, telecaller, follow-up, accounts, customer — each role gets the right dashboard and permissions.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LEAD MANAGEMENT -->
+<section class="ll-section ll-section-alt" id="lead-management">
+  <div class="ll-container">
+    <h2>AI Lead Management — Best Follow-up, Never Miss an Enquiry</h2>
+    <p class="subtitle">
+      AI-powered lead pipeline for follow-up department, managers, executives &amp; telecallers. WhatsApp AI follow-up, auto calling alerts &amp; smart next-date tracking. Confirm lead → customer flows to admin automatically.
+    </p>
+    <div class="ll-lead-flow">
+      <div class="ll-lead-step"><i class="fas fa-robot"></i> AI Capture</div>
+      <div class="ll-lead-step"><i class="fas fa-phone-volume"></i> Auto Call</div>
+      <div class="ll-lead-step"><i class="fab fa-whatsapp"></i> WhatsApp AI</div>
+      <div class="ll-lead-step"><i class="fas fa-walking"></i> Site Visit</div>
+      <div class="ll-lead-step"><i class="fas fa-bell"></i> AI Reminder</div>
+      <div class="ll-lead-step"><i class="fas fa-user-check"></i> Customer</div>
+    </div>
+    <div class="ll-about-grid">
+      <div class="ll-card">
+        <h3><i class="fas fa-list-ul text-primary"></i> What you can do</h3>
+        <ul style="padding-left:1.2rem;color:var(--ll-muted);line-height:1.85;margin-bottom:0;">
+          <li>AI prioritizes leads by follow-up date &amp; activity</li>
+          <li>Auto calling alert when telecaller must call back</li>
+          <li>WhatsApp AI follow-up message to customer</li>
+          <li>Assign to executive or telecaller in one click</li>
+          <li>Log call, visit &amp; notes with next AI follow-up date</li>
+          <li>Confirm lead → auto customer in admin panel</li>
+        </ul>
+      </div>
+      <div class="ll-card" style="background:linear-gradient(145deg,#fff,#f0f0ff);">
+        <div class="ll-card-icon" style="background:rgba(108,92,231,0.15);color:#6c5ce7;"><i class="fas fa-brain"></i></div>
+        <h3>Best AI follow-up — close more deals</h3>
+        <p style="color:var(--ll-muted);line-height:1.7;margin-bottom:1rem;">
+          Teams across Karnataka lose 30% of enquiries without AI follow-up. Land Link's auto calling + WhatsApp AI + smart dashboard alerts mean your team in Hubli Dharwad, Bangalore, Bijapur &amp; more never forgets a single lead.
+        </p>
+        <a class="ll-btn ll-btn-primary" href="{% url 'public_signup' %}">Try Lead Management Free</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DASHBOARD -->
+<section class="ll-section" id="dashboard">
+  <div class="ll-container">
+    <h2>Your Dashboard — AI-Powered Full CRM</h2>
+    <p class="subtitle">Production dashboard with AI follow-up, WhatsApp AI, auto calling &amp; smart alerts. Explore every module during your 7-day trial.</p>
+    <div class="ll-dash-grid">
+      <div class="ll-dash-item">
+        <i class="fas fa-tachometer-alt"></i>
+        <div>
+          <h4>Home Dashboard</h4>
+          <p>Customers, bookings, AI follow-up counts, open leads, booking charts &amp; recent customers — manager sees only their data.</p>
+        </div>
+      </div>
+      <div class="ll-dash-item">
+        <i class="fas fa-robot"></i>
+        <div>
+          <h4>AI Follow-up Dashboard</h4>
+          <p>Smart alerts — follow-ups today, 7, 15 &amp; 30 days. Open leads count. AI priority list for telecallers &amp; executives. Best follow-up CRM in Karnataka.</p>
+        </div>
+      </div>
+      <div class="ll-dash-item">
+        <i class="fab fa-whatsapp"></i>
+        <div>
+          <h4>WhatsApp AI Follow-up</h4>
+          <p>Automated WhatsApp messages for lead follow-up, payment reminders &amp; booking updates. AI handles timing — your team handles closing.</p>
+        </div>
+      </div>
+      <div class="ll-dash-item">
+        <i class="fas fa-user-plus"></i>
+        <div>
+          <h4>AI Lead Management</h4>
+          <p>Capture, assign, auto calling alerts, confirm to customer. Manager, executive, telecaller &amp; follow-up — all AI-connected.</p>
+        </div>
+      </div>
+      <div class="ll-dash-item">
+        <i class="fas fa-building"></i>
+        <div>
+          <h4>Projects &amp; Master Plots</h4>
+          <p>Add layouts &amp; apartments, manage plot inventory, availability checks, project-wise sales reports.</p>
+        </div>
+      </div>
+      <div class="ll-dash-item">
+        <i class="fas fa-file-invoice"></i>
+        <div>
+          <h4>Booking Master</h4>
+          <p>Customer + property + agent commission in one form. Manager, executive, telecaller % per booking. KGP complete option.</p>
+        </div>
+      </div>
+      <div class="ll-dash-item">
+        <i class="fas fa-wallet"></i>
+        <div>
+          <h4>Payments &amp; Approvals</h4>
+          <p>Receipt list, payment approval queue, ledger, cancelled plots, accounts debit payments for agents.</p>
+        </div>
+      </div>
+      <div class="ll-dash-item">
+        <i class="fas fa-users-cog"></i>
+        <div>
+          <h4>Agent &amp; Team Reports</h4>
+          <p>Commission by role, booking-wise breakdown, team report with accounts ledger, withdrawal tracking.</p>
+        </div>
+      </div>
+      <div class="ll-dash-item">
+        <i class="fas fa-phone-alt"></i>
+        <div>
+          <h4>Follow-up Reports</h4>
+          <p>Partial payment follow-ups — today, 7, 15 &amp; 30 day buckets. Percentage &amp; advance follow-up reports.</p>
+        </div>
+      </div>
+      <div class="ll-dash-item">
+        <i class="fas fa-calculator"></i>
+        <div>
+          <h4>Tally Vouchers</h4>
+          <p>Easy payment voucher, receipt voucher, journal entry with Dr/Cr lines. Account statement with running balance.</p>
+        </div>
+      </div>
+      <div class="ll-dash-item">
+        <i class="fas fa-user-circle"></i>
+        <div>
+          <h4>Customer Portal</h4>
+          <p>Customers login to see their bookings, payments, receipts &amp; cancelled plots — transparent service, happy clients.</p>
+        </div>
+      </div>
+      <div class="ll-dash-item">
+        <i class="fas fa-cogs"></i>
+        <div>
+          <h4>Store Settings</h4>
+          <p>Projects, booking agent settings (enable/disable manager, executive, telecaller), user role assignment.</p>
+        </div>
+      </div>
+    </div>
+    <p class="text-center mt-4 mb-0">
+      <a class="ll-btn ll-btn-primary" href="{% url 'public_signup' %}">Explore Full Dashboard — Free 7 Days</a>
+    </p>
+  </div>
+</section>
+
+<!-- SUCCESS STORIES -->
+<section class="ll-section ll-section-alt" id="success">
+  <div class="ll-container">
+    <h2>Success Stories Across Karnataka</h2>
+    <p class="subtitle">Teams in Hubli Dharwad, Bangalore, Ranebennur, Jamkhandi, Bijapur and other cities — replacing Excel &amp; WhatsApp with Land Link.</p>
+    <div class="ll-cards">
+      <div class="ll-story-card">
+        <div class="metric">2×</div>
+        <p class="text-muted small mb-2">more lead conversions</p>
+        <h3>Layout developer, Hubballi</h3>
+        <p style="color:var(--ll-muted);line-height:1.6;margin-bottom:0;">
+          "Lead management changed everything. Telecallers log every call, managers assign leads, confirmed customers go straight to booking. We doubled conversions in 3 months."
+        </p>
+      </div>
+      <div class="ll-story-card">
+        <div class="metric">40%</div>
+        <p class="text-muted small mb-2">faster collections</p>
+        <h3>Channel partner, Dharwad</h3>
+        <p style="color:var(--ll-muted);line-height:1.6;margin-bottom:0;">
+          "Dashboard follow-up boxes show exactly who to call today. Partial payment reports saved our collection team hours every morning."
+        </p>
+      </div>
+      <div class="ll-story-card">
+        <div class="metric">Zero</div>
+        <p class="text-muted small mb-2">commission disputes</p>
+        <h3>Apartment developer, Bangalore</h3>
+        <p style="color:var(--ll-muted);line-height:1.6;margin-bottom:0;">
+          "We run sales from Bangalore and site office in Jamkhandi — one CRM for both. Lead assign, booking, commission reports. Best software we tried in Karnataka."
+        </p>
+      </div>
+      <div class="ll-story-card">
+        <div class="metric">100%</div>
+        <p class="text-muted small mb-2">ledger accuracy</p>
+        <h3>Layout promoter, Bijapur</h3>
+        <p style="color:var(--ll-muted);line-height:1.6;margin-bottom:0;">
+          "Team report shows manager, executive &amp; telecaller commission on one screen. Accounts approves payments from one queue. No more Excel fights."
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CLIENT REVIEWS -->
+<section class="ll-section" id="reviews">
+  <div class="ll-container">
+    <h2>Customer Reviews — 5 Star Rated CRM</h2>
+    <p class="subtitle">Trusted by managers, accounts teams &amp; developers across Karnataka — Hubli Dharwad, Bangalore, Ranebennur, Jamkhandi, Bijapur &amp; more. Ultimate service — no doubt at all.</p>
+    <div class="ll-rating-banner">
+      <div class="big">4.9 / 5</div>
+      <p class="mb-0 mt-2" style="opacity:0.95;">Best AI follow-up CRM · Auto calling · WhatsApp AI · Trusted across Karnataka</p>
+    </div>
+    <div class="ll-cards">
+      <div class="ll-review-card">
+        <div class="quote">"</div>
+        <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+        <p style="line-height:1.65;color:var(--ll-text);">
+          "Best CRM software in Karnataka. Lead management, booking, receipts — all simple. My executives learned it in one day. We use it from Hubli Dharwad and recommend it to partners in Bangalore too."
+        </p>
+        <div class="author">Rajesh Patil <span class="role">— Developer, Hubballi</span></div>
+      </div>
+      <div class="ll-review-card">
+        <div class="quote">"</div>
+        <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+        <p style="line-height:1.65;color:var(--ll-text);">
+          "Accounts module is perfect. Payment approvals, Tally vouchers, account statements — everything correct. Our CA said this is the cleanest real estate software he has seen in Dharwad."
+        </p>
+        <div class="author">Sunita Hegde <span class="role">— Accounts Head, Dharwad</span></div>
+      </div>
+      <div class="ll-review-card">
+        <div class="quote">"</div>
+        <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+        <p style="line-height:1.65;color:var(--ll-text);">
+          "AI follow-up is the game changer. Auto calling alerts tell my telecallers who to call. WhatsApp AI messages go to customers automatically. Best AI CRM we have used in Hubballi."
+        </p>
+        <div class="author">Mahesh Kulkarni <span class="role">— Sales Manager, Hubballi</span></div>
+      </div>
+      <div class="ll-review-card">
+        <div class="quote">"</div>
+        <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+        <p style="line-height:1.65;color:var(--ll-text);">
+          "Don't waste time on manual registers. Land Link gave us more business in the first month itself. Booking form with multiple plots, commission split — exactly what Karnataka layout sales needs."
+        </p>
+        <div class="author">Anita Desai <span class="role">— Operations, Hubli–Dharwad</span></div>
+      </div>
+      <div class="ll-review-card">
+        <div class="quote">"</div>
+        <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></div>
+        <p style="line-height:1.65;color:var(--ll-text);">
+          "Customer portal lets buyers see their booking &amp; payments online. Simple for them, less calls for us. Best real estate management software — easy for admin, manager &amp; telecaller."
+        </p>
+        <div class="author">Vikram Joshi <span class="role">— Channel Partner, North Karnataka</span></div>
+      </div>
+      <div class="ll-review-card">
+        <div class="quote">"</div>
+        <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+        <p style="line-height:1.65;color:var(--ll-text);">
+          "7-day trial convinced us. Full dashboard access — leads, bookings, reports, Tally. We signed up immediately. No tension business from day one. Highly recommend for any Karnataka developer."
+        </p>
+        <div class="author">Prakash G. <span class="role">— Layout Promoter, Ranebennur</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="ll-section ll-section-alt" id="contact">
+  <div class="ll-container">
+    <h2>Contact Us</h2>
+    <p class="subtitle">Serving customers across Karnataka — Hubli Dharwad, Bangalore, Ranebennur, Jamkhandi, Bijapur &amp; all cities. Questions about demo or onboarding? We reply within one business day.</p>
+    <div class="ll-contact-grid">
+      <div class="ll-contact-info">
+        <h3 class="mt-0">Get in touch</h3>
+        <p style="opacity:0.9;line-height:1.75;">
+          <i class="fas fa-map-marker-alt mr-2"></i>
+          <strong>Office address</strong><br />
+          <span style="display:inline-block;padding-left:1.5rem;margin-bottom:0.75rem;">
+            Office No. 11, Stellar Mall, 3rd Floor,<br />
+            beside JGCC College, Jayanagar, Vidya Nagar,<br />
+            Hubballi, Karnataka 580021
+          </span><br />
+          <i class="fas fa-phone mr-2"></i>
+          <a href="tel:+919535347161" style="color:#fff;">+91 95353 47161</a><br />
+          <i class="fas fa-envelope mr-2"></i>
+          <a href="mailto:team@indataai.in" style="color:#fff;">team@indataai.in</a>
+        </p>
+        <hr style="border-color:rgba(255,255,255,0.2);" />
+        <p class="mb-2"><strong>Ready to grow? Don't wait.</strong></p>
+        <a class="ll-btn ll-btn-highlight-trial" href="{% url 'public_signup' %}"><i class="fas fa-gift"></i> Free Trial — 7 Days</a>
+        <a class="ll-btn ll-btn-highlight-login-dark mt-2" href="{% url 'login' %}" style="display:inline-block;margin-top:0.75rem;"><i class="fas fa-sign-in-alt"></i> Login</a>
+      </div>
+      <div class="ll-contact-form">
+        <h3 class="mt-0" style="color:var(--ll-primary);">Send a message</h3>
+        <form method="post" action="{% url 'landing_home' %}#contact">
+          {% csrf_token %}
+          <input type="hidden" name="form_type" value="contact" />
+          <div class="form-group">
+            <label for="id_name">Name</label>
+            {{ contact_form.name }}
+            {% for e in contact_form.name.errors %}<small style="color:#c0392b;">{{ e }}</small>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label for="id_email">Email</label>
+            {{ contact_form.email }}
+            {% for e in contact_form.email.errors %}<small style="color:#c0392b;">{{ e }}</small>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label for="id_phone">Phone</label>
+            {{ contact_form.phone }}
+          </div>
+          <div class="form-group">
+            <label for="id_message">Message</label>
+            {{ contact_form.message }}
+            {% for e in contact_form.message.errors %}<small style="color:#c0392b;">{{ e }}</small>{% endfor %}
+          </div>
+          <button type="submit" class="ll-btn ll-btn-primary" style="width:100%;border:none;">Submit message</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="ll-container">
+  <div class="ll-cta">
+    <h2>Don't Waste Your Time — Get More Business Today</h2>
+    <p>
+      Land Link is Karnataka's best <strong>AI-powered real estate CRM</strong> — auto calling, WhatsApp AI follow-up, smart lead management, accounts &amp; Tally. Start your 7-day free trial. Get more business with AI. No tension.
+    </p>
+    <div class="ll-cta-actions">
+      <a class="ll-btn ll-btn-highlight-trial" href="{% url 'public_signup' %}"><i class="fas fa-gift"></i> Free Trial — 7 Days</a>
+      <a class="ll-btn ll-btn-highlight-login" href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

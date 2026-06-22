@@ -1,0 +1,7 @@
+
+# ── Core Framework ─────────────────────────────────────────────────────────────
+Django==4.2.27
+djangorestframework==3.17.1
+
+# ── Image Processing (required for ImageField) ─────────────────────────────────
+Pillow==11.3.0

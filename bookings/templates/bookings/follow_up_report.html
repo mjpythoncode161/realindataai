@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Follow-Up Report{% endblock %}
+
+{% block extra_head %}
+<!-- DataTables -->
+<link rel="stylesheet" href="{% static 'assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
+<link rel="stylesheet" href="{% static 'assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+<style>
+    .nav-tabs.custom-tabs .nav-link {
+        color: #495057;
+        font-weight: 500;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 0;
+    }
+    .nav-tabs.custom-tabs .nav-link.active {
+        color: #29577f;
+        border-bottom: 3px solid #29577f;
+        background: transparent;
+    }
+    .filter-btn-group .btn {
+        margin-right: 10px;
+        border-radius: 20px;
+        padding: 5px 15px;
+        font-size: 0.85rem;
+    }
+    .btn-outline-maroon {
+        color: #29577f;
+        border-color: #29577f;
+    }
+    .btn-outline-maroon:hover, .btn-outline-maroon.active {
+        background-color: #29577f;
+        color: white;
+    }
+    .card-title-custom {
+        font-weight: 600;
+        color: #333;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 style="color: #333; font-weight: 500;">Follow-Up Report</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card card-outline card-maroon">
+            <div class="card-header p-0 border-bottom-0">
+                <ul class="nav nav-tabs custom-tabs" id="paymentStatusTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link {% if payment_status == 'PARTIAL' %}active{% endif %}" id="partial-tab" href="?status=PARTIAL&filter={{ filter_type }}" role="tab">
+                            🔵 Partial Payments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if payment_status == 'FULL' %}active{% endif %}" id="full-tab" href="?status=FULL&filter={{ filter_type }}" role="tab">
+                            🟢 Full Payments
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                {% if payment_status != 'FULL' %}
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="filter-btn-group">
+                        <a href="?status={{ payment_status }}&filter=today" class="btn btn-outline-maroon {% if filter_type == 'today' %}active{% endif %}">{% if payment_status == 'FULL' %}Booked Today{% else %}Today Due{% endif %}</a>
+                        <a href="?status={{ payment_status }}&filter=7" class="btn btn-outline-maroon {% if filter_type == '7' %}active{% endif %}">{% if payment_status == 'FULL' %}Booked 7 Days{% else %}Next 7 Days Due{% endif %}</a>
+                        <a href="?status={{ payment_status }}&filter=15" class="btn btn-outline-maroon {% if filter_type == '15' %}active{% endif %}">{% if payment_status == 'FULL' %}Booked 15 Days{% else %}Next 15 Days Due{% endif %}</a>
+                        <a href="?status={{ payment_status }}&filter=30" class="btn btn-outline-maroon {% if filter_type == '30' %}active{% endif %}">{% if payment_status == 'FULL' %}Booked 30 Days{% else %}Next 30 Days Due{% endif %}</a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="table-responsive">
+                    <table id="followUpTable" class="table table-bordered table-hover">
+                        <thead>
+                            <tr class="text-center">
+                                <th>Customer Name</th>
+                                <th>Bill No</th>
+                                <th>Booking Date</th>
+                                <th>Follow-up Date</th>
+                                <th>Source</th>
+                                <th>Total Amount</th>
+                                <th>Paid Amount</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in bookings %}
+                            <tr class="text-center">
+                                <td>{{ b.customer_full_name }}</td>
+                                <td>{{ b.booking_no }}</td>
+                                <td>{{ b.booking_date|date:"d-m-Y" }}</td>
+                                <td>{{ b.final_followup_date|date:"d-m-Y" }}</td>
+                                <td>
+                                    {% if b.followup_source == 'RECEIPT' %}
+                                    <span class="badge badge-info">RECEIPT</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">BOOKING</span>
+                                    {% endif %}
+                                </td>
+                                <td>₹ {{ b.balance.total_amount|floatformat:2 }}</td>
+                                <td>₹ {{ b.balance.paid_amount|floatformat:2 }}</td>
+                                <td class="text-danger font-weight-bold">₹ {{ b.balance.balance_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">No follow-ups found for this criteria.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'assets/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script>
+    $(function () {
+        $("#followUpTable").DataTable({
+            responsive: true,
+            autoWidth: false,
+            ordering: true,
+            order: [[3, 'asc']] // Sort by due date by default
+        });
+    });
+</script>
+{% endblock %}

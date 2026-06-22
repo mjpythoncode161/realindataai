@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}All Project Summary Report{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>All Project Summary Report</h1>
+            </div>
+            <div class="col-sm-6 text-right">
+                <a href="{% url 'all_reports' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to Reports
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Filter Card -->
+        <div class="card card-outline card-maroon">
+            <div class="card-header">
+                <h3 class="card-title">Filter Options</h3>
+            </div>
+            <div class="card-body">
+                <form method="GET">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>From Date</label>
+                                <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>To Date</label>
+                                <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <button type="submit" class="btn btn-maroon btn-block" style="background-color: #29577f; color: white;">Show Report</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info"><i class="fas fa-city"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Projects</span>
+                        <span class="info-box-number">{{ project_stats.count }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success"><i class="fas fa-hand-holding-usd"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Portfolio Value</span>
+                        <span class="info-box-number">₹{{ total_global_val|default:"0.00"|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="card">
+            <div class="card-body p-0">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Project</th>
+                            <th class="text-center">Total Bookings</th>
+                            <th class="text-right">Total Revenue</th>
+                            <th class="text-right">Total Collection</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in project_stats %}
+                        <tr>
+                            <td>{{ stat.name }}</td>
+                            <td class="text-center">{{ stat.total_bookings }}</td>
+                            <td class="text-right">₹{{ stat.total_val|default:0|floatformat:2 }}</td>
+                            <td class="text-right text-success">₹{{ stat.total_paid|default:0|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">No project statistics found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

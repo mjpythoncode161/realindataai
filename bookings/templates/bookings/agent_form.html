@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>{{ title }}</h1>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-outline card-maroon">
+      <div class="card-body">
+        <form method="POST" id="agentForm">
+          {% csrf_token %}
+          {% if role == "accounts" %}
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label>Accounts Date <span class="text-danger">*</span></label>
+              {{ form.effective_date }}
+              {% if form.effective_date.errors %}
+                <div class="text-danger small">{{ form.effective_date.errors }}</div>
+              {% endif %}
+            </div>
+            <div class="col-md-8 mb-3">
+              <label>Select User (Manager / Executive / Telecaller) <span class="text-danger">*</span></label>
+              {{ form.u_id }}
+              {% if form.u_id.errors %}
+                <div class="text-danger small">{{ form.u_id.errors }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <hr>
+          <h5 class="mb-2">Debit Payments <small class="text-muted">(multiple — commission &amp; security)</small></h5>
+          {{ payment_formset.management_form }}
+          {% if payment_formset.non_form_errors %}
+            <div class="alert alert-danger">{{ payment_formset.non_form_errors }}</div>
+          {% endif %}
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm" id="paymentsTable">
+              <thead class="bg-light">
+                <tr>
+                  <th style="min-width:140px;">Type</th>
+                  <th style="min-width:100px;">Amount</th>
+                  <th style="min-width:130px;">Date</th>
+                  <th style="min-width:120px;">Mode</th>
+                  <th style="min-width:120px;">Note</th>
+                  <th style="width:40px;"></th>
+                </tr>
+              </thead>
+              <tbody id="paymentFormsetBody">
+                {% for pform in payment_formset %}
+                <tr class="payment-form-row">
+                  {% for hidden in pform.hidden_fields %}{{ hidden }}{% endfor %}
+                  <td>{{ pform.debit_type }}{% if pform.debit_type.errors %}<div class="text-danger small">{{ pform.debit_type.errors }}</div>{% endif %}</td>
+                  <td>{{ pform.amount }}{% if pform.amount.errors %}<div class="text-danger small">{{ pform.amount.errors }}</div>{% endif %}</td>
+                  <td>{{ pform.payment_date }}{% if pform.payment_date.errors %}<div class="text-danger small">{{ pform.payment_date.errors }}</div>{% endif %}</td>
+                  <td>{{ pform.payment_method }}{% if pform.payment_method.errors %}<div class="text-danger small">{{ pform.payment_method.errors }}</div>{% endif %}</td>
+                  <td>{{ pform.remarks }}</td>
+                  <td class="text-center align-middle">
+                    {% if pform.instance.pk %}
+                    <label class="mb-0 text-danger" title="Delete">{{ pform.DELETE }}</label>
+                    {% else %}
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-payment-row" title="Remove row">&times;</button>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-primary mb-3" id="addPaymentRow">
+            <i class="fas fa-plus"></i> Add row
+          </button>
+
+          {% else %}
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label>Select User (Filtered by role: {{ role|capfirst }})</label>
+              {{ form.u_id }}
+              {% if form.u_id.errors %}
+                <div class="text-danger small">{{ form.u_id.errors }}</div>
+              {% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label>Commission Percentage (%)</label>
+              {{ form.commission_percentage }}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label>TDS Amount (%)</label>
+              {{ form.tds_amount }}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label>Security Amount (%)</label>
+              {{ form.security_amount }}
+            </div>
+          </div>
+          {% endif %}
+
+          {% if role != "accounts" and form.remarks %}
+          <div class="row">
+            <div class="col-md-12 mb-3">
+              <label>Remarks</label>
+              {{ form.remarks }}
+            </div>
+          </div>
+          {% endif %}
+
+          <hr>
+          <div class="text-right">
+            <a href="{% url 'agent_list' role=role %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-maroon-custom" style="background-color: #29577f; color: white;">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if role == "accounts" %}
+<table class="d-none">
+  <tbody id="emptyPaymentFormTemplate">
+    <tr class="payment-form-row">
+      {% with pform=payment_formset.empty_form %}
+      {% for hidden in pform.hidden_fields %}{{ hidden }}{% endfor %}
+      <td>{{ pform.debit_type }}</td>
+      <td>{{ pform.amount }}</td>
+      <td>{{ pform.payment_date }}</td>
+      <td>{{ pform.payment_method }}</td>
+      <td>{{ pform.remarks }}</td>
+      <td class="text-center align-middle">
+        <button type="button" class="btn btn-sm btn-outline-danger remove-payment-row" title="Remove row">&times;</button>
+      </td>
+      {% endwith %}
+    </tr>
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  $(function () {
+    {% if role == "accounts" %}
+    var totalFormsInput = $('#id_payments-TOTAL_FORMS');
+    var formPrefix = 'payments';
+
+    function reindexPaymentRows() {
+      $('#paymentFormsetBody .payment-form-row').each(function (index) {
+        $(this).find('input, select, textarea').each(function () {
+          var name = $(this).attr('name');
+          var id = $(this).attr('id');
+          if (name) {
+            $(this).attr('name', name.replace(/payments-\d+-/, 'payments-' + index + '-'));
+          }
+          if (id) {
+            $(this).attr('id', id.replace(/payments-\d+-/, 'payments-' + index + '-'));
+          }
+        });
+      });
+      totalFormsInput.val($('#paymentFormsetBody .payment-form-row').length);
+    }
+
+    $('#addPaymentRow').on('click', function () {
+      var count = parseInt(totalFormsInput.val(), 10);
+      var tmpl = $('#emptyPaymentFormTemplate tr').clone();
+      tmpl.find('input, select, textarea').each(function () {
+        var name = $(this).attr('name');
+        var id = $(this).attr('id');
+        if (name) {
+          $(this).attr('name', name.replace(/__prefix__/g, count));
+        }
+        if (id) {
+          $(this).attr('id', id.replace(/__prefix__/g, count));
+        }
+        $(this).val('');
+      });
+      $('#paymentFormsetBody').append(tmpl);
+      totalFormsInput.val(count + 1);
+    });
+
+    $(document).on('click', '.remove-payment-row', function () {
+      $(this).closest('tr').remove();
+      reindexPaymentRows();
+    });
+    {% endif %}
+
+    $('#agentForm').on('submit', function (e) {
+      e.preventDefault();
+      var form = $(this);
+      $.ajax({
+        url: form.attr('action'),
+        method: 'POST',
+        data: form.serialize(),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function (resp) {
+          if (resp.status === 'success') {
+            Swal.fire({
+              title: 'Success!',
+              text: resp.message,
+              icon: 'success',
+              confirmButtonColor: '#29577f'
+            }).then(function () {
+              window.location.href = "{% url 'agent_list' role=role %}";
+            });
+          } else {
+            var errMsg = resp.message || 'Please check the form for errors';
+            Swal.fire('Error!', errMsg, 'error');
+          }
+        },
+        error: function () {
+          Swal.fire('Error!', 'Network error or server error', 'error');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

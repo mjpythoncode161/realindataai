@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load user_roles %}
+
+{% block title %}Lead — {{ lead.full_name }}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1>{{ lead.full_name }}</h1>
+        <p class="text-muted mb-0">
+          <span class="badge badge-{% if lead.status == 'CONFIRMED' %}success{% elif lead.status == 'CLOSED_LOST' %}secondary{% else %}info{% endif %}">{{ lead.get_status_display }}</span>
+        </p>
+      </div>
+      <div class="col-sm-6 text-sm-right">
+        <a href="{% url 'lead_list' %}" class="btn btn-secondary btn-sm">Back to Leads</a>
+        {% if lead.is_open %}
+        <a href="{% url 'lead_edit' lead.lead_id %}" class="btn btn-primary btn-sm">Edit</a>
+        <a href="{% url 'lead_confirm' lead.lead_id %}" class="btn btn-success btn-sm">Confirm Lead</a>
+        <a href="{% url 'lead_close_lost' lead.lead_id %}" class="btn btn-outline-secondary btn-sm">Close (Lost)</a>
+        {% endif %}
+        {% if lead.converted_customer %}
+        <a href="{% url 'customer_list' %}" class="btn btn-info btn-sm">View in Customers</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-5">
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Lead Details</h3></div>
+          <div class="card-body">
+            <p><strong>Phone:</strong> {{ lead.phone }}</p>
+            <p><strong>Email:</strong> {{ lead.email|default:"—" }}</p>
+            <p><strong>Project:</strong> {{ lead.p_id.name|default:"—" }}</p>
+            <p><strong>Plot Interest:</strong> {{ lead.plot_interest|default:"—" }}</p>
+            <p><strong>Budget:</strong> {% if lead.budget %}₹{{ lead.budget }}{% else %}—{% endif %}</p>
+            <p><strong>Source:</strong> {{ lead.get_source_display }}</p>
+            <p><strong>Occupation:</strong> {{ lead.occupation|default:"—" }}</p>
+            <p><strong>Address:</strong> {{ lead.present_address|default:"—" }}</p>
+            <p><strong>Next Follow-up:</strong> {{ lead.next_follow_up_date|date:"d-m-Y"|default:"—" }}</p>
+            <p><strong>Assigned To:</strong> {{ lead.assigned_to.full_name|default:"—" }}</p>
+            <p class="mb-0"><strong>Notes:</strong> {{ lead.notes|default:"—" }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        {% if lead.is_open %}
+        <div class="card card-outline card-primary">
+          <div class="card-header"><h3 class="card-title">Add Follow-up</h3></div>
+          <form method="POST">
+            {% csrf_token %}
+            <div class="card-body">
+              <div class="form-group">
+                <label>Activity Type</label>
+                {{ activity_form.activity_type }}
+              </div>
+              <div class="form-group">
+                <label>Notes</label>
+                {{ activity_form.note }}
+              </div>
+              <div class="form-group mb-0">
+                <label>Next Follow-up Date</label>
+                {{ activity_form.next_follow_up_date }}
+              </div>
+            </div>
+            <div class="card-footer text-right">
+              <button type="submit" class="btn btn-primary btn-sm">Save Activity</button>
+            </div>
+          </form>
+        </div>
+        {% endif %}
+
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Activity History</h3></div>
+          <div class="card-body table-responsive p-0">
+            <table class="table table-bordered table-striped table-sm mb-0">
+              <thead class="thead-light">
+                <tr>
+                  <th>#</th>
+                  <th>Type</th>
+                  <th>Notes</th>
+                  <th>Next Follow-up</th>
+                  <th>Date</th>
+                  <th>By</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for activity in activities %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>
+                    <span class="badge badge-{% if activity.activity_type == 'CALL' %}info{% elif activity.activity_type == 'VISIT' %}success{% elif activity.activity_type == 'STATUS' %}warning{% else %}secondary{% endif %}">
+                      {{ activity.get_activity_type_display }}
+                    </span>
+                  </td>
+                  <td>{{ activity.note }}</td>
+                  <td>{{ activity.next_follow_up_date|date:"d-m-Y"|default:"—" }}</td>
+                  <td class="text-nowrap">{{ activity.created_at|date:"d-m-Y H:i" }}</td>
+                  <td class="text-nowrap">{{ activity.created_by.full_name|default:"System" }}</td>
+                  <td class="text-nowrap">
+                    {% if request.user|has_any_role:"admin,manager" or activity.created_by == request.user %}
+                    <button type="button" class="btn btn-xs btn-outline-primary"
+                      title="Edit"
+                      data-toggle="modal" data-target="#editActivityModal"
+                      data-id="{{ activity.activity_id }}"
+                      data-type="{{ activity.activity_type }}"
+                      data-note="{{ activity.note|escapejs }}"
+                      data-date="{{ activity.next_follow_up_date|date:'Y-m-d'|default:'' }}">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-xs btn-outline-danger"
+                      title="Delete"
+                      data-toggle="modal" data-target="#deleteActivityModal"
+                      data-id="{{ activity.activity_id }}"
+                      data-name="{{ activity.get_activity_type_display|escapejs }}">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                    {% else %}—{% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted">No activities yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Edit Activity Modal -->
+<div class="modal fade" id="editActivityModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <form method="POST" id="editActivityForm" action="">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-edit mr-2"></i>Edit Activity</h5>
+          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Activity Type</label>
+            <select name="activity_type" class="form-control" id="editActivityType">
+              <option value="CALL">Phone Call</option>
+              <option value="VISIT">Site Visit</option>
+              <option value="NOTE">Note</option>
+              <option value="STATUS">Status Update</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Notes</label>
+            <textarea name="note" class="form-control" rows="3" id="editActivityNote"></textarea>
+          </div>
+          <div class="form-group mb-0">
+            <label>Next Follow-up Date</label>
+            <input type="date" name="next_follow_up_date" class="form-control" id="editActivityDate">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save mr-1"></i>Save Changes</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Activity Modal -->
+<div class="modal fade" id="deleteActivityModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-sm" role="document">
+    <form method="POST" id="deleteActivityForm" action="">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title"><i class="fas fa-trash mr-2"></i>Delete Activity</h5>
+          <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+        </div>
+        <div class="modal-body">
+          <p>Delete activity <strong id="deleteActivityName"></strong>?</p>
+          <p class="text-muted small mb-0">This cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash mr-1"></i>Delete</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  $('#editActivityModal').on('show.bs.modal', function (e) {
+    var btn = $(e.relatedTarget);
+    var id = btn.data('id');
+    var type = btn.data('type');
+    var note = btn.data('note');
+    var date = btn.data('date');
+    $('#editActivityForm').attr('action', '/leads/activity/' + id + '/edit/');
+    $('#editActivityType').val(type);
+    $('#editActivityNote').val(note);
+    $('#editActivityDate').val(date || '');
+  });
+
+  $('#deleteActivityModal').on('show.bs.modal', function (e) {
+    var btn = $(e.relatedTarget);
+    var id = btn.data('id');
+    var name = btn.data('name');
+    $('#deleteActivityForm').attr('action', '/leads/activity/' + id + '/delete/');
+    $('#deleteActivityName').text('"' + name + '"');
+  });
+</script>
+{% endblock %}

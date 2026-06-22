@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>{{ title }}</h1>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12 col-md-8">
+        <div class="card card-outline card-maroon">
+          <div class="card-body">
+            <form method="POST" id="projectForm">
+              {% csrf_token %}
+              <div class="row">
+                <div class="col-12 col-md-8 mb-3">
+                  <label class="form-label">Project Name</label>
+                  {{ form.name }}
+                  {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors }}</div>{% endif %}
+                </div>
+                <div class="col-12 col-md-4 mb-3">
+                  <label class="form-label">No. of plots</label>
+                  {{ form.num_plots }}
+                  {% if form.num_plots.errors %}<div class="text-danger small">{{ form.num_plots.errors }}</div>{% endif %}
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Location</label>
+                {{ form.location }}
+                {% if form.location.errors %}<div class="text-danger small">{{ form.location.errors }}</div>{% endif %}
+              </div>
+              <div class="mt-4">
+                <button type="submit" class="btn btn-maroon-custom" style="background-color: #29577f; color: white; border: none; padding: 6px 20px;">Save</button>
+                <a href="{% url 'project_list' %}" class="btn btn-secondary">Cancel</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  $(function () {
+    $('#projectForm').on('submit', function (e) {
+      e.preventDefault();
+      var form = $(this);
+      
+      $.ajax({
+        url: form.attr('action'),
+        method: 'POST',
+        data: form.serialize(),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function (resp) {
+          if (resp.status === 'success') {
+            Swal.fire({
+              title: 'Success!',
+              text: resp.message,
+              icon: 'success',
+              confirmButtonColor: '#29577f'
+            }).then(() => {
+              window.location.href = "{% url 'project_list' %}";
+            });
+          } else {
+            Swal.fire('Error!', resp.message || 'Please check the form for errors', 'error');
+          }
+        },
+        error: function () {
+          Swal.fire('Error!', 'Network error or server error', 'error');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

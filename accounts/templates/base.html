@@ -1,0 +1,583 @@
+{% load static %}
+{% load user_roles %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>{% block title %}Dashboard{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback"
+    />
+    <link
+      rel="stylesheet"
+      href="{% static 'assets/assets/plugins/fontawesome-free/css/all.min.css' %}"
+    />
+    <link
+      rel="stylesheet"
+      href="{% static 'assets/assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css' %}"
+    />
+    <link
+      rel="stylesheet"
+      href="{% static 'assets/plugins/select2/css/select2.min.css' %}"
+    />
+    <link
+      rel="stylesheet"
+      href="{% static 'assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css' %}"
+    />
+    <link
+      rel="stylesheet"
+      href="{% static 'assets/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css' %}"
+    />
+    <link
+      rel="stylesheet"
+      href="{% static 'assets/plugins/toastr/toastr.min.css' %}"
+    />
+    <link
+      rel="stylesheet"
+      href="{% static 'assets/plugins/dropzone/min/dropzone.min.css' %}"
+    />
+    <link
+      rel="stylesheet"
+      href="{% static 'assets/dist/css/adminlte.min.css' %}"
+    />
+    <link rel="stylesheet" href="{% static 'assets/dist/css/styles.css' %}" />
+    {% block extra_head %}{% endblock %}
+    <style>
+      /* small adjustments to match old-style minimal look */
+      .brand-text {
+        font-weight: 700;
+      }
+      .nav-sidebar .nav-link.active {
+        background: #2d6ca2;
+        color: #fff;
+      }
+      /* Global table size reduction */
+      table.table {
+        font-size: 0.85rem !important;
+      }
+      table.table td, table.table th {
+        padding: 8px !important;
+        vertical-align: middle !important;
+      }
+    </style>
+  </head>
+  <body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
+      <!-- Navbar -->
+      <nav class="main-header navbar navbar-expand navbar-primary navbar-dark">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" data-widget="pushmenu" href="#" role="button"
+              ><i class="fas fa-bars"></i
+            ></a>
+          </li>
+          <li class="nav-item d-none d-sm-inline-block">
+            <a href="{% url 'home' %}" class="nav-link text-white"
+              ><strong>{{ system_name|default:"Dashboard" }}</strong></a
+            >
+          </li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" data-widget="fullscreen" href="#" role="button"
+              ><i class="fas fa-expand-arrows-alt"></i
+            ></a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link" data-toggle="dropdown" href="#">
+              <div class="d-flex align-items-center">
+                <i class="fa fa-user mr-2"></i>
+                <strong>{% if request.user.full_name %}{{ request.user.full_name }}{% else %}{{ request.user.username }}{% endif %}</strong>
+                <i class="fa fa-angle-down ml-2"></i>
+              </div>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right">
+              <a class="dropdown-item" href="{% url 'manage_account' %}"
+                ><i class="fa fa-cog mr-2"></i> Manage Account</a
+              >
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item text-danger" href="{% url 'logout' %}"
+                ><i class="fa fa-power-off mr-2"></i> Logout</a
+              >
+            </div>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Main Sidebar Container -->
+      <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <a href="{% url 'home' %}" class="brand-link text-left">
+          <span class="brand-text font-weight-light px-2"><b>{{ company_name|default:"LandLink" }}</b></span>
+        </a>
+        <div class="sidebar">
+          <nav class="mt-2">
+            <ul class="nav nav-pills nav-sidebar flex-column" role="menu">
+              <li class="nav-item">
+                <a href="{% url 'home' %}" class="nav-link"
+                  ><i class="nav-icon fas fa-home text-primary"></i>
+                  <p>Dashboard</p></a
+                >
+              </li>
+              <!-- More items can be added from includes or overridden -->
+              {% block sidebar %}
+              
+              {% if request.user|has_any_role:"followup,admin,manager,executive,telecaller" %}
+              <li class="nav-item">
+                <a href="{% url 'lead_list' %}" class="nav-link">
+                  <i class="nav-icon fas fa-user-plus text-success"></i>
+                  <p>Lead Management</p>
+                </a>
+              </li>
+              {% endif %}
+
+              {% if request.user|has_any_role:"manager,admin" %}
+              <!-- Shared Manager/Admin Sidebar -->
+              <li class="nav-item">
+                <a href="{% url 'customer_list' %}" class="nav-link">
+                  <i class="nav-icon fas fa-users text-info"></i>
+                  <p>Customers</p>
+                </a>
+              </li>
+             
+              
+              <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                  <i class="nav-icon fas fa-book-open text-primary"></i>
+                  <p>
+                    BookingMaster
+                    <i class="right fas fa-angle-left"></i>
+                  </p>
+                </a>
+                <ul class="nav nav-treeview">
+                  <li class="nav-item">
+                    <a href="{% url 'booking_list' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Bookings</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'cancelled_plots_list' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Cancelled Plots</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'master_plots' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Master Plots Details</p>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+
+              <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                  <i class="nav-icon fas fa-credit-card text-success"></i>
+                  <p>
+                    Payments
+                    <i class="right fas fa-angle-left"></i>
+                  </p>
+                </a>
+                <ul class="nav nav-treeview">
+                  <li class="nav-item">
+                    <a href="{% url 'receipt_list' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Receipt List</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'payment_list' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Approval List</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'ledger_list' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Ledger</p>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              {% endif %}
+
+              {% if request.user|has_role:"accounts" %}
+              <!-- Accounts Sidebar -->
+              <li class="nav-item">
+                <a href="{% url 'home' %}" class="nav-link">
+                  <i class="nav-icon fas fa-tachometer-alt"></i>
+                  <p>Accounts Dashboard</p>
+                </a>
+              </li>
+              <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                  <i class="nav-icon fas fa-credit-card text-success"></i>
+                  <p>
+                    Payments
+                    <i class="right fas fa-angle-left"></i>
+                  </p>
+                </a>
+                <ul class="nav nav-treeview">
+                  <li class="nav-item">
+                    <a href="{% url 'receipt_list' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Receipt List</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'payment_list' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Approval List</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'ledger_list' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Ledger</p>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'cancelled_plots_list' %}" class="nav-link">
+                  <i class="nav-icon fas fa-ban text-danger"></i>
+                  <p>Cancelled Plots</p>
+                </a>
+              </li>
+              <!-- Tally Menu -->
+              <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                  <i class="nav-icon fas fa-book text-warning"></i>
+                  <p>Voucher / Tally<i class="right fas fa-angle-left"></i></p>
+                </a>
+                <ul class="nav nav-treeview">
+                  <li class="nav-item"><a href="{% url 'tally_payment_voucher' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Payment Voucher</p></a></li>
+                  <li class="nav-item"><a href="{% url 'tally_receipt_voucher' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Receipt Voucher</p></a></li>
+                  <li class="nav-item"><a href="{% url 'tally_journal_entry' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Journal Entry</p></a></li>
+                  <li class="nav-item"><a href="{% url 'tally_account_statement' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Account Statements</p></a></li>
+                  <li class="nav-item"><a href="{% url 'tally_create_master' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Create Master</p></a></li>
+                </ul>
+              </li>
+              {% endif %}
+
+              {% if request.user|has_role:"admin" %}
+              <!-- Admin Specific Sidebar -->
+
+
+              
+             
+              <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                  <i class="nav-icon fas fa-chart-line"></i>
+                  <p>
+                    Reports
+                    <i class="right fas fa-angle-left"></i>
+                  </p>
+                </a>
+                <ul class="nav nav-treeview">
+                  <li class="nav-item">
+                    <a href="{% url 'all_reports' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>All Report</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'follow_up_report' %}?status=PARTIAL&filter=today" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Follow-Up</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'percentage_follow_up' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Percentage Follow-Up</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'advance_follow_up' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Advance Follow-Up</p>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                  <i class="nav-icon fas fa-cogs"></i>
+                  <p>
+                    Store Settings
+                    <i class="right fas fa-angle-left"></i>
+                  </p>
+                </a>
+                <ul class="nav nav-treeview">
+                  <li class="nav-item">
+                    <a href="{% url 'project_list' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Projects</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'booking_agent_settings' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Company &amp; Agent Settings</p>
+                    </a>
+                  </li>
+                  {% if agent_settings.enable_manager %}
+                  <li class="nav-item">
+                    <a href="{% url 'agent_list' role='manager' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Manager</p>
+                    </a>
+                  </li>
+                  {% endif %}
+                  {% if agent_settings.enable_executive %}
+                  <li class="nav-item">
+                    <a href="{% url 'agent_list' role='executive' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Executive</p>
+                    </a>
+                  </li>
+                  {% endif %}
+                  {% if agent_settings.enable_telecaller %}
+                  <li class="nav-item">
+                    <a href="{% url 'agent_list' role='telecaller' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Telecaller</p>
+                    </a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'agent_list' role='accounts' %}" class="nav-link">
+                  <i class="nav-icon fas fa-calculator"></i>
+                  <p>Accounts</p>
+                </a>
+              </li>
+              <!-- Tally Menu for Admin -->
+              <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                  <i class="nav-icon fas fa-book text-warning"></i>
+                  <p>Voucher / Tally<i class="right fas fa-angle-left"></i></p>
+                </a>
+                <ul class="nav nav-treeview">
+                  <li class="nav-item"><a href="{% url 'tally_payment_voucher' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Payment Voucher</p></a></li>
+                  <li class="nav-item"><a href="{% url 'tally_receipt_voucher' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Receipt Voucher</p></a></li>
+                  <li class="nav-item"><a href="{% url 'tally_journal_entry' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Journal Entry</p></a></li>
+                  <li class="nav-item"><a href="{% url 'tally_account_statement' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Account Statements</p></a></li>
+                  <li class="nav-item"><a href="{% url 'tally_create_master' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Create Master</p></a></li>
+                </ul>
+              </li>
+              {% endif %}
+
+              {% if request.user|has_role:"followup" %}
+              <li class="nav-item">
+                <a href="{% url 'followup_signup_approvals' %}" class="nav-link">
+                  <i class="nav-icon fas fa-user-check text-warning"></i>
+                  <p>Signup approvals</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'booking_list' %}" class="nav-link">
+                  <i class="nav-icon fas fa-book-open text-primary"></i>
+                  <p>Bookings</p>
+                </a>
+              </li>
+              <li class="nav-item has-treeview">
+                <a href="#" class="nav-link">
+                  <i class="nav-icon fas fa-chart-line"></i>
+                  <p>
+                    Reports
+                    <i class="right fas fa-angle-left"></i>
+                  </p>
+                </a>
+                <ul class="nav nav-treeview">
+                  <li class="nav-item">
+                    <a href="{% url 'all_reports' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>All Report</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'follow_up_report' %}?status=PARTIAL&filter=today" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Follow-Up</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'percentage_follow_up' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Percentage Follow-Up</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'advance_follow_up' %}" class="nav-link">
+                      <i class="far fa-circle nav-icon"></i>
+                      <p>Advance Follow-Up</p>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              {% endif %}
+
+              {% if request.user|has_role:"customer" %}
+              <!-- Customer Sidebar -->
+              <li class="nav-item">
+        
+                <a href="{% url 'home' %}" class="nav-link">
+                  <i class="nav-icon fas fa-tachometer-alt text-primary"></i>
+                  <p>My Dashboard</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'booking_list' %}" class="nav-link">
+                  <i class="nav-icon fas fa-book text-info"></i>
+                  <p>My Bookings</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'my_payments' %}" class="nav-link">
+                  <i class="nav-icon fas fa-credit-card text-success"></i>
+                  <p>My Payments</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'receipt_list' %}" class="nav-link">
+                  <i class="nav-icon fas fa-history text-warning"></i>
+                  <p>Payment History</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'cancelled_plots_list' %}" class="nav-link">
+                  <i class="nav-icon fas fa-ban text-danger"></i>
+                  <p>Cancelled Plots</p>
+                </a>
+              </li>
+              {% endif %}
+               {% if request.user|has_role:"admin" %}
+              <li class="nav-item">
+                <a href="{% url 'user_list' %}" class="nav-link">
+                  <i class="nav-icon fas fa-user-friends text-warning"></i>
+                  <p>Users</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{% url 'activity_log' %}" class="nav-link">
+                  <i class="nav-icon fas fa-history text-warning"></i>
+                  <p>Activity Log</p>
+                </a>
+              </li>
+              {% endif %}
+              {% endblock %}
+            </ul>
+          </nav>
+        </div>
+      </aside>
+
+      <!-- Content Wrapper. Contains page content -->
+      <div class="content-wrapper">
+        {% if user.is_authenticated and user.is_trial_account and user.signup_approved and user.trial_is_active %}
+        <div class="alert alert-info alert-dismissible fade show mb-0 rounded-0 border-0" style="background: linear-gradient(90deg, #29577f, #1e3f5c); color: #fff;">
+          <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between">
+            <span>
+              <i class="fas fa-gift mr-2"></i>
+              <strong>Land Link trial:</strong>
+              {{ user.trial_days_remaining }} day{{ user.trial_days_remaining|pluralize }} left
+              {% if user.trial_ends_at %} (ends {{ user.trial_ends_at|date:"M d, Y" }}){% endif %}
+            </span>
+            <a href="{% url 'manage_account' %}" class="text-white font-weight-bold"><u>Manage account</u></a>
+          </div>
+          <button type="button" class="close text-white" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        </div>
+        {% endif %}
+        {% if messages %}
+          <div class="container-fluid pt-3 px-4">
+            {% for message in messages %}
+              <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-2"></i>
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+      </div>
+
+      <!-- Footer -->
+      <footer class="main-footer text-center">
+        <strong>© Company</strong>
+      </footer>
+    </div>
+
+    <script src="{% static 'assets/plugins/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'assets/plugins/jquery-ui/jquery-ui.min.js' %}"></script>
+    <script src="{% static 'assets/assets/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'assets/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js' %}"></script>
+    <script src="{% static 'assets/dist/js/adminlte.min.js' %}"></script>
+    <!-- Plugins used by templates -->
+    <script src="{% static 'assets/plugins/select2/js/select2.full.min.js' %}"></script>
+    <script src="{% static 'assets/plugins/sweetalert2/sweetalert2.min.js' %}"></script>
+    <script src="{% static 'assets/plugins/toastr/toastr.min.js' %}"></script>
+    <script src="{% static 'assets/plugins/summernote/summernote-bs4.min.js' %}"></script>
+    <script src="{% static 'assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js' %}"></script>
+
+    <script>
+      $(function () {
+        var currentUrl = window.location.pathname;
+        $(".nav-sidebar .has-treeview")
+          .removeClass("menu-open")
+          .find(".nav-treeview")
+          .hide();
+        $(".nav-sidebar .nav-link").each(function () {
+          var href = $(this).attr("href");
+          if (href && href === currentUrl) {
+            $(this).addClass("active");
+            $(this)
+              .closest(".has-treeview")
+              .addClass("menu-open")
+              .children(".nav-treeview")
+              .show();
+          }
+        });
+        if (currentUrl === "/home/" || currentUrl === "/") {
+          $(".nav-sidebar > li:first-child > .nav-link").addClass("active");
+        }
+        $(".nav-sidebar .has-treeview > .nav-link").on("click", function (e) {
+          e.preventDefault();
+          var $li = $(this).parent();
+          if ($li.hasClass("menu-open")) {
+            $li.removeClass("menu-open");
+            $li.children(".nav-treeview").slideUp(150);
+          } else {
+            $(".nav-sidebar .has-treeview.menu-open")
+              .removeClass("menu-open")
+              .children(".nav-treeview")
+              .slideUp(150);
+            $li.addClass("menu-open");
+            $li.children(".nav-treeview").slideDown(150);
+          }
+        });
+
+        // Auto-hide success/info alerts after a short delay
+        setTimeout(function () {
+          $(".alert.alert-success, .alert.alert-info").fadeOut(
+            400,
+            function () {
+              $(this).remove();
+            },
+          );
+        }, 2500);
+      });
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+  </body>
+</html>

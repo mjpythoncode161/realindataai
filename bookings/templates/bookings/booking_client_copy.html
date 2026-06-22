@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Client Copy — Booking {{ booking.booking_no }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  @media print {
+    .no-print { display: none !important; }
+    .content-wrapper { margin-left: 0 !important; }
+    .main-sidebar, .main-header, .main-footer { display: none !important; }
+  }
+  .client-copy-header {
+    text-align: center;
+    border-bottom: 2px solid #29577f;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .client-copy-header h2 {
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+    color: #333;
+  }
+  .client-copy-header .company-address {
+    white-space: pre-line;
+    color: #666;
+    font-size: 0.95rem;
+    margin-bottom: 0;
+  }
+  .client-copy-badge {
+    display: inline-block;
+    background: #17a2b8;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="content-header no-print">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Client Copy</h1>
+        <p class="text-muted mb-0">Customer copy — agent commission details are hidden.</p>
+      </div>
+      <div class="col-sm-6 text-right">
+        <a href="{% url 'booking_view' booking.b_id %}" class="btn btn-secondary">Back to Booking</a>
+        {% include "bookings/includes/share_buttons.html" %}
+        <button type="button" class="btn btn-info" onclick="window.print();">
+          <i class="fas fa-print"></i> Print
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-outline card-maroon">
+      <div class="card-body">
+        <div class="client-copy-header">
+          <span class="client-copy-badge mb-2">Client Copy</span>
+          <h2>{{ company_name }}</h2>
+          {% if company_address %}
+          <p class="company-address">{{ company_address }}</p>
+          {% endif %}
+          {% if company_phone or company_email %}
+          <p class="small text-muted mb-0">
+            {% if company_phone %}<span>Phone: {{ company_phone }}</span>{% endif %}
+            {% if company_phone and company_email %} · {% endif %}
+            {% if company_email %}<span>Email: {{ company_email }}</span>{% endif %}
+          </p>
+          {% endif %}
+        </div>
+
+        <h5 class="text-center text-muted mb-4">Booking Application</h5>
+
+        <div class="row">
+          <div class="col-md-3"><strong>Booking No.</strong><br />{{ booking.booking_no }}</div>
+          <div class="col-md-3"><strong>Booking Date</strong><br />{% if booking.booking_date %}{{ booking.booking_date|date:"d-m-Y" }}{% else %}-{% endif %}</div>
+          <div class="col-md-3"><strong>Customer Name</strong><br />{{ booking.customer_full_name|default:"-" }}</div>
+          <div class="col-md-3"><strong>Mobile No.</strong><br />{{ booking.customer_phone|default:"-" }}</div>
+        </div>
+        <hr />
+        <div class="row">
+          <div class="col-md-3"><strong>Email</strong><br />{{ booking.customer_email|default:"-" }}</div>
+          <div class="col-md-3"><strong>Aadhaar No.</strong><br />{{ booking.customer_aadhar|default:"-" }}</div>
+          <div class="col-md-3"><strong>Apartment/Layout</strong><br />{% if booking.p_id %}{{ booking.p_id.name }}{% else %}-{% endif %}</div>
+          <div class="col-md-3"><strong>Location</strong><br />{{ booking.project_location|default:"-" }}</div>
+        </div>
+        {% if booking.present_address or booking.permanent_address %}
+        <hr />
+        <div class="row">
+          {% if booking.present_address %}
+          <div class="col-md-6"><strong>Present Address</strong><br />{{ booking.present_address }}</div>
+          {% endif %}
+          {% if booking.permanent_address %}
+          <div class="col-md-6"><strong>Permanent Address</strong><br />{{ booking.permanent_address }}</div>
+          {% endif %}
+        </div>
+        {% endif %}
+        {% if booking.kgp_completed %}
+        <div class="row mt-2">
+          <div class="col-md-12">
+            <span class="badge badge-info">
+              KGP Completed
+              {% if booking.kgp_completed_at %} — {{ booking.kgp_completed_at|date:"d-m-Y" }}{% endif %}
+            </span>
+          </div>
+        </div>
+        {% endif %}
+
+        <hr />
+        <h5>Property Details</h5>
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Project Name</th>
+              <th>Plot No</th>
+              <th>Plot Name</th>
+              <th>Area (sq.ft)</th>
+              <th>Rate</th>
+              <th>Booking Amount</th>
+              <th>Total Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for it in booking.items.all %}
+            <tr>
+              <td>{% if it.p_id %}{{ it.p_id.name }}{% else %}-{% endif %}</td>
+              <td>{{ it.plot_number|default:"-" }}</td>
+              <td>{{ it.plot_name|default:"-" }}</td>
+              <td>{{ it.area_sqft }}</td>
+              <td>{{ it.rate }}</td>
+              <td>{{ it.booking_amount }}</td>
+              <td>{{ it.total_amount }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center">No items</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {% if booking.balance %}
+        <hr />
+        <div class="row">
+          <div class="col-md-4"><strong>Total Amount</strong><br />₹{{ booking.balance.total_amount|floatformat:2 }}</div>
+          <div class="col-md-4"><strong>Paid Amount</strong><br />₹{{ booking.balance.paid_amount|floatformat:2 }}</div>
+          <div class="col-md-4"><strong>Balance Due</strong><br />₹{{ booking.balance.balance_amount|floatformat:2 }}</div>
+        </div>
+        {% endif %}
+
+        {% if booking.next_payment_date %}
+        <div class="row mt-3">
+          <div class="col-md-12"><strong>Next Payment Date</strong><br />{{ booking.next_payment_date|date:"d-m-Y" }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+{% include "bookings/includes/share_email_script.html" %}
+{% endblock %}

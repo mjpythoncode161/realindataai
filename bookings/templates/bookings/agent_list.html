@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ role_display }} List{% endblock %}
+
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>{{ role_display }} List</h1>
+      </div>
+      <div class="col-sm-6 text-right">
+        <a href="{% url 'agent_add' role=role %}" class="btn btn-sm" style="background-color: #29577f; color: white; border: none; padding: 6px 15px; font-weight: 500;">
+          <i class="fas fa-plus"></i> Add {{ role_display }}
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-outline card-maroon">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered table-sm align-middle">
+            <thead class="bg-light">
+              <tr>
+                <th style="width: 60px;">SI No.</th>
+                <th>Name</th>
+                {% if role == "accounts" %}
+                <th>Commission (Debit) Total</th>
+                <th>Security (Debit) Total</th>
+                <th>Accounts Date</th>
+                <th>Payments</th>
+                {% else %}
+                <th>Commission %</th>
+                <th>TDS Amount %</th>
+                <th>Security Amount %</th>
+                {% endif %}
+                <th class="text-center" style="width: {% if role == 'accounts' %}150px{% else %}120px{% endif %};">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in agents %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ a.u_id.full_name }}</td>
+                {% if role == "accounts" %}
+                <td>₹{{ a.commission_debit_total|floatformat:2 }}</td>
+                <td>₹{{ a.security_debit_total|floatformat:2 }}</td>
+                <td>{{ a.effective_date|date:"d-m-Y"|default:"—" }}</td>
+                <td>
+                  <span class="badge badge-info">{{ a.payment_count }} payment{{ a.payment_count|pluralize }}</span>
+                </td>
+                {% else %}
+                <td>{{ a.commission_percentage }}</td>
+                <td>{{ a.tds_amount }}%</td>
+                <td>{{ a.security_amount }}%</td>
+                {% endif %}
+                <td class="text-center text-nowrap">
+                  {% if role == "accounts" %}
+                  <a href="{% url 'accounts_transactions' a.am_id %}" class="btn btn-sm btn-light" title="View all transactions">
+                    <i class="fas fa-eye text-info"></i>
+                  </a>
+                  {% endif %}
+                  <a href="{% url 'agent_edit' a.am_id %}" class="btn btn-sm btn-light" title="Edit"><i class="fas fa-edit text-primary"></i></a>
+                  <form method="POST" action="{% url 'agent_delete' a.am_id %}" class="delete-form" data-name="{{ a.u_id.full_name }}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-light" title="Delete"><i class="fas fa-trash text-danger"></i></button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                {% if role == "accounts" %}
+                <td colspan="7" class="text-center text-muted">No {{ role_display }} records found</td>
+                {% else %}
+                <td colspan="6" class="text-center text-muted">No {{ role_display }} records found</td>
+                {% endif %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  $(function () {
+    $('.delete-form').on('submit', function (e) {
+      e.preventDefault();
+      var form = $(this);
+      var name = form.data('name');
+      
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "Delete profile for " + name + "?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#29577f',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function (resp) {
+              if (resp.status === 'success') {
+                Swal.fire({
+                  title: 'Deleted!',
+                  text: resp.message,
+                  icon: 'success',
+                  confirmButtonColor: '#29577f'
+                }).then(() => {
+                  location.reload();
+                });
+              } else {
+                Swal.fire('Error!', resp.message || 'Something went wrong', 'error');
+              }
+            },
+            error: function () {
+              Swal.fire('Error!', 'Network error or server error', 'error');
+            }
+          });
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

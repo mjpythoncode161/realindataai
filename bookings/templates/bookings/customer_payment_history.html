@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment History{% endblock %}
+
+{% block extra_head %}
+<style>
+    .nav-tabs-custom {
+        display: flex;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+    .nav-tabs-custom a {
+        padding: 10px 30px;
+        color: #666;
+        text-decoration: none;
+        border-bottom: 3px solid transparent;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    .nav-tabs-custom a.active {
+        color: #1a73e8;
+        border-bottom-color: #1a73e8;
+    }
+    .history-card {
+        background: #fdfbff;
+        border: 1px solid #f1e9f5;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .history-card .receipt-no {
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+    }
+    .history-card .detail-row {
+        margin-bottom: 5px;
+        color: #555;
+    }
+    .history-card .detail-row strong {
+        color: #333;
+    }
+    .history-card .amount {
+        color: #28a745;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-top: 5px;
+    }
+    .history-card .status-badge {
+        display: inline-block;
+        background: #28a745;
+        color: white;
+        padding: 4px 15px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-top: 10px;
+    }
+    .history-card .method {
+        color: #666;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6 d-flex align-items-center">
+                <a href="{% url 'home' %}" class="btn btn-sm btn-light rounded-circle mr-3 border">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 style="color: #333; font-weight: 500; text-transform: uppercase; font-size: 1.5rem;">Payment History</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        
+        <div class="nav-tabs-custom">
+            <a href="{% url 'receipt_list' %}" class="active">History</a>
+            <a href="{% url 'ledger_list' %}">Ledger</a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <!-- Pending Payments -->
+                {% for p in pending_payments %}
+                <div class="history-card" style="border-left: 5px solid #ffc107; background: #fffdf5;">
+                    <div class="receipt-no">Request No : PENDING-{{ p.p_id }}</div>
+                    
+                    <div class="detail-row">Project Name : <strong>{{ p.b_id.p_id.name }}</strong></div>
+                    <div class="detail-row">Plot No : <strong>{{ p.b_id.balance.display_plot_number }}</strong></div>
+                    <div class="detail-row">Date : <strong>{{ p.payment_date|date:"d M Y" }}</strong></div>
+                    
+                    <div class="amount text-warning">Amount : ₹{{ p.pay_amount|floatformat:0 }}</div>
+                    
+                    <div class="detail-row mt-1">
+                        <span class="method">Payment Method : {{ p.get_payment_method_display }}</span>
+                    </div>
+                    
+                    <div class="status-badge" style="background: #ffc107; color: #333;">Pending</div>
+                </div>
+                {% endfor %}
+
+                <!-- Approved Receipts -->
+                {% for r in receipts %}
+                <div class="history-card">
+                    <div class="receipt-no">Receipt No : {{ r.receipt_no }}</div>
+                    
+                    <div class="detail-row">Project Name : <strong>{{ r.b_id.p_id.name }}</strong></div>
+                    <div class="detail-row">Plot No : <strong>{{ r.plot_number }}</strong></div>
+                    <div class="detail-row">Date : <strong>{{ r.receipt_date|date:"d M Y" }}</strong></div>
+                    
+                    <div class="amount">Amount : ₹{{ r.pay_amount|floatformat:0 }}</div>
+                    
+                    <div class="detail-row mt-1">
+                        <span class="method">Payment Method : {{ r.get_payment_method_display }}</span>
+                    </div>
+                    
+                    <div class="status-badge">Success</div>
+                </div>
+                {% endfor %}
+
+                {% if not receipts and not pending_payments %}
+                <div class="text-center py-5">
+                    <i class="fas fa-history fa-4x text-muted opacity-25 mb-3"></i>
+                    <h5 class="text-muted">No payment history found.</h5>
+                    <a href="{% url 'my_payments' %}" class="btn btn-primary mt-3">Make a Payment</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Ledger Master{% endblock %}
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6"><h1>Ledger Master</h1></div>
+      <div class="col-sm-6 text-right">
+        <a href="{% url 'tally_create_master' %}" class="btn btn-primary">
+          <i class="fas fa-plus"></i> Add Ledger Account
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="content">
+  <div class="container-fluid">
+    {% if messages %}
+      {% for msg in messages %}
+      <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>{{ msg }}
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    {% for section in sections %}
+    <div class="card mb-3" style="border:1px solid #dee2e6;">
+      <!-- Section Header -->
+      <div class="card-header py-2" style="background:#f8f9fa; border-bottom:1px solid #dee2e6;">
+        <span class="badge badge-{{ section.badge }} mr-2" style="font-size:0.85em;">{{ section.category }}</span>
+        <strong>{{ section.subgroup }}</strong>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead style="background:#e9ecef;">
+            <tr>
+              <th width="5%">#</th>
+              <th width="40%">Ledger Name</th>
+              <th width="22%">Opening Balance</th>
+              <th width="10%">Type</th>
+              <th width="10%">System</th>
+              <th width="13%">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in section.rows %}
+            <tr>
+              <td>{{ d.num }}</td>
+              <td>
+                <strong>{{ d.ledger.name }}</strong>
+                {% if d.ledger.description %}
+                <br><small class="text-muted">{{ d.ledger.description }}</small>
+                {% endif %}
+              </td>
+              <td>₹{{ d.ledger.opening_balance|floatformat:2 }}</td>
+              <td>
+                {% if d.ledger.opening_balance_type == 'Dr' %}
+                  <span class="badge" style="background:#e6a817; color:#fff; font-size:0.85em;">Dr</span>
+                {% else %}
+                  <span class="badge" style="background:#17a2b8; color:#fff; font-size:0.85em;">Cr</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if d.ledger.is_system %}
+                  <i class="fas fa-lock text-secondary" title="System account"></i>
+                {% endif %}
+              </td>
+              <td>
+                {% if d.ledger.is_system %}
+                  <span class="text-muted small">System</span>
+                {% else %}
+                  <a href="{% url 'tally_edit_master' d.ledger.l_id %}" class="btn btn-xs btn-warning mr-1" title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  <form method="POST" action="{% url 'tally_delete_master' d.ledger.l_id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Delete {{ d.ledger.name }}?')" title="Delete">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-info">No ledger accounts yet. <a href="{% url 'tally_create_master' %}">Add one</a>.</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

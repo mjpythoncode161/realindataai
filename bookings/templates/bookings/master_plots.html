@@ -1,0 +1,506 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title|default:"Master Plots" }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Clean, modern light background */
+    body {
+        background-color: #f6f8f6; /* slightly darker off-white to make white cards pop */
+    }
+
+    /* Fixed Top Details Bar */
+    .details-top-bar {
+        position: fixed;
+        top: -150px;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        z-index: 1050;
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+        border-bottom: 3px solid #137333;
+    }
+
+    .details-top-bar.active { top: 0; }
+
+    .details-left { display: flex; align-items: center; gap: 30px; flex-wrap: wrap; }
+    .details-title-group { display: flex; flex-direction: column; }
+    .details-title { font-size: 1.2rem; font-weight: 700; color: #2b3035; margin: 0; }
+    .details-project { font-size: 0.85rem; color: #6c757d; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+    .details-stats { display: flex; gap: 20px; }
+    .detail-item { display: flex; flex-direction: column; }
+    .detail-label { font-size: 0.75rem; color: #adb5bd; text-transform: uppercase; font-weight: 600; }
+    .detail-value { font-size: 1rem; font-weight: 600; color: #212529; }
+    .status-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+    .status-available { background: #e6f4ea; color: #137333; }
+    .status-booked { background: #f1f3f4; color: #5f6368; }
+    .details-right { display: flex; align-items: center; gap: 15px; }
+    .close-details { background: none; border: none; font-size: 1.8rem; color: #adb5bd; cursor: pointer; line-height: 1; transition: color 0.2s; }
+    .close-details:hover { color: #495057; }
+
+    /* Project Blocks Layout */
+    .projects-container {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        align-items: stretch;
+    }
+
+    .project-block {
+        background: #ffffff; /* pure white background like the image */
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03); /* very soft shadow */
+        border: 1px solid #f0f0f0;
+        width: 100%;
+    }
+
+    .project-header {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: none;
+    }
+
+    .project-header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .project-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(145deg, #f1f8f1, #dcf0dc);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #2e7d32;
+        box-shadow: 2px 2px 6px rgba(0,0,0,0.08), -2px -2px 6px rgba(255,255,255,0.8);
+    }
+
+    .project-title {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #0b4a1b; /* dark green text */
+        margin-bottom: 2px;
+    }
+
+    .project-location {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    .stats-container {
+        display: flex;
+        gap: 10px;
+    }
+
+    .stat-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: #ffffff;
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        padding: 6px 14px;
+        min-width: 70px;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.02);
+    }
+
+    .stat-label {
+        font-size: 0.6rem;
+        font-weight: 800;
+        color: #6c757d;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        font-size: 1.2rem;
+        font-weight: 800;
+    }
+
+    .text-total { color: #2e7d32; }
+    .text-booked { color: #d32f2f; }
+    .text-available { color: #2e7d32; }
+
+    /* Internal Plot Grid */
+    .plots-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        background: #fbfdfb; /* extremely subtle off-white inner */
+        padding: 20px;
+        border-radius: 12px; 
+        border: 1px solid #f0f0f0;
+        justify-content: start;
+    }
+
+    .plot {
+        width: 60px; /* wider key */
+        height: 52px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
+        position: relative;
+    }
+
+    /* Plot States matching Image exact 3D Keys */
+    .plot-available {
+        background: linear-gradient(to bottom, #f1f8f1 0%, #dcf0dc 100%);
+        color: #0b4a1b; /* dark green text */
+        border: 1px solid #b8d7b0;
+        /* THICK 3D BOTTOM EDGE + DROP SHADOW */
+        box-shadow: 
+            0 4px 0 #95c590, 
+            0 6px 6px rgba(0,0,0,0.12);
+    }
+
+    .plot-booked {
+        background: linear-gradient(to bottom, #f8f9fa 0%, #e2e6ea 100%);
+        color: #495057;
+        border: 1px solid #ced4da;
+        /* THICK 3D BOTTOM EDGE + DROP SHADOW */
+        box-shadow: 
+            0 4px 0 #adb5bd, 
+            0 6px 6px rgba(0,0,0,0.1);
+        cursor: not-allowed;
+    }
+
+    .plot-awaiting {
+        background: linear-gradient(to bottom, #fff3cd 0%, #ffeeba 100%);
+        color: #856404;
+        border: 1px solid #ffeeba;
+        box-shadow: 
+            0 4px 0 #ffe082, 
+            0 6px 6px rgba(0,0,0,0.1);
+        cursor: not-allowed;
+    }
+
+    /* 3D Press Interaction */
+    .plot-available:active, .plot-booked:active, .plot-awaiting:active {
+        transform: translateY(3px); /* push down */
+        box-shadow: 
+            0 1px 0 #95c590, /* shrink bottom edge */
+            0 2px 3px rgba(0,0,0,0.1);
+    }
+    .plot-booked:active {
+        box-shadow: 0 1px 0 #adb5bd, 0 2px 3px rgba(0,0,0,0.1);
+    }
+    .plot-awaiting:active {
+        box-shadow: 0 1px 0 #ffe082, 0 2px 3px rgba(0,0,0,0.1);
+    }
+
+    /* Slightly brighten on hover, but no weird floating since they are physical keys */
+    .plot-available:hover {
+        filter: brightness(1.03);
+    }
+
+    .plot-selected {
+        background: linear-gradient(to bottom, #d4ebd6, #b2dbb6) !important;
+        border: 2px solid #2e7d32 !important;
+        color: #0b4a1b !important;
+        box-shadow: 
+            0 3px 0 #7cb37a, 
+            0 5px 8px rgba(0,0,0,0.2) !important;
+        transform: translateY(1px); /* slight press state to indicate selection */
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .project-header { flex-direction: column; gap: 20px; align-items: flex-start; }
+        .details-top-bar { flex-direction: column; align-items: flex-start; gap: 15px; }
+        .details-right { align-self: flex-end; margin-top: -40px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Top Details Panel -->
+<div class="details-top-bar" id="plotDetailsCard">
+    <div class="details-left">
+        <div class="details-title-group">
+            <span class="details-project" id="d-project-name">Project Name</span>
+            <h3 class="details-title">Plot <span id="d-plot-no">-</span></h3>
+        </div>
+        
+        <div class="details-stats">
+            <div class="detail-item">
+                <span class="detail-label">Status</span>
+                <div><span class="status-badge" id="d-status">-</span></div>
+            </div>
+            <!-- Standard Placeholders -->
+            <div class="detail-item">
+                <span class="detail-label">Price</span>
+                <span class="detail-value text-muted">Contact Sales</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="details-right">
+        <a href="{% url 'booking_add' %}" class="btn btn-success" style="background-color: #137333; border: none; font-weight: 600;" id="btn-book-now">Book Now</a>
+        <button class="close-details" id="closeDetailsCard">&times;</button>
+    </div>
+</div>
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2 align-items-center">
+            <div class="col-sm-6">
+                <h1 style="font-weight: 700; color: #343a40;">Master Plots</h1>
+            </div>
+            <div class="col-sm-6 text-right">
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" id="btn-grid-view" class="btn btn-outline-secondary active" title="Grid View"><i class="fas fa-th mr-1"></i>Grid</button>
+                    <button type="button" id="btn-list-view" class="btn btn-outline-secondary" title="List View"><i class="fas fa-list mr-1"></i>List</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content pb-5">
+    <div class="container-fluid">
+
+        <!-- GRID VIEW -->
+        <div id="view-grid">
+        <div class="projects-container">
+            {% for item in project_data %}
+            <div class="project-block">
+                <div class="project-header">
+                    <div class="project-header-left">
+                        <div class="project-icon">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <div>
+                            <h2 class="project-title">{{ item.project.name }}</h2>
+                            <p class="project-location"><i class="fas fa-map-marker-alt mr-1"></i>{{ item.project.location|default:"Random Road" }}</p>
+                        </div>
+                    </div>
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <span class="stat-label">TOTAL</span>
+                            <span class="stat-value text-total">{{ item.project.num_plots }}</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">BOOKED</span>
+                            <span class="stat-value text-booked">{{ item.booked_count }}</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">PENDING CLOSURE</span>
+                            <span class="stat-value text-warning" style="color: #ffc107 !important;">{{ item.awaiting_count }}</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">AVAILABLE</span>
+                            <span class="stat-value text-available">{{ item.available_count }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clean Grid Internal Layout -->
+                <div class="plots-grid" data-total-plots="{{ item.plots|length }}">
+                    {% for plot in item.plots %}
+                        <div class="plot {% if plot.status == 'booked' %}plot-booked{% elif plot.status == 'awaiting_closure' %}plot-awaiting{% else %}plot-available{% endif %}" 
+                             data-plot-no="{{ plot.number }}" 
+                             data-project-id="{{ item.project.p_id }}"
+                             data-project-name="{{ item.project.name }}"
+                             data-status="{% if plot.status == 'booked' %}Booked{% elif plot.status == 'awaiting_closure' %}Cancelled - Awaiting Closure{% else %}Available{% endif %}"
+                             title="Plot {{ plot.number }}">
+                            {{ plot.number }}
+                        </div>
+                    {% empty %}
+                        <div class="text-muted text-center py-3 w-100">No plots found.</div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info bg-white w-100" style="border: 1px solid #b8daff; color: #004085;">
+                <i class="fas fa-info-circle mr-2"></i> No layout plans found.
+            </div>
+            {% endfor %}
+        </div>
+        </div><!-- end #view-grid -->
+
+        <!-- LIST VIEW -->
+        <div id="view-list" style="display:none;">
+            {% for item in project_data %}
+            <div class="card card-outline card-maroon mb-4">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-leaf mr-2 text-success"></i>{{ item.project.name }}
+                    </h3>
+                    <div>
+                        <span class="badge badge-secondary ml-1">Total: {{ item.project.num_plots }}</span>
+                        <span class="badge badge-danger ml-1">Booked: {{ item.booked_count }}</span>
+                        <span class="badge badge-warning ml-1">Pending: {{ item.awaiting_count }}</span>
+                        <span class="badge badge-success ml-1">Available: {{ item.available_count }}</span>
+                    </div>
+                </div>
+                <div class="card-body p-0 table-responsive">
+                    <table class="table table-bordered table-striped table-sm mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th style="width:60px;">#</th>
+                                <th>Plot No.</th>
+                                <th>Status</th>
+                                <th class="text-center" style="width:100px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for plot in item.plots %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><strong>{{ plot.number }}</strong></td>
+                                <td>
+                                    {% if plot.status == "booked" %}
+                                    <span class="badge badge-danger">Booked</span>
+                                    {% elif plot.status == "awaiting_closure" %}
+                                    <span class="badge badge-warning">Cancelled – Awaiting Closure</span>
+                                    {% else %}
+                                    <span class="badge badge-success">Available</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center text-nowrap">
+                                    {% if plot.status == "available" %}
+                                    <a href="{% url 'booking_add' %}?p_id={{ item.project.p_id }}&plot_no={{ plot.number }}"
+                                       class="btn btn-sm btn-light" title="Book this plot">
+                                        <i class="fas fa-plus-circle text-success"></i>
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted">No plots found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">No layout plans found.</div>
+            {% endfor %}
+        </div><!-- end #view-list -->
+
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Dynamic sizing is now handled purely by flexbox CSS
+        const grids = document.querySelectorAll('.plots-grid');
+        grids.forEach(grid => {
+            const total = parseInt(grid.getAttribute('data-total-plots')) || 0;
+            if (total === 0) {
+                grid.style.display = 'block'; // Fallback for empty message
+            }
+        });
+
+        const plots = document.querySelectorAll('.plot');
+        const detailsCard = document.getElementById('plotDetailsCard');
+        const closeBtn = document.getElementById('closeDetailsCard');
+        
+        // Detail Elements
+        const dProjectName = document.getElementById('d-project-name');
+        const dPlotNo = document.getElementById('d-plot-no');
+        const dStatus = document.getElementById('d-status');
+        const btnBookNow = document.getElementById('btn-book-now');
+
+        function selectPlot(plotEl) {
+            // Remove previous selection
+            document.querySelectorAll('.plot-selected').forEach(el => {
+                el.classList.remove('plot-selected');
+            });
+
+            // Add selection to current
+            plotEl.classList.add('plot-selected');
+
+            // Populate Details
+            const no = plotEl.getAttribute('data-plot-no');
+            const project = plotEl.getAttribute('data-project-name');
+            const projectId = plotEl.getAttribute('data-project-id');
+            const status = plotEl.getAttribute('data-status');
+
+            dProjectName.textContent = project;
+            dPlotNo.textContent = no;
+            
+            dStatus.textContent = status;
+            dStatus.className = 'status-badge ' + (status === 'Available' ? 'status-available' : 'status-booked');
+
+            if (status === 'Available') {
+                btnBookNow.style.display = 'inline-block';
+                // Update Book Now URL
+                const baseUrl = "{% url 'booking_add' %}";
+                btnBookNow.href = `${baseUrl}?p_id=${projectId}&plot_no=${no}`;
+            } else {
+                btnBookNow.style.display = 'none';
+            }
+
+            // Show Card
+            detailsCard.classList.add('active');
+        }
+
+        plots.forEach(plot => {
+            plot.addEventListener('click', function(e) {
+                e.stopPropagation();
+                selectPlot(this);
+            });
+        });
+
+        // Close card
+        closeBtn.addEventListener('click', function() {
+            detailsCard.classList.remove('active');
+            document.querySelectorAll('.plot-selected').forEach(el => {
+                el.classList.remove('plot-selected');
+            });
+        });
+
+        // Close card when clicking outside
+        document.addEventListener('click', function(e) {
+            // Don't close if clicking inside details card or on a plot
+            if (!detailsCard.contains(e.target) && !e.target.classList.contains('plot')) {
+                detailsCard.classList.remove('active');
+                document.querySelectorAll('.plot-selected').forEach(el => {
+                    el.classList.remove('plot-selected');
+                });
+            }
+        });
+
+        // Grid / List view toggle
+        document.getElementById('btn-grid-view').addEventListener('click', function () {
+            document.getElementById('view-grid').style.display = '';
+            document.getElementById('view-list').style.display = 'none';
+            this.classList.add('active');
+            document.getElementById('btn-list-view').classList.remove('active');
+        });
+        document.getElementById('btn-list-view').addEventListener('click', function () {
+            document.getElementById('view-grid').style.display = 'none';
+            document.getElementById('view-list').style.display = '';
+            this.classList.add('active');
+            document.getElementById('btn-grid-view').classList.remove('active');
+        });
+    });
+</script>
+{% endblock %}

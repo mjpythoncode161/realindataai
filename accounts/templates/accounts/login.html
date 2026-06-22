@@ -1,0 +1,133 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ company_name|default:"LandLink" }} | Sign in</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback"
+    />
+    <link rel="stylesheet" href="{% static 'assets/assets/plugins/fontawesome-free/css/all.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/dist/css/adminlte.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/dist/css/styles.css' %}" />
+    <style>
+      body.hold-transition.login-page {
+        background-color: #f4f6f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .login-box {
+        width: 100%;
+        max-width: 420px;
+        margin: 1rem auto;
+      }
+      .login-box .card-header {
+        background: transparent;
+        border-bottom: 1px solid #dee2e6;
+      }
+      .login-box .brand-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #29577f;
+      }
+      .btn-login-primary {
+        background-color: #29577f;
+        border-color: #29577f;
+        color: #fff;
+        font-weight: 600;
+      }
+      .btn-login-primary:hover,
+      .btn-login-primary:focus {
+        background-color: #1e3f5c;
+        border-color: #1e3f5c;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body class="hold-transition login-page">
+    <div class="login-box">
+      <div class="card card-outline card-maroon elevation-2">
+        <div class="card-header text-center py-3">
+          <span class="brand-title"><i class="fas fa-sign-in-alt mr-1"></i> Sign in</span>
+        </div>
+        <div class="card-body">
+          <p class="text-muted text-center mb-4">Use your <strong>email</strong> or <strong>phone</strong> and password</p>
+
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'danger' }}{% endif %} alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+
+          <form action="{% url 'login' %}" method="post" autocomplete="on">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="login_id" class="small font-weight-bold">Email or phone</label>
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="login_id"
+                  name="username"
+                  class="form-control"
+                  placeholder="Email or 10-digit mobile"
+                  required
+                  autofocus
+                  autocomplete="username"
+                />
+                <div class="input-group-append">
+                  <div class="input-group-text"><span class="fas fa-user"></span></div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="password" class="small font-weight-bold">Password</label>
+              <div class="input-group">
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  class="form-control"
+                  placeholder="Password"
+                  required
+                  autocomplete="current-password"
+                />
+                <div class="input-group-append">
+                  <div class="input-group-text"><span class="fas fa-lock"></span></div>
+                </div>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-7">
+                <div class="icheck-primary">
+                  <input type="checkbox" id="remember" name="remember" />
+                  <label for="remember">Remember me</label>
+                </div>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-login-primary btn-block btn-lg">
+              <i class="fas fa-tachometer-alt mr-1"></i> Go to Dashboard
+            </button>
+          </form>
+          <p class="text-center text-muted mt-3 mb-2 small">
+            <a href="{% url 'landing_home' %}">← Back to Land Link home</a>
+          </p>
+          <p class="text-center mb-0">
+            New here? <a href="{% url 'public_signup' %}"><strong>Start 7-day free trial</strong></a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="{% static 'assets/plugins/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'assets/assets/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'assets/dist/js/adminlte.min.js' %}"></script>
+  </body>
+</html>

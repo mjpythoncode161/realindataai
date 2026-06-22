@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% block title %}Receipt Voucher{% endblock %}
+{% block content %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Receipt Voucher</h1>
+        <small class="text-muted">Debit and Credit must balance before saving</small>
+      </div>
+      <div class="col-sm-6 text-right">
+        <a href="{% url 'tally_voucher_list' %}" class="btn btn-secondary btn-sm"><i class="fas fa-list"></i> Voucher List</a>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="content">
+  <div class="container-fluid">
+    <div class="card card-outline card-success">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-arrow-circle-down text-success mr-1"></i> New Receipt Voucher</h3>
+      </div>
+      <div class="card-body">
+        {% if messages %}
+          {% for msg in messages %}
+          <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>{{ msg }}
+          </div>
+          {% endfor %}
+        {% endif %}
+        <form method="POST" id="rvForm">
+          {% csrf_token %}
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <label>Voucher Date <span class="text-danger">*</span></label>
+              <input type="date" name="voucher_date" class="form-control" value="{% now 'Y-m-d' %}" required>
+            </div>
+            <div class="col-md-6">
+              <label>Narration</label>
+              <input type="text" name="narration" class="form-control" placeholder="Receipt description / reason">
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-bordered">
+              <thead style="background:#343a40; color:#fff;">
+                <tr>
+                  <th width="4%">#</th>
+                  <th width="36%">Ledger Account</th>
+                  <th width="12%">Dr / Cr</th>
+                  <th width="16%">Amount (₹)</th>
+                  <th width="28%">Narration</th>
+                  <th width="4%"></th>
+                </tr>
+              </thead>
+              <tbody id="entryBody">
+                <tr>
+                  <td class="text-center row-num">1</td>
+                  <td>
+                    <select name="entry_ledger[]" class="form-control form-control-sm" required>
+                      <option value="">-- Select Ledger --</option>
+                      {% if bank_cash %}<optgroup label="Bank / Cash">{% for l in bank_cash %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+                      {% if staff_ledgers %}<optgroup label="Staff Members">{% for l in staff_ledgers %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+                      {% if other_ledgers %}<optgroup label="Other Accounts">{% for l in other_ledgers %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+                    </select>
+                  </td>
+                  <td class="text-center">
+                    <input type="hidden" name="entry_drcr[]" class="drcr-val" value="Dr">
+                    <div class="btn-group btn-group-sm">
+                      <button type="button" class="btn btn-danger drcr-btn" onclick="setDrCr(this,'Dr')">Dr</button>
+                      <button type="button" class="btn btn-outline-success drcr-btn" onclick="setDrCr(this,'Cr')">Cr</button>
+                    </div>
+                  </td>
+                  <td><input type="number" name="entry_amount[]" step="0.01" min="0" class="form-control form-control-sm amt-input" placeholder="0.00" required></td>
+                  <td><input type="text" name="entry_note[]" class="form-control form-control-sm" placeholder="Optional note"></td>
+                  <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)"><i class="fas fa-times"></i></button></td>
+                </tr>
+                <tr>
+                  <td class="text-center row-num">2</td>
+                  <td>
+                    <select name="entry_ledger[]" class="form-control form-control-sm">
+                      <option value="">-- Select Ledger --</option>
+                      {% if bank_cash %}<optgroup label="Bank / Cash">{% for l in bank_cash %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+                      {% if staff_ledgers %}<optgroup label="Staff Members">{% for l in staff_ledgers %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+                      {% if other_ledgers %}<optgroup label="Other Accounts">{% for l in other_ledgers %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+                    </select>
+                  </td>
+                  <td class="text-center">
+                    <input type="hidden" name="entry_drcr[]" class="drcr-val" value="Cr">
+                    <div class="btn-group btn-group-sm">
+                      <button type="button" class="btn btn-outline-danger drcr-btn" onclick="setDrCr(this,'Dr')">Dr</button>
+                      <button type="button" class="btn btn-success drcr-btn" onclick="setDrCr(this,'Cr')">Cr</button>
+                    </div>
+                  </td>
+                  <td><input type="number" name="entry_amount[]" step="0.01" min="0" class="form-control form-control-sm amt-input" placeholder="0.00"></td>
+                  <td><input type="text" name="entry_note[]" class="form-control form-control-sm" placeholder="Optional note"></td>
+                  <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)"><i class="fas fa-times"></i></button></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" class="text-right"><strong>Total:</strong></td>
+                  <td>
+                    <div class="text-danger"><strong>Dr: <span id="totalDr">0.00</span></strong></div>
+                    <div class="text-success"><strong>Cr: <span id="totalCr">0.00</span></strong></div>
+                  </td>
+                  <td colspan="2" class="align-middle">
+                    <span id="balanceStatus" class="text-danger font-weight-bold">
+                      <i class="fas fa-times-circle"></i> Not Balanced
+                    </span>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="mb-3">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addRow()">
+              <i class="fas fa-plus"></i> Add Row
+            </button>
+          </div>
+          <hr>
+          <div class="text-right">
+            <a href="{% url 'tally_voucher_list' %}" class="btn btn-secondary mr-2">Cancel</a>
+            <button type="submit" class="btn btn-success" id="saveBtn" disabled><i class="fas fa-save mr-1"></i> Save Receipt Voucher</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<template id="rowTpl">
+  <tr>
+    <td class="text-center row-num"></td>
+    <td>
+      <select name="entry_ledger[]" class="form-control form-control-sm">
+        <option value="">-- Select Ledger --</option>
+        {% if bank_cash %}<optgroup label="Bank / Cash">{% for l in bank_cash %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+        {% if staff_ledgers %}<optgroup label="Staff Members">{% for l in staff_ledgers %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+        {% if other_ledgers %}<optgroup label="Other Accounts">{% for l in other_ledgers %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+      </select>
+    </td>
+    <td class="text-center">
+      <input type="hidden" name="entry_drcr[]" class="drcr-val" value="Dr">
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-danger drcr-btn" onclick="setDrCr(this,'Dr')">Dr</button>
+        <button type="button" class="btn btn-outline-success drcr-btn" onclick="setDrCr(this,'Cr')">Cr</button>
+      </div>
+    </td>
+    <td><input type="number" name="entry_amount[]" step="0.01" min="0" class="form-control form-control-sm amt-input" placeholder="0.00"></td>
+    <td><input type="text" name="entry_note[]" class="form-control form-control-sm" placeholder="Optional note"></td>
+    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)"><i class="fas fa-times"></i></button></td>
+  </tr>
+</template>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function setDrCr(btn, val) {
+  const row = btn.closest('tr');
+  const hidden = row.querySelector('.drcr-val');
+  hidden.value = val;
+  row.querySelectorAll('.drcr-btn').forEach(b => {
+    const isDr = b.textContent.trim() === 'Dr';
+    b.className = 'btn btn-sm drcr-btn';
+    if (isDr) b.classList.add(val === 'Dr' ? 'btn-danger' : 'btn-outline-danger');
+    else       b.classList.add(val === 'Cr' ? 'btn-success' : 'btn-outline-success');
+  });
+  updateTotals();
+}
+function updateTotals() {
+  let dr = 0, cr = 0;
+  document.querySelectorAll('#entryBody tr').forEach(row => {
+    const dc = row.querySelector('.drcr-val');
+    const amt = row.querySelector('.amt-input');
+    if (!dc || !amt) return;
+    const v = parseFloat(amt.value || 0);
+    if (dc.value === 'Dr') dr += v; else cr += v;
+  });
+  document.getElementById('totalDr').textContent = dr.toFixed(2);
+  document.getElementById('totalCr').textContent = cr.toFixed(2);
+  const ok = Math.abs(dr - cr) < 0.01 && dr > 0;
+  document.getElementById('balanceStatus').innerHTML = ok
+    ? '<i class="fas fa-check-circle text-success"></i> <span class="text-success">Balanced</span>'
+    : '<i class="fas fa-times-circle text-danger"></i> <span class="text-danger">Not Balanced</span>';
+  document.getElementById('saveBtn').disabled = !ok;
+}
+function addRow() {
+  const tpl = document.getElementById('rowTpl');
+  document.getElementById('entryBody').appendChild(tpl.content.cloneNode(true));
+  renumber(); updateTotals();
+}
+function removeRow(btn) {
+  const body = document.getElementById('entryBody');
+  if (body.rows.length > 1) { btn.closest('tr').remove(); renumber(); updateTotals(); }
+}
+function renumber() {
+  document.querySelectorAll('#entryBody tr').forEach((r, i) => {
+    const n = r.querySelector('.row-num'); if (n) n.textContent = i + 1;
+  });
+}
+document.addEventListener('input', e => { if (e.target.classList.contains('amt-input')) updateTotals(); });
+document.addEventListener('DOMContentLoaded', updateTotals);
+</script>
+{% endblock extra_scripts %}

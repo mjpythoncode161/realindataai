@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Project Wise Report{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Project Wise Report</h1>
+            </div>
+            <div class="col-sm-6 text-right">
+                <a href="{% url 'all_reports' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to Reports
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Filter Card -->
+        <div class="card card-outline card-maroon">
+            <div class="card-header">
+                <h3 class="card-title">Filter Options</h3>
+            </div>
+            <div class="card-body">
+                <form method="GET">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Project</label>
+                                <select name="project" class="form-control select2">
+                                    <option value="">-- Select Project --</option>
+                                    {% for p in projects %}
+                                    <option value="{{ p.p_id }}" {% if selected_project == p.p_id|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>From Date</label>
+                                <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>To Date</label>
+                                <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <button type="submit" class="btn btn-maroon btn-block" style="background-color: #29577f; color: white;">Show Report</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if selected_project %}
+        <!-- Summary Cards -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info"><i class="fas fa-key"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Units Booked</span>
+                        <span class="info-box-number">{{ bookings.count }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success"><i class="fas fa-wallet"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total Collection</span>
+                        <span class="info-box-number">₹{{ total_paid|default:"0.00"|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="card">
+            <div class="card-body p-0">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Booking No</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Plot No</th>
+                            <th>Total Amount</th>
+                            <th>Paid</th>
+                            <th>Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in bookings %}
+                        <tr>
+                            <td>{{ b.booking_no }}</td>
+                            <td>{{ b.booking_date|date:"d-m-Y" }}</td>
+                            <td>{{ b.customer_full_name }}</td>
+                            <td>{{ b.balance.display_plot_number }}</td>
+                            <td>₹{{ b.balance.total_amount|floatformat:2 }}</td>
+                            <td class="text-success">₹{{ b.balance.paid_amount|floatformat:2 }}</td>
+                            <td class="text-danger">₹{{ b.balance.balance_amount|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No bookings found for this project.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+    });
+</script>
+{% endblock %}
