@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
 from itertools import zip_longest
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -10,52 +11,69 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.models import Users, users_with_any_role_query
+from saas.tenant import get_request_organization, tenant_ledgers, tenant_vouchers
 from .models import LedgerMaster, Voucher, VoucherEntry
 
 
-def _ensure_system_ledgers():
-    """Auto-create default system bank/cash accounts (undeletable)."""
+def _org(request):
+    return get_request_organization(request)
+
+
+def _ensure_system_ledgers(request):
+    """Auto-create default system bank/cash accounts per organization."""
+    org = _org(request)
+    if not org:
+        return
     defaults = [
         {"name": "Bank Account", "group": "BANK_CASH", "opening_balance_type": "Dr"},
         {"name": "Cash in Hand", "group": "BANK_CASH", "opening_balance_type": "Dr"},
     ]
     for d in defaults:
         LedgerMaster.objects.get_or_create(
+            organization=org,
             name=d["name"],
-            defaults={"group": d["group"], "opening_balance_type": d["opening_balance_type"], "is_system": True},
+            defaults={
+                "group": d["group"],
+                "opening_balance_type": d["opening_balance_type"],
+                "is_system": True,
+            },
         )
 
 
-def _ensure_staff_ledgers():
-    """Auto-create a LedgerMaster for every active manager/executive/telecaller."""
+def _ensure_staff_ledgers(request):
+    """Auto-create a LedgerMaster for every active staff user in this org."""
+    org = _org(request)
+    if not org:
+        return
     staff = Users.objects.filter(
-        users_with_any_role_query("manager", "executive", "telecaller"), is_active=True
+        users_with_any_role_query("manager", "executive", "telecaller"),
+        is_active=True,
+        organization=org,
     ).distinct()
     for user in staff:
         label = f"{user.full_name or user.username} ({user.get_roles_display()})"
         LedgerMaster.objects.get_or_create(
+            organization=org,
             name=label,
             defaults={"group": "STAFF", "opening_balance_type": "Dr"},
         )
 
 
-# category/badge/subgroup metadata for each group key
 GROUP_META = {
-    "BANK_CASH": ("Assets",     "success", "Cash & Bank"),
-    "ASSET":     ("Assets",     "success", "Fixed Assets"),
-    "LIABILITY": ("Liability",  "danger",  "Current Liability"),
-    "INCOME":    ("Income",     "info",    "Direct Income"),
-    "EXPENSE":   ("Expenses",   "warning", "Direct Expenses"),
-    "CAPITAL":   ("Capital",    "primary", "Owner's Equity"),
-    "STAFF":     ("Expenses",   "warning", "Staff & Commission"),
+    "BANK_CASH": ("Assets", "success", "Cash & Bank"),
+    "ASSET": ("Assets", "success", "Fixed Assets"),
+    "LIABILITY": ("Liability", "danger", "Current Liability"),
+    "INCOME": ("Income", "info", "Direct Income"),
+    "EXPENSE": ("Expenses", "warning", "Direct Expenses"),
+    "CAPITAL": ("Capital", "primary", "Owner's Equity"),
+    "STAFF": ("Expenses", "warning", "Staff & Commission"),
 }
 
 
-def _grouped_ledgers():
-    """Return (bank_cash, staff, others) querysets for template optgroups."""
-    _ensure_system_ledgers()
-    _ensure_staff_ledgers()
-    active = LedgerMaster.objects.filter(is_active=True).order_by("name")
+def _grouped_ledgers(request):
+    _ensure_system_ledgers(request)
+    _ensure_staff_ledgers(request)
+    active = tenant_ledgers(request).filter(is_active=True).order_by("name")
     return (
         active.filter(group="BANK_CASH"),
         active.filter(group="STAFF"),
@@ -72,23 +90,21 @@ def _require_tally(view_func):
         if not _tally_allowed(request.user):
             return HttpResponseForbidden("Access denied.")
         return view_func(request, *args, **kwargs)
+
     wrapper.__name__ = view_func.__name__
     return wrapper
 
 
-# ── Create / Edit / Delete Ledger Master ─────────────────────────────────────
-
 @login_required
 @_require_tally
 def master_list(request):
-    _ensure_system_ledgers()
-    _ensure_staff_ledgers()
+    _ensure_system_ledgers(request)
+    _ensure_staff_ledgers(request)
 
-    # Build grouped sections in a fixed display order
     group_order = ["BANK_CASH", "ASSET", "LIABILITY", "INCOME", "EXPENSE", "CAPITAL", "STAFF"]
     sections = []
     for gkey in group_order:
-        ledgers_in_group = LedgerMaster.objects.filter(group=gkey, is_active=True).order_by("name")
+        ledgers_in_group = tenant_ledgers(request).filter(group=gkey, is_active=True).order_by("name")
         if not ledgers_in_group.exists():
             continue
         meta = GROUP_META.get(gkey, ("Other", "secondary", gkey))
@@ -118,6 +134,7 @@ def master_list(request):
 @login_required
 @_require_tally
 def create_master(request):
+    org = _org(request)
     if request.method == "POST":
         name = request.POST.get("name", "").strip()
         group = request.POST.get("group", "")
@@ -125,14 +142,18 @@ def create_master(request):
         ob_type = request.POST.get("opening_balance_type", "Dr")
         desc = request.POST.get("description", "")
 
-        if not name:
+        if not org:
+            messages.error(request, "No organization linked to your account.")
+        elif not name:
             messages.error(request, "Ledger name is required.")
-        elif LedgerMaster.objects.filter(name__iexact=name).exists():
+        elif tenant_ledgers(request).filter(name__iexact=name).exists():
             messages.error(request, f"Ledger '{name}' already exists.")
         else:
             try:
                 LedgerMaster.objects.create(
-                    name=name, group=group,
+                    organization=org,
+                    name=name,
+                    group=group,
                     opening_balance=Decimal(ob),
                     opening_balance_type=ob_type,
                     description=desc,
@@ -151,7 +172,7 @@ def create_master(request):
 @login_required
 @_require_tally
 def edit_master(request, l_id):
-    ledger = get_object_or_404(LedgerMaster, pk=l_id)
+    ledger = get_object_or_404(tenant_ledgers(request), pk=l_id)
     if request.method == "POST":
         ledger.name = request.POST.get("name", ledger.name).strip()
         ledger.group = request.POST.get("group", ledger.group)
@@ -175,7 +196,7 @@ def edit_master(request, l_id):
 @login_required
 @_require_tally
 def delete_master(request, l_id):
-    ledger = get_object_or_404(LedgerMaster, pk=l_id)
+    ledger = get_object_or_404(tenant_ledgers(request), pk=l_id)
     if request.method == "POST":
         if ledger.is_system:
             messages.error(request, "Cannot delete a system ledger account.")
@@ -193,8 +214,8 @@ VOUCHER_UI = {
         "form_heading": "New Payment Voucher",
         "card_class": "card-danger",
         "card_icon": "fas fa-arrow-circle-up text-danger",
-        "btn_class": "btn-danger",
-        "save_label": "Save Payment Voucher",
+        "btn_class": "btn-primary ll-btn-primary",
+        "save_label": "SAVE VOUCHER",
         "redirect": "tally_payment_voucher",
         "default_rows": [{"drcr": "Dr"}, {"drcr": "Cr"}],
     },
@@ -203,9 +224,11 @@ VOUCHER_UI = {
         "form_heading": "New Receipt Voucher",
         "card_class": "card-success",
         "card_icon": "fas fa-arrow-circle-down text-success",
-        "btn_class": "btn-success",
-        "save_label": "Save Receipt Voucher",
+        "btn_class": "btn-primary ll-btn-primary",
+        "save_label": "SAVE VOUCHER",
         "redirect": "tally_receipt_voucher",
+        "reference_label": "Reference No (optional)",
+        "reference_prefix": "Ref",
         "default_rows": [{"drcr": "Dr"}, {"drcr": "Cr"}],
     },
     "JOURNAL": {
@@ -236,13 +259,17 @@ def _parse_voucher_rows(request):
     entry_amts = request.POST.getlist("entry_amount[]")
     entry_notes = request.POST.getlist("entry_note[]")
 
+    org_ledger_ids = set(tenant_ledgers(request).values_list("pk", flat=True))
     total_dr = Decimal("0.00")
     total_cr = Decimal("0.00")
     rows = []
     for lid, drcr, amt, note in zip_longest(entry_ledgers, entry_drcr, entry_amts, entry_notes, fillvalue=""):
         amt_d = Decimal(amt or "0")
         if lid and amt_d > 0:
-            rows.append((int(lid), drcr, amt_d, (note or "").strip()))
+            lid_int = int(lid)
+            if lid_int not in org_ledger_ids:
+                continue
+            rows.append((lid_int, drcr, amt_d, (note or "").strip()))
             if drcr == "Dr":
                 total_dr += amt_d
             else:
@@ -250,8 +277,17 @@ def _parse_voucher_rows(request):
     return rows, total_dr, total_cr
 
 
-def _voucher_form_context(voucher_type):
-    bank_cash, staff_ledgers, other_ledgers = _grouped_ledgers()
+def _preview_voucher_no(request, voucher_type):
+    org = _org(request)
+    prefix = {"PAYMENT": "PAY", "RECEIPT": "REC", "JOURNAL": "JRN"}.get(voucher_type, "VCH")
+    qs = tenant_vouchers(request).filter(voucher_type=voucher_type)
+    if org:
+        qs = qs.filter(organization=org)
+    return f"{prefix}-{qs.count() + 1:04d}"
+
+
+def _voucher_form_context(request, voucher_type):
+    bank_cash, staff_ledgers, other_ledgers = _grouped_ledgers(request)
     ui = VOUCHER_UI[voucher_type]
     return {
         "bank_cash": bank_cash,
@@ -264,13 +300,23 @@ def _voucher_form_context(voucher_type):
         "card_icon": ui["card_icon"],
         "btn_class": ui["btn_class"],
         "save_label": ui["save_label"],
+        "preview_voucher_no": _preview_voucher_no(request, voucher_type),
+        "reference_label": ui.get("reference_label"),
     }
 
 
 def _save_voucher(request, voucher_type):
     ui = VOUCHER_UI[voucher_type]
+    org = _org(request)
+    if not org:
+        messages.error(request, "No organization linked to your account.")
+        return None
     vdate = request.POST.get("voucher_date")
     narration = (request.POST.get("narration") or "").strip()
+    reference_no = (request.POST.get("reference_no") or "").strip()
+    if reference_no:
+        ref_label = ui.get("reference_prefix", "Ref")
+        narration = f"{ref_label}: {reference_no}" + (f" — {narration}" if narration else "")
 
     try:
         rows, total_dr, total_cr = _parse_voucher_rows(request)
@@ -285,6 +331,7 @@ def _save_voucher(request, voucher_type):
             return None
 
         voucher = Voucher.objects.create(
+            organization=org,
             voucher_type=voucher_type,
             voucher_date=vdate,
             narration=narration,
@@ -304,6 +351,7 @@ def _save_voucher(request, voucher_type):
         messages.error(request, "Invalid amount entered.")
         return None
 
+
 @login_required
 @_require_tally
 @transaction.atomic
@@ -311,7 +359,7 @@ def payment_voucher(request):
     if request.method == "POST":
         if _save_voucher(request, "PAYMENT"):
             return redirect("tally_payment_voucher")
-    return render(request, "tally/voucher_form.html", _voucher_form_context("PAYMENT"))
+    return render(request, "tally/voucher_form.html", _voucher_form_context(request, "PAYMENT"))
 
 
 @login_required
@@ -321,7 +369,7 @@ def receipt_voucher(request):
     if request.method == "POST":
         if _save_voucher(request, "RECEIPT"):
             return redirect("tally_receipt_voucher")
-    return render(request, "tally/voucher_form.html", _voucher_form_context("RECEIPT"))
+    return render(request, "tally/voucher_form.html", _voucher_form_context(request, "RECEIPT"))
 
 
 @login_required
@@ -331,15 +379,13 @@ def journal_entry(request):
     if request.method == "POST":
         if _save_voucher(request, "JOURNAL"):
             return redirect("tally_journal_entry")
-    return render(request, "tally/voucher_form.html", _voucher_form_context("JOURNAL"))
+    return render(request, "tally/voucher_form.html", _voucher_form_context(request, "JOURNAL"))
 
-
-# ── Voucher List & Detail (kept for statement links; not in sidebar) ──────────
 
 @login_required
 @_require_tally
 def voucher_list(request):
-    qs = Voucher.objects.select_related("created_by").prefetch_related("entries").order_by("-voucher_date", "-v_id")
+    qs = tenant_vouchers(request).select_related("created_by").prefetch_related("entries").order_by("-voucher_date", "-v_id")
     vtype = request.GET.get("type", "")
     from_date = request.GET.get("from_date", "")
     to_date = request.GET.get("to_date", "")
@@ -365,7 +411,8 @@ def voucher_list(request):
 @_require_tally
 def voucher_detail(request, v_id):
     voucher = get_object_or_404(
-        Voucher.objects.prefetch_related("entries__ledger"), pk=v_id
+        tenant_vouchers(request).prefetch_related("entries__ledger"),
+        pk=v_id,
     )
     return render(request, "tally/voucher_detail.html", {
         "voucher": voucher,
@@ -376,7 +423,7 @@ def voucher_detail(request, v_id):
 @login_required
 @_require_tally
 def delete_voucher(request, v_id):
-    voucher = get_object_or_404(Voucher, pk=v_id)
+    voucher = get_object_or_404(tenant_vouchers(request), pk=v_id)
     if request.method == "POST":
         no = voucher.voucher_no
         voucher.delete()
@@ -384,12 +431,10 @@ def delete_voucher(request, v_id):
     return redirect("tally_account_statement")
 
 
-# ── Account Statement ─────────────────────────────────────────────────────────
-
 @login_required
 @_require_tally
 def account_statement(request):
-    ledgers = LedgerMaster.objects.filter(is_active=True).order_by("name")
+    ledgers = tenant_ledgers(request).filter(is_active=True).order_by("name")
     ledger_id = request.GET.get("ledger", "")
     from_date = request.GET.get("from_date", "")
     to_date = request.GET.get("to_date", "")
@@ -402,13 +447,13 @@ def account_statement(request):
     total_cr = Decimal("0.00")
     closing = Decimal("0.00")
     closing_type = "Dr"
-
     opening_label = "Opening Balance"
+
     if ledger_id:
-        selected_ledger = get_object_or_404(LedgerMaster, pk=ledger_id)
+        selected_ledger = get_object_or_404(tenant_ledgers(request), pk=ledger_id)
         running = _signed_opening(selected_ledger)
 
-        prior_qs = VoucherEntry.objects.filter(ledger=selected_ledger)
+        prior_qs = VoucherEntry.objects.filter(ledger=selected_ledger, v_id__organization=selected_ledger.organization)
         if from_date:
             prior_qs = prior_qs.filter(v_id__voucher_date__lt=from_date)
             prior_dr = prior_qs.aggregate(t=Sum("dr_amount"))["t"] or Decimal("0.00")
@@ -421,8 +466,7 @@ def account_statement(request):
             opening_label = "Opening Balance"
 
         qs = (
-            VoucherEntry.objects
-            .filter(ledger=selected_ledger)
+            VoucherEntry.objects.filter(ledger=selected_ledger, v_id__organization=selected_ledger.organization)
             .select_related("v_id")
             .order_by("v_id__voucher_date", "v_id__v_id", "ve_id")
         )
@@ -460,14 +504,11 @@ def account_statement(request):
     })
 
 
-# ── Unified Ledger ────────────────────────────────────────────────────────────
-
 @login_required
 @_require_tally
 def unified_ledger(request):
-    ledgers = LedgerMaster.objects.all().order_by("group", "name")
     data = []
-    for l in ledgers:
+    for l in tenant_ledgers(request).order_by("group", "name"):
         bal = l.current_balance()
         dr = l.entries.aggregate(t=Sum("dr_amount"))["t"] or Decimal("0.00")
         cr = l.entries.aggregate(t=Sum("cr_amount"))["t"] or Decimal("0.00")

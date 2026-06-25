@@ -42,3 +42,31 @@ def has_any_role(user, roles_csv):
         return False
     role_names = [part.strip() for part in (roles_csv or "").split(",") if part.strip()]
     return user.has_any_role(*role_names)
+
+
+@register.filter
+def can_manage_bookings(user):
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+    return user.can_manage_bookings()
+
+
+@register.filter
+def is_lead_only_staff(user):
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+    return user.is_lead_only_staff()
+
+
+@register.filter
+def is_manager_only_staff(user):
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+    return user.is_manager_only_staff()
+
+
+@register.filter
+def is_accounts_only_staff(user):
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+    return user.is_accounts_only_staff()

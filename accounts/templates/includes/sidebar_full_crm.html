@@ -1,0 +1,103 @@
+{# Full CRM sidebar — shown for any active paid organization (all plans) #}
+<li class="nav-item has-treeview">
+  <a href="#" class="nav-link">
+    <i class="nav-icon fas fa-user-plus text-success"></i>
+    <p>Lead Management <i class="right fas fa-angle-left"></i></p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item"><a href="{% url 'lead_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>All Leads</p></a></li>
+    <li class="nav-item"><a href="{% url 'lead_add' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Add Lead</p></a></li>
+    <li class="nav-item"><a href="{% url 'lead_reports_hub' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Lead Reports</p></a></li>
+  </ul>
+</li>
+<li class="nav-item">
+  <a href="{% url 'customer_list' %}" class="nav-link">
+    <i class="nav-icon fas fa-users text-info"></i>
+    <p>Customers</p>
+  </a>
+</li>
+<li class="nav-item has-treeview">
+  <a href="#" class="nav-link">
+    <i class="nav-icon fas fa-book-open text-primary"></i>
+    <p>Booking <i class="right fas fa-angle-left"></i></p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item"><a href="{% url 'booking_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>All Bookings</p></a></li>
+    <li class="nav-item"><a href="{% url 'booking_add' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Add Booking</p></a></li>
+    <li class="nav-item"><a href="{% url 'cancelled_plots_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Cancelled Plots</p></a></li>
+    <li class="nav-item"><a href="{% url 'master_plots' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Master Plots Details</p></a></li>
+  </ul>
+</li>
+<li class="nav-item has-treeview">
+  <a href="#" class="nav-link">
+    <i class="nav-icon fas fa-credit-card text-success"></i>
+    <p>Payments <i class="right fas fa-angle-left"></i></p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item"><a href="{% url 'receipt_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Receipt List</p></a></li>
+    <li class="nav-item"><a href="{% url 'payment_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Approval List</p></a></li>
+    <li class="nav-item"><a href="{% url 'ledger_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Ledger</p></a></li>
+  </ul>
+</li>
+<li class="nav-item has-treeview">
+  <a href="#" class="nav-link">
+    <i class="nav-icon fas fa-chart-line"></i>
+    <p>Reports <i class="right fas fa-angle-left"></i></p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item"><a href="{% url 'all_reports' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>All Report</p></a></li>
+    <li class="nav-item"><a href="{% url 'follow_up_report' %}?status=PARTIAL&filter=today" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Follow-Up</p></a></li>
+    <li class="nav-item"><a href="{% url 'percentage_follow_up' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Percentage Follow-Up</p></a></li>
+    <li class="nav-item"><a href="{% url 'advance_follow_up' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Advance Follow-Up</p></a></li>
+  </ul>
+</li>
+<li class="nav-item has-treeview">
+  <a href="#" class="nav-link">
+    <i class="nav-icon fas fa-cogs"></i>
+    <p>Store Settings <i class="right fas fa-angle-left"></i></p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item"><a href="{% url 'project_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Projects</p></a></li>
+    <li class="nav-item"><a href="{% url 'booking_agent_settings' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Company &amp; Agent Settings</p></a></li>
+    {% if agent_settings.enable_manager %}
+    <li class="nav-item"><a href="{% url 'agent_list' role='manager' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Manager</p></a></li>
+    {% endif %}
+    {% if agent_settings.enable_executive %}
+    <li class="nav-item"><a href="{% url 'agent_list' role='executive' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Executive</p></a></li>
+    {% endif %}
+    {% if agent_settings.enable_telecaller %}
+    <li class="nav-item"><a href="{% url 'agent_list' role='telecaller' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Telecaller</p></a></li>
+    {% endif %}
+  </ul>
+</li>
+<li class="nav-item">
+  <a href="{% url 'agent_list' role='accounts' %}" class="nav-link">
+    <i class="nav-icon fas fa-calculator"></i>
+    <p>Accounts</p>
+  </a>
+</li>
+<li class="nav-item has-treeview">
+  <a href="#" class="nav-link">
+    <i class="nav-icon fas fa-book text-warning"></i>
+    <p>Voucher / Tally<i class="right fas fa-angle-left"></i></p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item"><a href="{% url 'tally_payment_voucher' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Payment Voucher</p></a></li>
+    <li class="nav-item"><a href="{% url 'tally_receipt_voucher' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Receipt Voucher</p></a></li>
+    <li class="nav-item"><a href="{% url 'tally_journal_entry' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Journal Entry</p></a></li>
+    <li class="nav-item"><a href="{% url 'tally_account_statement' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Account Statements</p></a></li>
+    <li class="nav-item"><a href="{% url 'tally_create_master' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Create Master</p></a></li>
+  </ul>
+</li>
+<li class="nav-item">
+  <a href="{% url 'user_list' %}" class="nav-link">
+    <i class="nav-icon fas fa-user-friends text-warning"></i>
+    <p>Users</p>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="{% url 'activity_log' %}" class="nav-link">
+    <i class="nav-icon fas fa-history text-warning"></i>
+    <p>Activity Log</p>
+  </a>
+</li>

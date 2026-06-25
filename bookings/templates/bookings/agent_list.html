@@ -4,14 +4,14 @@
 {% block title %}{{ role_display }} List{% endblock %}
 
 {% block content %}
-<section class="content-header">
+<section class="content-header py-2">
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
         <h1>{{ role_display }} List</h1>
       </div>
       <div class="col-sm-6 text-right">
-        <a href="{% url 'agent_add' role=role %}" class="btn btn-sm" style="background-color: #29577f; color: white; border: none; padding: 6px 15px; font-weight: 500;">
+        <a href="{% url 'agent_add' role=role %}" class="btn btn-sm btn-primary ll-btn-primary">
           <i class="fas fa-plus"></i> Add {{ role_display }}
         </a>
       </div>
@@ -19,9 +19,9 @@
   </div>
 </section>
 
-<section class="content">
+<section class="content pt-0">
   <div class="container-fluid">
-    <div class="card card-outline card-maroon">
+    <div class="card card-outline card-primary ll-card">
       <div class="card-body">
         <div class="table-responsive">
           <table class="table table-hover table-bordered table-sm align-middle">

@@ -1,5 +1,46 @@
+from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
+
+
+class LeadOnlyStaffAccessMiddleware:
+    """Restrict executive / telecaller users to dashboard and lead management URLs."""
+
+    EXEMPT_PREFIXES = (
+        "/login",
+        "/logout",
+        "/signup",
+        "/static/",
+        "/media/",
+        "/admin/",
+    )
+    EXEMPT_EXACT = ("/",)
+    ALLOWED_PREFIXES = (
+        "/home/",
+        "/account/profile/",
+        "/leads/",
+    )
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = request.user
+        if not user.is_authenticated or user.is_superuser:
+            return self.get_response(request)
+        if not user.is_lead_only_staff():
+            return self.get_response(request)
+
+        path = request.path
+        if path in self.EXEMPT_EXACT:
+            return self.get_response(request)
+        if any(path.startswith(prefix) for prefix in self.EXEMPT_PREFIXES):
+            return self.get_response(request)
+        if any(path.startswith(prefix) for prefix in self.ALLOWED_PREFIXES):
+            return self.get_response(request)
+
+        messages.warning(request, "You only have access to Lead Management.")
+        return redirect("home")
 
 
 class TrialAccessMiddleware:

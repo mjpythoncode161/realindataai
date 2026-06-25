@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Super Admin | All Users{% endblock %}
+{% block content %}
+<div class="content-header py-2">
+  <div class="container-fluid"><h1 class="m-0"><i class="fas fa-users mr-2"></i>All Users</h1></div>
+</div>
+<section class="content pt-0">
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-body p-0">
+        <table class="table table-sm table-striped mb-0">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Organization</th><th>Superuser</th><th>Active</th><th>Joined</th></tr></thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td>{{ u.full_name }}</td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.get_roles_display }}</td>
+              <td>{{ u.organization.name|default:"—" }}</td>
+              <td>{% if u.is_superuser %}<span class="badge badge-danger">Yes</span>{% endif %}</td>
+              <td>{% if u.is_active %}<span class="badge badge-success">Yes</span>{% else %}<span class="badge badge-secondary">No</span>{% endif %}</td>
+              <td>{{ u.date_joined|date:"M d, Y" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <a href="{% url 'platform_dashboard' %}" class="btn btn-sm btn-outline-secondary mt-2">← Dashboard</a>
+  </div>
+</section>
+{% endblock %}

@@ -4,7 +4,7 @@
 {% block title %}Accounts Transactions — {{ agent.u_id.full_name }}{% endblock %}
 
 {% block content %}
-<section class="content-header">
+<section class="content-header py-2">
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
@@ -18,7 +18,7 @@
         <a href="{% url 'agent_list' role='accounts' %}" class="btn btn-secondary btn-sm">
           <i class="fas fa-arrow-left"></i> Back to Accounts List
         </a>
-        <a href="{% url 'agent_edit' agent.am_id %}" class="btn btn-sm" style="background-color: #29577f; color: white;">
+        <a href="{% url 'agent_edit' agent.am_id %}" class="btn btn-sm btn-primary ll-btn-primary">
           <i class="fas fa-plus"></i> Add Payment
         </a>
       </div>
@@ -26,7 +26,7 @@
   </div>
 </section>
 
-<section class="content">
+<section class="content pt-0">
   <div class="container-fluid">
     <div class="row mb-3">
       <div class="col-md-4">
@@ -64,7 +64,7 @@
     </div>
     {% endif %}
 
-    <div class="card card-outline card-maroon">
+    <div class="card card-outline card-primary ll-card">
       <div class="card-header">
         <h3 class="card-title">Payment history ({{ payments|length }} transaction{{ payments|length|pluralize }})</h3>
       </div>

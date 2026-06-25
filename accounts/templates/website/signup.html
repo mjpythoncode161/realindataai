@@ -19,8 +19,8 @@
     color: var(--ll-primary);
     margin: 0 0 0.35rem;
   }
-  .ll-trial-note {
-    background: rgba(232, 168, 56, 0.2);
+  .ll-saas-note {
+    background: rgba(41, 87, 127, 0.08);
     border-radius: 8px;
     padding: 0.65rem 1rem;
     font-size: 0.9rem;
@@ -44,14 +44,21 @@
     margin-bottom: 1rem;
     font-size: 0.9rem;
   }
+  .ll-plan-mini { display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem; }
+  .ll-plan-mini label {
+    flex:1;min-width:120px;border:2px solid #e8edf3;border-radius:8px;padding:0.5rem;text-align:center;cursor:pointer;font-size:0.8rem;
+  }
+  .ll-plan-mini input { display:none; }
+  .ll-plan-mini input:checked + span { font-weight:700;color:var(--ll-primary); }
+  .ll-plan-mini label:has(input:checked) { border-color:var(--ll-primary); }
 </style>
 {% endblock %}
 {% block body %}
 <div class="ll-signup-wrap">
   <div class="ll-signup-card">
     <h1><i class="fas fa-user-plus"></i> Create your account</h1>
-    <p style="color:var(--ll-muted);margin-bottom:1rem;">Manager trial — access the full CRM dashboard.</p>
-    <div class="ll-trial-note"><i class="fas fa-gift"></i> After <strong>Followup team approval</strong>, your <strong>7-day free trial</strong> and dashboard access will begin.</div>
+    <p style="color:var(--ll-muted);margin-bottom:1rem;">SaaS CRM for real estate — pay &amp; start instantly.</p>
+    <div class="ll-saas-note"><i class="fas fa-bolt"></i> After signup you <strong>choose a plan</strong>, pay once, and your <strong>workspace starts automatically</strong>. <a href="{% url 'saas_pricing' %}">View pricing</a></div>
 
     {% if form.non_field_errors %}
       <div class="ll-alert-danger">{{ form.non_field_errors }}</div>
@@ -59,6 +66,19 @@
 
     <form method="post" action="{% url 'public_signup' %}">
       {% csrf_token %}
+      {% if plans %}
+      <div class="form-group">
+        <label>Preferred plan</label>
+        <div class="ll-plan-mini">
+          {% for plan in plans %}
+          <label>
+            <input type="radio" name="plan_tier" value="{{ plan.tier }}" {% if request.GET.plan == plan.tier %}checked{% elif forloop.counter == 2 and not request.GET.plan %}checked{% endif %}>
+            <span>{{ plan.name }}<br>₹{{ plan.price_inr|floatformat:0 }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
       <div class="form-group">
         <label for="id_company_name">{{ form.company_name.label }}</label>
         {{ form.company_name }}
@@ -90,7 +110,7 @@
         {% for e in form.confirm_password.errors %}<span class="invalid-feedback">{{ e }}</span>{% endfor %}
       </div>
       <button type="submit" class="ll-btn ll-btn-primary" style="width:100%;padding:0.85rem;margin-top:0.5rem;border:none;color:#fff !important;">
-        Submit registration
+        Create account &amp; choose plan
       </button>
     </form>
     <p class="text-center mt-3 mb-0" style="color:var(--ll-muted);font-size:0.9rem;">

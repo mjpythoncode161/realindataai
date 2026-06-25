@@ -4,7 +4,7 @@
 {% block title %}Activity Log{% endblock %}
 
 {% block content %}
-<div class="content-header">
+<div class="content-header py-2">
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
@@ -61,7 +61,7 @@
           </div>
           <div class="form-group col-md-2">
             <button type="submit" class="btn btn-primary btn-sm btn-block">Apply</button>
-            <a href="{% url 'activity_log' %}" class="btn btn-secondary btn-sm btn-block mt-1">Reset (1 Week)</a>
+            <a href="{% url 'activity_log' %}?show_all=1" class="btn btn-secondary btn-sm btn-block mt-1">Show All</a>
           </div>
         </form>
       </div>
@@ -70,7 +70,14 @@
     <!-- Log Table -->
     <div class="card card-outline card-warning">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-list mr-1"></i> Records ({{ logs.count }})</h3>
+        <h3 class="card-title">
+          <i class="fas fa-list mr-1"></i> Records ({{ logs.count }})
+          {% if default_date_range %}
+          <small class="text-muted ml-2">— showing last 7 days</small>
+          {% elif show_all %}
+          <small class="text-muted ml-2">— showing all records</small>
+          {% endif %}
+        </h3>
       </div>
       <div class="card-body table-responsive p-0">
         <table id="activityLogTable" class="table table-hover table-striped table-sm">

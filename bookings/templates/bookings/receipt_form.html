@@ -4,7 +4,7 @@
 {% block title %}{% if is_payment %}Payment Request{% else %}Down Payment Bill{% endif %}{% endblock %}
 
 {% block content %}
-<section class="content-header">
+<section class="content-header py-2">
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-12">
@@ -14,9 +14,9 @@
   </div>
 </section>
 
-<section class="content">
+<section class="content pt-0">
   <div class="container-fluid">
-    <div class="card card-outline card-maroon">
+    <div class="card card-outline card-primary ll-card">
       <div class="card-header">
         <h3 class="card-title" style="text-transform: uppercase; font-size: 1rem; font-weight: 600; color: #555;">{% if is_payment %}Request Details{% else %}Payment Details{% endif %}</h3>
       </div>
@@ -84,7 +84,7 @@
 
         <div class="card-footer text-right" style="background: transparent; border-top: none;">
           <a href="{% if is_payment %}{% url 'payment_list' %}{% else %}{% url 'receipt_list' %}{% endif %}" class="btn btn-secondary mr-2">Cancel</a>
-          <button type="submit" class="btn btn-maroon-custom" style="background-color: #29577f; color: white; border: none; padding: 6px 20px;">
+          <button type="submit" class="btn btn-sm btn-primary ll-btn-primary">
             {% if is_payment %}Submit Request{% else %}Save Receipt{% endif %}
           </button>
         </div>

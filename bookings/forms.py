@@ -120,12 +120,16 @@ class AgentMasterForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         role = kwargs.pop("role", None)
+        request = kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
         if role:
             from accounts.models import Users
+            from saas.tenant import tenant_users
+
+            base_qs = tenant_users(request) if request else Users.objects.all()
             if role == "accounts":
                 # Accounts entries are for manager/executive/telecaller agents
-                self.fields["u_id"].queryset = Users.objects.filter(
+                self.fields["u_id"].queryset = base_qs.filter(
                     role__in=["manager", "executive", "telecaller"]
                 ).order_by("full_name")
                 self.fields["u_id"].label = "Select User (Manager / Executive / Telecaller)"
@@ -138,7 +142,7 @@ class AgentMasterForm(forms.ModelForm):
                 self.fields.pop("payment_method", None)
                 self.fields.pop("remarks", None)
             else:
-                self.fields["u_id"].queryset = Users.objects.filter(role=role)
+                self.fields["u_id"].queryset = base_qs.filter(role=role)
                 self.fields.pop("payment_method", None)
                 self.fields.pop("effective_date", None)
 
@@ -309,7 +313,8 @@ class BookingMasterForm(forms.ModelForm):
             "location": forms.TextInput(attrs={"class": "form-control", "placeholder": "Enter Location"}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
         super().__init__(*args, **kwargs)
         optional_customer_fields = [
             "full_name",
@@ -335,17 +340,27 @@ class BookingMasterForm(forms.ModelForm):
                 }
             )
         from accounts.models import Users, users_with_role_query
-        manager_ids = AgentMaster.objects.filter(role="manager").values_list("u_id_id", flat=True)
-        executive_ids = AgentMaster.objects.filter(role="executive").values_list("u_id_id", flat=True)
-        telecaller_ids = AgentMaster.objects.filter(role="telecaller").values_list("u_id_id", flat=True)
+        from saas.tenant import get_user_organization
 
-        self.fields["manager_u_id"].queryset = Users.objects.filter(
+        org = get_user_organization(user) if user else None
+        agents = AgentMaster.objects.all()
+        if org:
+            agents = agents.filter(u_id__organization=org)
+        manager_ids = agents.filter(role="manager").values_list("u_id_id", flat=True)
+        executive_ids = agents.filter(role="executive").values_list("u_id_id", flat=True)
+        telecaller_ids = agents.filter(role="telecaller").values_list("u_id_id", flat=True)
+
+        staff = Users.objects.all()
+        if org:
+            staff = staff.filter(organization=org)
+
+        self.fields["manager_u_id"].queryset = staff.filter(
             u_id__in=manager_ids
         ).filter(users_with_role_query("manager")).order_by("full_name")
-        self.fields["executive_u_id"].queryset = Users.objects.filter(
+        self.fields["executive_u_id"].queryset = staff.filter(
             u_id__in=executive_ids
         ).filter(users_with_role_query("executive")).order_by("full_name")
-        self.fields["telecaller_u_id"].queryset = Users.objects.filter(
+        self.fields["telecaller_u_id"].queryset = staff.filter(
             u_id__in=telecaller_ids
         ).filter(users_with_role_query("telecaller")).order_by("full_name")
 
@@ -353,7 +368,7 @@ class BookingMasterForm(forms.ModelForm):
         self.fields["executive_u_id"].empty_label = "Select Executive"
         self.fields["telecaller_u_id"].empty_label = "Select Telecaller"
 
-        agent_settings = get_booking_agent_settings()
+        agent_settings = get_booking_agent_settings(org)
         self.agent_settings = agent_settings
         for role, field_names in AGENT_FIELD_GROUPS.items():
             enabled = agent_settings.is_role_enabled(role)
@@ -371,7 +386,10 @@ class BookingMasterForm(forms.ModelForm):
 
         self.fields["p_id"].required = True
         self.fields["p_id"].label = "Project"
-        self.fields["p_id"].queryset = Project.objects.all().order_by("name")
+        pqs = Project.objects.all().order_by("name")
+        if org:
+            pqs = pqs.filter(organization=org)
+        self.fields["p_id"].queryset = pqs
         self.fields["p_id"].empty_label = "Select Project"
         self.fields["p_id"].widget.attrs.update({"id": "id_p_id", "class": "form-control"})
         self.fields["location"].widget = forms.HiddenInput()

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Super Admin | {{ org.name }}{% endblock %}
+{% block content %}
+<div class="content-header py-2">
+  <div class="container-fluid">
+    <h1 class="m-0">{{ org.name }}</h1>
+    <small class="text-muted">{{ org.slug }} · Owner: {{ org.owner.email }}</small>
+  </div>
+</div>
+<section class="content pt-0">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-5">
+        <div class="card">
+          <div class="card-header py-2"><h3 class="card-title mb-0">Account status</h3></div>
+          <div class="card-body">
+            <p><strong>Status:</strong>
+              {% if org.is_subscription_active %}<span class="badge badge-success">Active</span>
+              {% else %}<span class="badge badge-danger">{{ org.get_status_display }}</span>{% endif %}
+            </p>
+            <p><strong>Plan:</strong> {{ org.plan.name|default:"None" }} (₹{{ org.plan.price_inr|floatformat:0|default:"0" }}/mo)</p>
+            <p><strong>Started:</strong> {{ org.subscription_started_at|date:"M d, Y H:i"|default:"—" }}</p>
+            <p><strong>Next renewal:</strong> {{ org.subscription_ends_at|date:"M d, Y H:i"|default:"—" }}</p>
+            <p><strong>Days remaining:</strong> {{ org.days_remaining }}</p>
+
+            <form method="post" class="mb-3">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="update_status">
+              <div class="form-group">
+                <label class="small font-weight-bold">Change status / plan</label>
+                {{ status_form.status }}
+              </div>
+              <div class="form-group">{{ status_form.plan }}</div>
+              <button type="submit" class="btn btn-sm btn-primary">Save status</button>
+            </form>
+
+            <form method="post" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="activate">
+              <button type="submit" class="btn btn-sm btn-success">Activate now</button>
+            </form>
+            <form method="post" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="suspend">
+              <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Suspend this account?');">Suspend</button>
+            </form>
+
+            <hr>
+            <form method="post" class="form-inline">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="extend">
+              <label class="mr-2 small">Extend renewal:</label>
+              {{ extend_form.extra_days }}
+              <button type="submit" class="btn btn-sm btn-info ml-2">Extend</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <div class="card">
+          <div class="card-header py-2"><h3 class="card-title mb-0">Team members ({{ members|length }})</h3></div>
+          <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Owner</th></tr></thead>
+              <tbody>
+                {% for m in members %}
+                <tr>
+                  <td>{{ m.user.full_name }}</td>
+                  <td>{{ m.user.email }}</td>
+                  <td>{{ m.user.get_roles_display }}</td>
+                  <td>{% if m.is_owner %}<i class="fas fa-star text-warning"></i>{% endif %}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header py-2"><h3 class="card-title mb-0">Payment history</h3></div>
+          <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+              <thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th></tr></thead>
+              <tbody>
+                {% for p in payments %}
+                <tr>
+                  <td>{{ p.paid_at|date:"M d, Y"|default:p.created_at|date:"M d, Y" }}</td>
+                  <td>{{ p.plan.name }}</td>
+                  <td>₹{{ p.amount_inr|floatformat:0 }}</td>
+                  <td><span class="badge badge-{% if p.status == 'paid' %}success{% else %}secondary{% endif %}">{{ p.get_status_display }}</span></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-muted text-center py-2">No payments yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <a href="{% url 'platform_organizations' %}" class="btn btn-sm btn-outline-secondary mt-2">← All accounts</a>
+  </div>
+</section>
+{% endblock %}

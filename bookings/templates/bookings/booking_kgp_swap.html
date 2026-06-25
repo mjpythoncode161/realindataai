@@ -3,7 +3,7 @@
 {% block title %}{{ page_title|default:"Swap Plot/Flat (Post-KGP)" }}{% endblock %}
 
 {% block content %}
-<section class="content-header">
+<section class="content-header py-2">
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
@@ -19,9 +19,9 @@
   </div>
 </section>
 
-<section class="content">
+<section class="content pt-0">
   <div class="container-fluid">
-    <div class="card card-outline card-maroon mb-4">
+    <div class="card card-outline card-primary ll-card mb-4">
       <div class="card-body">
         <div class="row">
           <div class="col-md-3"><strong>Booking No.</strong><br />{{ booking.booking_no }}</div>
@@ -36,7 +36,7 @@
       <div class="card-body">
         {% if current_item %}
         <div class="table-responsive mb-4">
-          <table class="table table-bordered">
+          <table class="table table-sm table-bordered table-striped table-hover ll-table mb-0">
             <thead class="bg-light">
               <tr>
                 <th>Plot / Flat No.</th>

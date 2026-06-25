@@ -1,0 +1,71 @@
+{% extends "website/landing_base.html" %}
+{% block title %}Land Link | Pricing — Basic, Premium, Diamond{% endblock %}
+{% block extra_head %}
+<style>
+  .ll-pricing-wrap { max-width: 1100px; margin: 2rem auto 4rem; padding: 0 1.25rem; }
+  .ll-pricing-head { text-align: center; margin-bottom: 2.5rem; }
+  .ll-pricing-head h1 { color: var(--ll-primary); font-size: 2rem; margin: 0 0 0.5rem; }
+  .ll-pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    align-items: stretch;
+  }
+  .ll-plan-card {
+    background: #fff;
+    border: 1px solid #e8edf3;
+    border-radius: 16px;
+    padding: 1.75rem;
+    box-shadow: 0 8px 28px rgba(41, 87, 127, 0.08);
+    display: flex;
+    flex-direction: column;
+  }
+  .ll-plan-card.featured {
+    border-color: var(--ll-accent);
+    box-shadow: 0 12px 36px rgba(232, 168, 56, 0.2);
+    transform: scale(1.02);
+  }
+  .ll-plan-tier { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ll-muted); font-weight: 700; }
+  .ll-plan-name { font-size: 1.5rem; font-weight: 800; color: var(--ll-primary); margin: 0.25rem 0; }
+  .ll-plan-price { font-size: 2rem; font-weight: 800; color: var(--ll-text); margin: 0.75rem 0; }
+  .ll-plan-price small { font-size: 0.95rem; font-weight: 500; color: var(--ll-muted); }
+  .ll-plan-desc { color: var(--ll-muted); font-size: 0.95rem; margin-bottom: 1rem; min-height: 2.5rem; }
+  .ll-plan-features { list-style: none; padding: 0; margin: 0 0 1.5rem; flex: 1; }
+  .ll-plan-features li { padding: 0.35rem 0; font-size: 0.9rem; }
+  .ll-plan-features li i { color: #27ae60; width: 1.25rem; }
+  .ll-plan-btn { width: 100%; text-align: center; margin-top: auto; }
+</style>
+{% endblock %}
+{% block body %}
+<div class="ll-pricing-wrap">
+  <div class="ll-pricing-head">
+    <h1><i class="fas fa-tags"></i> Simple SaaS Pricing</h1>
+    <p style="color:var(--ll-muted);max-width:560px;margin:0 auto;">Pay once, start instantly. Your CRM workspace activates automatically after payment.</p>
+  </div>
+
+  <div class="ll-pricing-grid">
+    {% for plan in plans %}
+    <div class="ll-plan-card{% if plan.tier == 'premium' %} featured{% endif %}">
+      <div class="ll-plan-tier">{{ plan.get_tier_display }}</div>
+      <div class="ll-plan-name">{{ plan.name }}</div>
+      <div class="ll-plan-price">₹{{ plan.price_inr|floatformat:0 }}<small>/month</small></div>
+      <p class="ll-plan-desc">{{ plan.description }}</p>
+      <ul class="ll-plan-features">
+        {% for feature in plan.feature_list %}
+        <li><i class="fas fa-check"></i> {{ feature }}</li>
+        {% endfor %}
+      </ul>
+      <a href="{% url 'public_signup' %}?plan={{ plan.tier }}" class="ll-btn ll-btn-primary ll-plan-btn">
+        Get {{ plan.name }}
+      </a>
+    </div>
+    {% empty %}
+    <p class="text-center">Plans loading — run <code>python manage.py seed_saas_plans</code></p>
+    {% endfor %}
+  </div>
+
+  <p class="text-center mt-4" style="color:var(--ll-muted);font-size:0.9rem;">
+    Already registered? <a href="{% url 'login' %}">Sign in</a> to complete payment.
+  </p>
+</div>
+{% endblock %}

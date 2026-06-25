@@ -3,77 +3,76 @@
 
 {% block title %}Customer List{% endblock %}
 
-{% block extra_head %}
-<!-- DataTables -->
-<link
-  rel="stylesheet"
-  href="{% static 'assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}"
-/>
-<link
-  rel="stylesheet"
-  href="{% static 'assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}"
-/>
-<link
-  rel="stylesheet"
-  href="{% static 'assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}"
-/>
-{% endblock %}
+{% block extra_head %}{% endblock %}
 
 {% block content %}
-<div class="content-header">
+<section class="content-header py-2">
   <div class="container-fluid">
-    <div class="row mb-2">
+    <div class="row mb-1 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0">Customer List</h1>
+        <h1 class="m-0" style="font-size: 1.35rem;">Customer List</h1>
+      </div>
+      <div class="col-sm-6 text-right">
+        <a href="{% url 'register_customer' %}" class="btn btn-sm btn-primary">
+          <i class="fas fa-plus mr-1"></i> Add Customer
+        </a>
       </div>
     </div>
   </div>
-</div>
+</section>
 
-<section class="content">
+<section class="content pt-0">
   <div class="container-fluid">
-    <div class="card">
-      <div
-        class="card-header d-flex justify-content-between align-items-center"
-      >
-        <h3 class="card-title m-0">Customers</h3>
-        <a
-          href="{% url 'register_customer' %}"
-          class="btn btn-primary btn-sm ml-auto"
-        >
-          <i class="fas fa-plus"></i> Add Customer
-        </a>
-      </div>
-      <div class="card-body">
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-        {% endif %}
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show py-2 mb-2">
+      {{ message }}
+      <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+    {% endfor %}
+    {% endif %}
 
-        <table id="customerTable" class="table table-bordered table-striped">
+    <div class="card card-outline card-primary customer-card">
+      <div class="card-body table-responsive p-2">
+        <table id="customerTable" class="table table-sm table-striped table-bordered table-hover mb-0">
           <thead>
             <tr>
-              <th>SL NO</th>
+              <th style="width: 40px;">#</th>
               <th>Full Name</th>
-              <th>Phone No</th>
+              <th>Phone</th>
               <th>Email</th>
-              <th>Aadhaar No.</th>
-              <th>Action</th>
+              <th>Aadhaar</th>
+              <th style="width: 70px;" class="text-center">Action</th>
             </tr>
           </thead>
           <tbody>
             {% for c in customers %}
             <tr>
               <td></td>
-              <td>{{ c.u_id.full_name }}</td>
-              <td>{{ c.u_id.contact }}</td>
-              <td>{{ c.u_id.email }}</td>
-              <td>{{ c.aadhar_number }}</td>
-              <td>
-                <a href="{% url 'edit_customer' c.cust_id %}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
-                <button type="button" class="btn btn-sm btn-danger delete-customer" data-url="{% url 'delete_user' c.u_id.u_id %}" data-name="{{ c.u_id.full_name }}"><i class="fas fa-trash"></i></button>
+              <td class="col-name ll-link">{{ c.u_id.full_name|default:"—" }}</td>
+              <td>{{ c.u_id.contact|default:"—" }}</td>
+              <td class="col-email" title="{{ c.u_id.email }}">{{ c.u_id.email|default:"—" }}</td>
+              <td>{{ c.aadhar_number|default:"—" }}</td>
+              <td class="text-center">
+                <div class="btn-group">
+                  <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle py-0 px-2" data-toggle="dropdown" data-boundary="viewport" aria-expanded="false">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                  <div class="dropdown-menu dropdown-menu-right">
+                    <a class="dropdown-item py-1" href="{% url 'edit_customer' c.cust_id %}">
+                      <i class="fas fa-edit mr-2 text-primary"></i> Edit
+                    </a>
+                    <button type="button" class="dropdown-item py-1 text-danger delete-customer"
+                      data-url="{% url 'delete_user' c.u_id.u_id %}" data-name="{{ c.u_id.full_name }}">
+                      <i class="fas fa-trash-alt mr-2"></i> Delete
+                    </button>
+                  </div>
+                </div>
               </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="text-center text-muted py-3">No customers found.</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -85,7 +84,6 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<!-- DataTables  & Plugins -->
 <script src="{% static 'assets/plugins/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
 <script src="{% static 'assets/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
@@ -94,60 +92,65 @@
   $(function () {
     var table = $("#customerTable").DataTable({
       paging: true,
-      lengthChange: true,
+      pageLength: 25,
+      lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
       searching: true,
       ordering: true,
       info: true,
       autoWidth: false,
       responsive: true,
-      columnDefs: [{
-        searchable: false,
-        orderable: false,
-        targets: 0
-      }],
-      order: [[1, 'asc']]
+      order: [[1, "asc"]],
+      columnDefs: [
+        { searchable: false, orderable: false, targets: 0 },
+        { orderable: false, targets: 5 }
+      ],
+      language: {
+        search: "_INPUT_",
+        searchPlaceholder: "Search customers…",
+        lengthMenu: "Show _MENU_",
+        info: "_START_–_END_ of _TOTAL_",
+        infoEmpty: "No customers",
+        paginate: { previous: "‹", next: "›" }
+      },
+      dom: '<"row align-items-center mb-1"<"col-sm-6"l><"col-sm-6"f>>rt<"row align-items-center mt-1"<"col-sm-6"i><"col-sm-6"p>>'
     });
 
-    table.on('order.dt search.dt', function () {
-      let i = 1;
-      table.cells(null, 0, { search: 'applied', order: 'applied' }).every(function (cell) {
+    table.on("order.dt search.dt", function () {
+      var i = 1;
+      table.cells(null, 0, { search: "applied", order: "applied" }).every(function () {
         this.data(i++);
       });
     }).draw();
 
-    $('.delete-customer').on('click', function () {
+    $("#customerTable").on("click", ".delete-customer", function () {
       var btn = $(this);
-      var url = btn.data('url');
-      var name = btn.data('name');
-      
       Swal.fire({
-        title: 'Are you sure?',
-        text: "Delete customer " + name + "?",
-        icon: 'warning',
+        title: "Delete customer?",
+        text: "Remove " + btn.data("name") + "?",
+        icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          $.ajax({
-            url: url,
-            method: 'GET',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            success: function (resp) {
-              if (resp.status === 'success') {
-                Swal.fire('Deleted!', resp.message, 'success').then(() => {
-                  location.reload();
-                });
-              } else {
-                Swal.fire('Error!', resp.message, 'error');
-              }
-            },
-            error: function () {
-              Swal.fire('Error!', 'Something went wrong', 'error');
+        confirmButtonColor: "#29577f",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Yes, delete"
+      }).then(function (result) {
+        if (!result.isConfirmed) return;
+        $.ajax({
+          url: btn.data("url"),
+          method: "GET",
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          success: function (resp) {
+            if (resp.status === "success") {
+              Swal.fire("Deleted!", resp.message, "success").then(function () {
+                location.reload();
+              });
+            } else {
+              Swal.fire("Error!", resp.message, "error");
             }
-          });
-        }
+          },
+          error: function () {
+            Swal.fire("Error!", "Something went wrong", "error");
+          }
+        });
       });
     });
   });

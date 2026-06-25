@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Super Admin | All Accounts{% endblock %}
+{% block content %}
+<div class="content-header py-2">
+  <div class="container-fluid">
+    <h1 class="m-0"><i class="fas fa-building mr-2"></i>All SaaS Accounts</h1>
+  </div>
+</div>
+<section class="content pt-0">
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header py-2 d-flex flex-wrap align-items-center">
+        <form method="get" class="form-inline mr-auto">
+          <input type="text" name="q" value="{{ search }}" class="form-control form-control-sm mr-2" placeholder="Search company or email">
+          <select name="status" class="form-control form-control-sm mr-2">
+            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All ({{ stats.total }})</option>
+            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active ({{ stats.active }})</option>
+            <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expired ({{ stats.expired }})</option>
+            <option value="pending_payment" {% if status_filter == 'pending_payment' %}selected{% endif %}>Pending ({{ stats.pending }})</option>
+            <option value="suspended" {% if status_filter == 'suspended' %}selected{% endif %}>Suspended ({{ stats.suspended }})</option>
+          </select>
+          <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+        </form>
+        <a href="{% url 'platform_dashboard' %}" class="btn btn-sm btn-outline-secondary">Back to dashboard</a>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-hover mb-0">
+          <thead>
+            <tr>
+              <th>#</th><th>Company</th><th>Owner</th><th>Plan</th><th>Status</th>
+              <th>Members</th><th>Next renewal</th><th>Days left</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for org in organizations %}
+            <tr>
+              <td>{{ org.org_id }}</td>
+              <td><strong>{{ org.name }}</strong></td>
+              <td>{{ org.owner.full_name }}<br><small class="text-muted">{{ org.owner.email }}</small></td>
+              <td>{{ org.plan.name|default:"—" }}</td>
+              <td>
+                {% if org.is_subscription_active %}
+                <span class="badge badge-success">Active</span>
+                {% elif org.status == 'pending_payment' %}
+                <span class="badge badge-warning">Pending</span>
+                {% elif org.status == 'suspended' %}
+                <span class="badge badge-secondary">Suspended</span>
+                {% else %}
+                <span class="badge badge-danger">{{ org.get_status_display }}</span>
+                {% endif %}
+              </td>
+              <td>{{ org.member_count }}</td>
+              <td>{{ org.subscription_ends_at|date:"M d, Y H:i"|default:"—" }}</td>
+              <td>
+                {% if org.subscription_ends_at %}
+                  {% if org.days_remaining <= 7 %}<span class="text-warning font-weight-bold">{{ org.days_remaining }}d</span>
+                  {% else %}{{ org.days_remaining }}d{% endif %}
+                {% else %}—{% endif %}
+              </td>
+              <td><a href="{% url 'platform_organization_detail' org.org_id %}" class="btn btn-xs btn-outline-primary btn-sm">Manage</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" class="text-center text-muted py-4">No accounts found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

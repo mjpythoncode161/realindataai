@@ -531,7 +531,8 @@
           </nav>
           <div class="ll-nav-actions">
             <a class="ll-btn-login" href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
-            <a class="ll-btn-signup" href="{% url 'public_signup' %}"><i class="fas fa-gift"></i> Free Trial — 7 Days</a>
+            <a class="ll-btn-signup" href="{% url 'saas_pricing' %}"><i class="fas fa-tags"></i> View Pricing</a>
+            <a class="ll-btn-signup" href="{% url 'public_signup' %}"><i class="fas fa-rocket"></i> Get Started</a>
           </div>
         </div>
       </div>
@@ -585,7 +586,8 @@
           <div>
             <h4>Get started</h4>
             <ul>
-              <li><a href="{% url 'public_signup' %}">Sign up — 7-day free trial</a></li>
+              <li><a href="{% url 'saas_pricing' %}">Pricing — Basic, Premium, Diamond</a></li>
+              <li><a href="{% url 'public_signup' %}">Sign up &amp; pay to start</a></li>
               <li><a href="{% url 'login' %}">Login to dashboard</a></li>
             </ul>
           </div>

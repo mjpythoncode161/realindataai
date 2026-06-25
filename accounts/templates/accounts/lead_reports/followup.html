@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="content-header py-2">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6"><h1>{{ page_title }}</h1></div>
+      <div class="col-sm-6 text-sm-right"><a href="{% url 'lead_reports_hub' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left mr-1"></i> All Lead Reports</a></div>
+    </div>
+  </div>
+</div>
+<section class="content pt-0">
+  <div class="container-fluid">
+    {% include "accounts/lead_reports/_filters.html" %}
+    <div class="row mb-3">
+      <div class="col-md-6"><div class="info-box shadow-sm"><span class="info-box-icon bg-warning"><i class="fas fa-calendar-check"></i></span><div class="info-box-content"><span class="info-box-text">Follow-ups in Period</span><span class="info-box-number">{{ total_followups }}</span></div></div></div>
+    </div>
+    {% include "accounts/lead_reports/_lead_table.html" with table_title="Open Leads — Follow-up Schedule" %}
+  </div>
+</section>
+{% endblock %}

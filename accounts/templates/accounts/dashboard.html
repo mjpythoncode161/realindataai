@@ -3,7 +3,7 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="content-header">
+<div class="content-header py-2">
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
@@ -22,17 +22,17 @@
   </div>
 </div>
 
-<section class="content">
+<section class="content pt-0">
   <div class="container-fluid">
 
     <!-- Row 1: KPI info-box cards -->
     {% if request.user|has_any_role:"admin,manager,followup,executive,telecaller" %}
-    <div class="row">
+    <div class="row ll-kpi-row">
 
       <div class="col-lg-3 col-md-6 col-sm-6 col-12">
         <a href="{% url 'customer_list' %}" class="text-decoration-none text-dark">
-          <div class="info-box">
-            <span class="info-box-icon bg-info elevation-1"><i class="fas fa-users"></i></span>
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-info"><i class="fas fa-users"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">Total Customers</span>
               <span class="info-box-number">{{ total_customers|default:"0" }}</span>
@@ -43,8 +43,8 @@
 
       <div class="col-lg-3 col-md-6 col-sm-6 col-12">
         <a href="{% url 'booking_list' %}" class="text-decoration-none text-dark">
-          <div class="info-box">
-            <span class="info-box-icon bg-success elevation-1"><i class="fas fa-clipboard-check"></i></span>
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-success"><i class="fas fa-clipboard-check"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">Total Bookings</span>
               <span class="info-box-number">{{ total_bookings|default:"0" }}</span>
@@ -55,8 +55,8 @@
 
       <div class="col-lg-3 col-md-6 col-sm-6 col-12">
         <a href="{% url 'booking_list' %}" class="text-decoration-none text-dark">
-          <div class="info-box">
-            <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-times-circle"></i></span>
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-warning"><i class="fas fa-times-circle"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">Cancelled Bookings</span>
               <span class="info-box-number">{{ total_cancellations|default:"0" }}</span>
@@ -67,8 +67,8 @@
 
       <div class="col-lg-3 col-md-6 col-sm-6 col-12">
         <a href="{% url 'project_list' %}" class="text-decoration-none text-dark">
-          <div class="info-box">
-            <span class="info-box-icon bg-primary elevation-1"><i class="fas fa-map-marked-alt"></i></span>
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-primary"><i class="fas fa-map-marked-alt"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">Total Projects</span>
               <span class="info-box-number">{{ total_projects|default:"0" }}</span>
@@ -80,14 +80,68 @@
     </div>
     {% endif %}
 
+    {% if lead_counts %}
+    <div class="row ll-kpi-row">
+
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <a href="{% url 'lead_list' %}?status=all" class="text-decoration-none text-dark">
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-info"><i class="fas fa-folder-open"></i></span>
+            <div class="info-box-content">
+              <span class="info-box-text">Total Lead</span>
+              <span class="info-box-number">{{ lead_counts.total|default:"0" }}</span>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <a href="{% url 'lead_list' %}?status=open" class="text-decoration-none text-dark">
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-warning"><i class="fas fa-star"></i></span>
+            <div class="info-box-content">
+              <span class="info-box-text">Pending Lead</span>
+              <span class="info-box-number">{{ lead_counts.pending|default:"0" }}</span>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <a href="{% url 'lead_list' %}?status=CONFIRMED" class="text-decoration-none text-dark">
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
+            <div class="info-box-content">
+              <span class="info-box-text">Confirm Lead</span>
+              <span class="info-box-number">{{ lead_counts.confirmed|default:"0" }}</span>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <a href="{% url 'lead_list' %}?status=CLOSED_LOST" class="text-decoration-none text-dark">
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-secondary"><i class="fas fa-times"></i></span>
+            <div class="info-box-content">
+              <span class="info-box-text">Close Lead</span>
+              <span class="info-box-number">{{ lead_counts.closed|default:"0" }}</span>
+            </div>
+          </div>
+        </a>
+      </div>
+
+    </div>
+    {% endif %}
+
     <!-- Row 2: Follow-up urgency info-box cards -->
     {% if request.user|has_any_role:"admin,followup,executive,telecaller" %}
-    <div class="row">
+    <div class="row ll-kpi-row">
 
       <div class="col-lg-3 col-md-6 col-sm-6 col-12">
         <a href="{% url 'follow_up_report' %}" class="text-decoration-none text-dark">
-          <div class="info-box">
-            <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-fire"></i></span>
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-danger"><i class="fas fa-fire"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">Follow-up Due Today</span>
               <span class="info-box-number">{{ followups_today|default:"0" }}</span>
@@ -98,8 +152,8 @@
 
       <div class="col-lg-3 col-md-6 col-sm-6 col-12">
         <a href="{% url 'follow_up_report' %}" class="text-decoration-none text-dark">
-          <div class="info-box">
-            <span class="info-box-icon bg-orange elevation-1"><i class="fas fa-clock"></i></span>
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-orange"><i class="fas fa-clock"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">Follow-up Next 7 Days</span>
               <span class="info-box-number">{{ followups_7|default:"0" }}</span>
@@ -110,8 +164,8 @@
 
       <div class="col-lg-3 col-md-6 col-sm-6 col-12">
         <a href="{% url 'follow_up_report' %}" class="text-decoration-none text-dark">
-          <div class="info-box">
-            <span class="info-box-icon bg-yellow elevation-1"><i class="fas fa-calendar-check"></i></span>
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-yellow"><i class="fas fa-calendar-check"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">Follow-up Next 15 Days</span>
               <span class="info-box-number">{{ followups_15|default:"0" }}</span>
@@ -122,8 +176,8 @@
 
       <div class="col-lg-3 col-md-6 col-sm-6 col-12">
         <a href="{% url 'follow_up_report' %}" class="text-decoration-none text-dark">
-          <div class="info-box">
-            <span class="info-box-icon bg-success elevation-1"><i class="fas fa-calendar-alt"></i></span>
+          <div class="info-box shadow-sm">
+            <span class="info-box-icon bg-success"><i class="fas fa-calendar-alt"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">Follow-up Next 30 Days</span>
               <span class="info-box-number">{{ followups_30|default:"0" }}</span>

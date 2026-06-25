@@ -20,7 +20,14 @@ class LedgerMaster(models.Model):
     DR_CR = [("Dr", "Debit"), ("Cr", "Credit")]
 
     l_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=200, unique=True)
+    organization = models.ForeignKey(
+        "saas.Organization",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="tally_ledgers",
+    )
+    name = models.CharField(max_length=200)
     group = models.CharField(max_length=20, choices=GROUP_CHOICES)
     opening_balance = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal("0.00"))
     opening_balance_type = models.CharField(max_length=2, choices=DR_CR, default="Dr")
@@ -48,6 +55,7 @@ class LedgerMaster(models.Model):
     class Meta:
         db_table = "tally_ledger_master"
         ordering = ["name"]
+        unique_together = ("organization", "name")
 
 
 class Voucher(models.Model):
@@ -59,7 +67,14 @@ class Voucher(models.Model):
     ]
 
     v_id = models.AutoField(primary_key=True)
-    voucher_no = models.CharField(max_length=50, unique=True, blank=True)
+    organization = models.ForeignKey(
+        "saas.Organization",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="tally_vouchers",
+    )
+    voucher_no = models.CharField(max_length=50, blank=True)
     voucher_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     voucher_date = models.DateField()
     narration = models.TextField(blank=True)
@@ -89,7 +104,10 @@ class Voucher(models.Model):
             prefix = {"PAYMENT": "PV", "RECEIPT": "RV", "JOURNAL": "JV", "CONTRA": "CV"}.get(
                 self.voucher_type, "VV"
             )
-            last = Voucher.objects.filter(voucher_type=self.voucher_type).order_by("-v_id").first()
+            last_qs = Voucher.objects.filter(voucher_type=self.voucher_type)
+            if self.organization_id:
+                last_qs = last_qs.filter(organization_id=self.organization_id)
+            last = last_qs.order_by("-v_id").first()
             seq = (last.v_id + 1) if last else 1
             self.voucher_no = f"{prefix}-{date_str}-{seq:04d}"
         super().save(*args, **kwargs)
@@ -97,6 +115,7 @@ class Voucher(models.Model):
     class Meta:
         db_table = "tally_voucher"
         ordering = ["-voucher_date", "-v_id"]
+        unique_together = ("organization", "voucher_no")
 
 
 class VoucherEntry(models.Model):

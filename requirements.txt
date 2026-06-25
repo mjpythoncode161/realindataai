@@ -3,5 +3,11 @@
 Django==4.2.27
 djangorestframework==3.17.1
 
+# ── Database ───────────────────────────────────────────────────────────────────
+PyMySQL==1.2.0
+
 # ── Image Processing (required for ImageField) ─────────────────────────────────
 Pillow==11.3.0
+
+# ── SaaS Payments ──────────────────────────────────────────────────────────────
+razorpay==1.4.2

@@ -205,9 +205,14 @@ class LeadForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         from bookings.models import Project
+        from saas.tenant import get_user_organization
         from .models import Users, users_with_any_role_query
 
-        self.fields["p_id"].queryset = Project.objects.all().order_by("name")
+        org = get_user_organization(user) if user else None
+        projects = Project.objects.all().order_by("name")
+        if org:
+            projects = projects.filter(organization=org)
+        self.fields["p_id"].queryset = projects
         self.fields["p_id"].empty_label = "Select Project"
         if user and user.has_role("manager") and not user.has_role("admin"):
             assignable = Users.objects.filter(
@@ -221,6 +226,8 @@ class LeadForm(forms.ModelForm):
             assignable = Users.objects.filter(
                 users_with_any_role_query("followup", "manager", "executive", "telecaller")
             ).distinct()
+        if org:
+            assignable = assignable.filter(organization=org)
         self.fields["assigned_to"].queryset = assignable.order_by("full_name")
         self.fields["assigned_to"].empty_label = "Select executive or telecaller"
         self.fields["assigned_to"].required = True

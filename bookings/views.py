@@ -72,9 +72,11 @@ def format_form_errors(form, formset=None):
     return "<br>".join(error_list) if error_list else "Please check the form for errors."
 
 
-def _booking_form_context(**extra):
-    """Shared context for booking form — projects loaded from Store Settings."""
-    projects = Project.objects.all().order_by("name")
+def _booking_form_context(request, **extra):
+    """Shared context for booking form — projects scoped to tenant."""
+    from saas.tenant import tenant_projects
+
+    projects = tenant_projects(request).order_by("name")
     context = {
         "projects": projects,
         "projects_json": json.dumps(
@@ -94,20 +96,23 @@ def _booking_form_context(**extra):
 
 @login_required
 def booking_list(request):
+    from saas.tenant import tenant_bookings
+
     if request.user.has_role("accounts"):
         return HttpResponseForbidden("Accounts cannot access Bookings.")
-        
+
     bookings = (
-        BookingMaster.objects.exclude(status="CANCELLED")
+        tenant_bookings(request)
+        .exclude(status="CANCELLED")
         .select_related("p_id")
         .prefetch_related("items")
         .order_by("-b_id")
     )
-    if request.user.has_role("manager"):
+    if request.user.has_role("manager") and not request.user.has_role("admin"):
         bookings = bookings.filter(created_by=request.user)
     elif request.user.has_role("customer"):
         bookings = bookings.filter(u_id=request.user)
-        
+
     return render(request, "bookings/booking_list.html", {"bookings": bookings})
 
 
@@ -118,12 +123,17 @@ def booking_create(request):
         return HttpResponseForbidden("You do not have permission to create bookings.")
         
     if request.method == "POST":
-        form = BookingMasterForm(request.POST)
+        form = BookingMasterForm(request.POST, user=request.user)
         formset = BookingItemFormSet(request.POST, prefix="items")
 
         if form.is_valid() and formset.is_valid():
+            from saas.tenant import get_request_organization
+
             booking = form.save(commit=False)
             booking.created_by = request.user
+            org = get_request_organization(request)
+            if org:
+                booking.organization = org
             
             user = sync_customer_from_booking(booking)
             if user:
@@ -169,13 +179,14 @@ def booking_create(request):
             return JsonResponse({"status": "error", "message": format_form_errors(form, formset)})
         messages.error(request, "Please correct the errors and try again.")
     else:
-        form = BookingMasterForm()
+        form = BookingMasterForm(user=request.user)
         formset = BookingItemFormSet(prefix="items")
 
     return render(
         request,
         "bookings/booking_form.html",
         _booking_form_context(
+            request,
             form=form,
             formset=formset,
             page_title="Site BookingMaster Application",
@@ -186,7 +197,9 @@ def booking_create(request):
 @login_required
 @transaction.atomic
 def booking_edit(request, b_id: int):
-    booking = get_object_or_404(BookingMaster, pk=b_id)
+    from saas.tenant import tenant_bookings
+
+    booking = get_object_or_404(tenant_bookings(request), pk=b_id)
 
     if request.method == "POST":
         # Capture old item values BEFORE form saves them
@@ -195,7 +208,7 @@ def booking_edit(request, b_id: int):
             for item in booking.items.all()
         }
 
-        form = BookingMasterForm(request.POST, instance=booking)
+        form = BookingMasterForm(request.POST, instance=booking, user=request.user)
         formset = BookingItemFormSet(
             request.POST,
             instance=booking,
@@ -248,6 +261,7 @@ def booking_edit(request, b_id: int):
                     request,
                     "bookings/booking_form.html",
                     _booking_form_context(
+                        request,
                         form=form,
                         formset=formset,
                         page_title="Edit Booking",
@@ -316,13 +330,14 @@ def booking_edit(request, b_id: int):
             return JsonResponse({"status": "error", "message": format_form_errors(form, formset)})
         messages.error(request, "Please correct the errors and try again.")
     else:
-        form = BookingMasterForm(instance=booking)
+        form = BookingMasterForm(instance=booking, user=request.user)
         formset = BookingItemFormSet(instance=booking, prefix="items")
 
     return render(
         request,
         "bookings/booking_form.html",
         _booking_form_context(
+            request,
             form=form,
             formset=formset,
             booking=booking,
@@ -721,12 +736,21 @@ def lookup_customer_by_phone(phone):
 def sync_customer_from_booking(booking):
     """Create or update registered customer profile from booking customer fields."""
     from accounts.models import Users, Customer
+    from saas.tenant import assign_user_to_organization
 
     phone = (booking.phone or "").strip()
     if not phone:
         return None
 
-    user = Users.objects.filter(phone=phone).first()
+    org = booking.organization
+    if not org and booking.p_id_id:
+        org = booking.p_id.organization
+
+    user = None
+    if org:
+        user = Users.objects.filter(phone=phone, organization=org).first()
+    if not user:
+        user = Users.objects.filter(phone=phone).first()
     if not user:
         email = (booking.email or "").strip().lower()
         if not email:
@@ -741,9 +765,12 @@ def sync_customer_from_booking(booking):
             full_name=booking.full_name or f"Customer {phone[-4:]}",
             phone=phone,
             role="customer",
+            organization=org,
         )
         user.set_unusable_password()
         user.save()
+        if org:
+            assign_user_to_organization(user, org)
 
     if booking.full_name:
         user.full_name = booking.full_name
@@ -793,13 +820,14 @@ def customer_by_phone(request):
 @require_GET
 @login_required
 def agent_details(request):
+    from saas.tenant import tenant_agents
     from .models import AgentMaster
     u_id = request.GET.get("u_id")
     role = request.GET.get("role")
     if not u_id or not role:
         return JsonResponse({"error": "Missing parameters"}, status=400)
     
-    agent = AgentMaster.objects.filter(u_id=u_id, role=role).first()
+    agent = tenant_agents(request).filter(u_id=u_id, role=role).first()
     if agent:
         return JsonResponse({
             "percentage": float(agent.commission_percentage),
@@ -837,25 +865,30 @@ def _booking_commission(paid_amount, percentage):
     return (paid * pct) / 100
 
 
-def _agent_role_profile(user_id, role, cache):
+def _agent_role_profile(user_id, role, cache, request=None):
     if not user_id:
         return None
     key = (user_id, role)
     if key not in cache:
-        cache[key] = AgentMaster.objects.filter(u_id_id=user_id, role=role).first()
+        if request is not None:
+            from saas.tenant import tenant_agents
+            cache[key] = tenant_agents(request).filter(u_id_id=user_id, role=role).first()
+        else:
+            cache[key] = AgentMaster.objects.filter(u_id_id=user_id, role=role).first()
     return cache[key]
 
 
-def _team_member_summary(bookings, profile_cache):
+def _team_member_summary(bookings, profile_cache, request=None):
     """Per team member: commission earned, deductions, account debits, and balance."""
     from .models import AccountsDebitPayment
+    from saas.tenant import tenant_agents
 
     members = {}
 
     def _ensure_member(user_id, role, user):
         key = (user_id, role)
         if key not in members:
-            profile = _agent_role_profile(user_id, role, profile_cache)
+            profile = _agent_role_profile(user_id, role, profile_cache, request)
             members[key] = {
                 "user": user,
                 "role": role,
@@ -921,8 +954,9 @@ def _team_member_summary(bookings, profile_cache):
     total_security_debit = Decimal("0.00")
 
     for (user_id, role), data in members.items():
+        accounts_qs = tenant_agents(request) if request is not None else AgentMaster.objects
         accounts_entry = (
-            AgentMaster.objects.filter(
+            accounts_qs.filter(
                 u_id_id=user_id, role=AgentMaster.Role.ACCOUNTS
             )
             .prefetch_related("debit_payments")
@@ -962,7 +996,9 @@ def _team_member_summary(bookings, profile_cache):
 
 @login_required
 def agent_list(request, role):
-    agents_qs = AgentMaster.objects.filter(role=role).select_related("u_id")
+    from saas.tenant import tenant_agents
+
+    agents_qs = tenant_agents(request).filter(role=role).select_related("u_id")
     if role == "accounts":
         agents_qs = agents_qs.prefetch_related("debit_payments")
     agents = list(agents_qs)
@@ -983,10 +1019,13 @@ def agent_list(request, role):
 @login_required
 def accounts_transactions(request, am_id):
     """View all debit payment transactions for an accounts profile."""
+    from saas.tenant import tenant_agents
     from .models import AccountsDebitPayment
 
     agent = get_object_or_404(
-        AgentMaster.objects.select_related("u_id").prefetch_related("debit_payments"),
+        tenant_agents(request)
+        .select_related("u_id")
+        .prefetch_related("debit_payments"),
         pk=am_id,
         role=AgentMaster.Role.ACCOUNTS,
     )
@@ -1011,10 +1050,14 @@ def accounts_transactions(request, am_id):
 @login_required
 def accounts_payment_edit(request, adp_id):
     """Edit a single AccountsDebitPayment entry."""
+    from saas.tenant import tenant_agents
     from .models import AccountsDebitPayment
     from .forms import AccountsDebitPaymentForm
 
-    payment = get_object_or_404(AccountsDebitPayment, pk=adp_id)
+    payment = get_object_or_404(
+        AccountsDebitPayment.objects.filter(agent_master__in=tenant_agents(request)),
+        pk=adp_id,
+    )
     am_id = payment.agent_master_id
 
     if request.method == "POST":
@@ -1032,9 +1075,13 @@ def accounts_payment_edit(request, adp_id):
 @login_required
 def accounts_payment_delete(request, adp_id):
     """Delete a single AccountsDebitPayment entry."""
+    from saas.tenant import tenant_agents
     from .models import AccountsDebitPayment
 
-    payment = get_object_or_404(AccountsDebitPayment, pk=adp_id)
+    payment = get_object_or_404(
+        AccountsDebitPayment.objects.filter(agent_master__in=tenant_agents(request)),
+        pk=adp_id,
+    )
     am_id = payment.agent_master_id
 
     if request.method == "POST":
@@ -1050,19 +1097,23 @@ def accounts_payment_delete(request, adp_id):
 def agent_add(request, role):
     role_display = dict(AgentMaster.Role.choices).get(role, role.capitalize())
     if request.method == "POST":
-        form = AgentMasterForm(request.POST, role=role)
+        form = AgentMasterForm(request.POST, role=role, request=request)
         if role == "accounts":
             u_id_obj = form.cleaned_data.get("u_id") if form.is_valid() else None
             agent_stub = None
             if u_id_obj:
-                agent_stub, _ = AgentMaster.objects.get_or_create(
+                from saas.tenant import tenant_agents
+
+                agent_stub, _ = tenant_agents(request).get_or_create(
                     u_id=u_id_obj, role=role, defaults={"remarks": ""}
                 )
             payment_formset = AccountsDebitPaymentFormSet(
                 request.POST, instance=agent_stub, prefix=ACCOUNTS_PAYMENT_FORMSET_PREFIX
             )
             if form.is_valid() and payment_formset.is_valid():
-                agent, _ = AgentMaster.objects.update_or_create(
+                from saas.tenant import tenant_agents
+
+                agent, _ = tenant_agents(request).update_or_create(
                     u_id=form.cleaned_data["u_id"],
                     role=role,
                     defaults={
@@ -1100,7 +1151,7 @@ def agent_add(request, role):
                 {"status": "error", "message": "Invalid form data.", "errors": form.errors.as_json()}
             )
     else:
-        form = AgentMasterForm(role=role)
+        form = AgentMasterForm(role=role, request=request)
         payment_formset = (
             AccountsDebitPaymentFormSet(prefix=ACCOUNTS_PAYMENT_FORMSET_PREFIX)
             if role == "accounts"
@@ -1119,11 +1170,13 @@ def agent_add(request, role):
 
 @login_required
 def agent_edit(request, am_id):
-    agent = get_object_or_404(AgentMaster, pk=am_id)
+    from saas.tenant import tenant_agents
+
+    agent = get_object_or_404(tenant_agents(request), pk=am_id)
     role = agent.role
     role_display = dict(AgentMaster.Role.choices).get(role, role.capitalize())
     if request.method == "POST":
-        form = AgentMasterForm(request.POST, instance=agent, role=role)
+        form = AgentMasterForm(request.POST, instance=agent, role=role, request=request)
         if role == "accounts":
             payment_formset = AccountsDebitPaymentFormSet(
                 request.POST, instance=agent, prefix=ACCOUNTS_PAYMENT_FORMSET_PREFIX
@@ -1153,7 +1206,7 @@ def agent_edit(request, am_id):
                 {"status": "error", "message": "Invalid form data.", "errors": form.errors.as_json()}
             )
     else:
-        form = AgentMasterForm(instance=agent, role=role)
+        form = AgentMasterForm(instance=agent, role=role, request=request)
         payment_formset = (
             AccountsDebitPaymentFormSet(instance=agent, prefix=ACCOUNTS_PAYMENT_FORMSET_PREFIX)
             if role == "accounts"
@@ -1173,7 +1226,9 @@ def agent_edit(request, am_id):
 @login_required
 @require_POST
 def agent_delete(request, am_id):
-    agent = get_object_or_404(AgentMaster, pk=am_id)
+    from saas.tenant import tenant_agents
+
+    agent = get_object_or_404(tenant_agents(request), pk=am_id)
     role = agent.role
     agent.delete()
     
@@ -1184,16 +1239,26 @@ def agent_delete(request, am_id):
     return redirect("agent_list", role=role)
 @login_required
 def project_list(request):
-    projects = Project.objects.all().order_by("-p_id")
+    from saas.tenant import scope_queryset_to_org
+    projects = scope_queryset_to_org(Project.objects.all(), request).order_by("-p_id")
     return render(request, "bookings/project_list.html", {"projects": projects})
 
 
 @login_required
 def project_add(request):
+    from saas.tenant import get_request_organization, organization_within_limits
+
+    org = get_request_organization(request)
+    if org and not organization_within_limits(org, "projects"):
+        messages.error(request, "Project limit reached for your plan. Please upgrade to add more projects.")
+        return redirect("project_list")
+
     if request.method == "POST":
         form = ProjectForm(request.POST)
         if form.is_valid():
-            form.save()
+            project = form.save(commit=False)
+            project.organization = org
+            project.save()
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({"status": "success", "message": "Project added successfully."})
             messages.success(request, "Project added successfully.")
@@ -1208,7 +1273,8 @@ def project_add(request):
 
 @login_required
 def project_edit(request, p_id):
-    project = get_object_or_404(Project, pk=p_id)
+    from saas.tenant import scope_queryset_to_org
+    project = get_object_or_404(scope_queryset_to_org(Project.objects.all(), request), pk=p_id)
     if request.method == "POST":
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
@@ -1228,7 +1294,9 @@ def project_edit(request, p_id):
 @login_required
 @require_POST
 def project_delete(request, p_id):
-    project = get_object_or_404(Project, pk=p_id)
+    from saas.tenant import scope_queryset_to_org
+
+    project = get_object_or_404(scope_queryset_to_org(Project.objects.all(), request), pk=p_id)
     project.delete()
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({"status": "success", "message": "Project deleted successfully."})
@@ -1241,11 +1309,18 @@ def booking_agent_settings(request):
     if not request.user.has_role("admin"):
         return HttpResponseForbidden("Only Admins can change booking agent settings.")
 
-    settings_obj = get_booking_agent_settings()
+    from saas.tenant import get_booking_agent_settings_for_request
+
+    settings_obj = get_booking_agent_settings_for_request(request)
     if request.method == "POST":
         form = BookingAgentSettingsForm(request.POST, instance=settings_obj)
         if form.is_valid():
-            form.save()
+            obj = form.save(commit=False)
+            from saas.tenant import get_request_organization
+            org = get_request_organization(request)
+            if org and not obj.organization_id:
+                obj.organization = org
+            obj.save()
             messages.success(request, "Store settings saved.")
             return redirect("booking_agent_settings")
         messages.error(request, "Please correct the errors below.")
@@ -1268,7 +1343,9 @@ def check_plot_availability(request):
     if not project_id or not plot_numbers:
         return JsonResponse({"available": True})
 
-    project = get_object_or_404(Project, pk=project_id)
+    from saas.tenant import scope_queryset_to_org
+
+    project = get_object_or_404(scope_queryset_to_org(Project.objects.all(), request), pk=project_id)
     max_plots = project.num_plots
     
     plots_to_check = [p.strip() for p in plot_numbers.split(",") if p.strip()]
@@ -1322,12 +1399,17 @@ def check_plot_availability(request):
 
 @login_required
 def master_plots(request):
-    projects = Project.objects.all().order_by("name")
+    from saas.tenant import tenant_bookings, tenant_projects
+
+    projects = tenant_projects(request).order_by("name")
     project_data = []
     
     for project in projects:
-        # Get all booking items for this project
-        items = BookingItem.objects.filter(p_id=project).select_related('b_id', 'b_id__cancelled_details')
+        # Get booking items for this project within the current organization
+        items = (
+            BookingItem.objects.filter(p_id=project, b_id__in=tenant_bookings(request))
+            .select_related("b_id", "b_id__cancelled_details")
+        )
         
         # Map plot_number -> status
         plot_status_map = {}
@@ -1392,16 +1474,14 @@ def master_plots(request):
 
 @login_required
 def receipt_list(request):
-    receipts = ReceiptMaster.objects.exclude(b_id__status="CANCELLED").select_related("b_id__p_id").order_by("-rm_id")
-    if request.user.has_role("manager"):
+    from saas.tenant import tenant_payments, tenant_receipts
+
+    receipts = tenant_receipts(request).exclude(b_id__status="CANCELLED").select_related("b_id__p_id").order_by("-rm_id")
+    if request.user.has_role("manager") and not request.user.has_role("admin"):
         receipts = receipts.filter(b_id__created_by=request.user)
     elif request.user.has_role("customer"):
         receipts = receipts.filter(b_id__u_id=request.user)
-        # Fetch pending payments as well
-        from .models import Payment
-        pending_payments = Payment.objects.filter(b_id__u_id=request.user, status=Payment.Status.PENDING).select_related('b_id__p_id').order_by("-created_at")
-        
-        # Use card-based design for customers
+        pending_payments = tenant_payments(request).filter(b_id__u_id=request.user, status=Payment.Status.PENDING).select_related('b_id__p_id').order_by("-created_at")
         return render(request, "bookings/customer_payment_history.html", {
             "receipts": receipts,
             "pending_payments": pending_payments
@@ -1557,7 +1637,9 @@ def booking_details_api(request):
     if not b_id:
         return JsonResponse({"error": "Missing b_id"}, status=400)
     
-    booking = get_object_or_404(BookingMaster, pk=b_id)
+    from saas.tenant import tenant_bookings
+
+    booking = get_object_or_404(tenant_bookings(request), pk=b_id)
     balance, _ = BalanceMaster.objects.get_or_create(b_id=booking)
     
     # Get plot numbers from items
@@ -1575,13 +1657,14 @@ def booking_details_api(request):
 @require_GET
 @login_required
 def bookings_by_phone(request):
-    from django.db.models import Q
+    from saas.tenant import tenant_bookings
+
     phone = (request.GET.get("phone") or "").strip()
     if not phone:
         return JsonResponse({"bookings": []})
     
     # Filter bookings by the linked customer's current phone number
-    bookings = BookingMaster.objects.filter(
+    bookings = tenant_bookings(request).filter(
         u_id__phone=phone
     ).exclude(status='CANCELLED').distinct().order_by("-b_id")
     
@@ -1598,7 +1681,9 @@ def bookings_by_phone(request):
 
 @login_required
 def ledger_list(request):
-    bookings = BookingMaster.objects.exclude(status="CANCELLED").select_related("u_id", "p_id").prefetch_related("items", "receipts").order_by("-b_id")
+    from saas.tenant import tenant_bookings
+
+    bookings = tenant_bookings(request).exclude(status="CANCELLED").select_related("u_id", "p_id").prefetch_related("items", "receipts").order_by("-b_id")
     if request.user.has_role("manager"):
         bookings = bookings.filter(created_by=request.user)
     elif request.user.has_role("customer"):
@@ -1664,12 +1749,14 @@ def ledger_list(request):
 
 @login_required
 def ledger_data_api(request):
+    from saas.tenant import tenant_bookings
+
     b_id = request.GET.get("b_id")
     if not b_id:
         return JsonResponse({"error": "Booking ID required"}, status=400)
     
     booking = get_object_or_404(
-        BookingMaster.objects.select_related("p_id", "balance").prefetch_related("items__p_id"),
+        tenant_bookings(request).select_related("p_id", "balance").prefetch_related("items__p_id"),
         pk=b_id,
     )
     items = list(booking.items.all())
@@ -1754,8 +1841,10 @@ def ledger_data_api(request):
 
 @login_required
 def ledger_print(request, b_id):
+    from saas.tenant import tenant_bookings
+
     booking = get_object_or_404(
-        BookingMaster.objects.select_related("p_id", "balance").prefetch_related("items__p_id"),
+        tenant_bookings(request).select_related("p_id", "balance").prefetch_related("items__p_id"),
         pk=b_id,
     )
     items = list(booking.items.all())
@@ -1844,9 +1933,10 @@ def get_agent_info(request):
     if not uid or not role:
         return JsonResponse({"status": "error", "message": "Missing parameters"}, status=400)
     
+    from saas.tenant import tenant_agents
     from .models import AgentMaster
     try:
-        agent = AgentMaster.objects.filter(u_id_id=uid, role=role).first()
+        agent = tenant_agents(request).filter(u_id_id=uid, role=role).first()
         if agent:
             data = {
                 "status": "success",
@@ -1878,9 +1968,11 @@ def agent_withdrawal_data(request):
         return JsonResponse({"status": "error", "message": "Missing user_id"}, status=400)
 
     try:
+        from saas.tenant import tenant_agents, tenant_bookings
+
         # Accounts deduction settings for this agent
         accounts_entry = (
-            AgentMaster.objects.filter(u_id_id=user_id, role="accounts")
+            tenant_agents(request).filter(u_id_id=user_id, role="accounts")
             .prefetch_related("debit_payments")
             .first()
         )
@@ -1896,7 +1988,7 @@ def agent_withdrawal_data(request):
             ("executive", {"executive_u_id_id": user_id}, "executive_percentage"),
             ("telecaller", {"telecaller_u_id_id": user_id}, "telecaller_percentage"),
         ]:
-            qs = BookingMaster.objects.filter(**booking_filter).exclude(status="CANCELLED").select_related("balance")
+            qs = tenant_bookings(request).filter(**booking_filter).exclude(status="CANCELLED").select_related("balance")
             role_commission = Decimal("0.00")
             for b in qs:
                 try:
@@ -1931,20 +2023,29 @@ from django.db.models import Sum, Max, F, DecimalField, ExpressionWrapper, Case,
 from django.db.models.functions import Coalesce
 from datetime import date, timedelta
 
-def base_report_queryset(user=None):
+def base_report_queryset(user=None, organization=None):
     """Returns a base queryset with all necessary annotations for reports."""
     from .models import BookingMaster, ReceiptMaster
     from decimal import Decimal
-    from django.db.models import Subquery, OuterRef
-    
-    # Subquery: Find the LATEST receipt that actually has a next_payment_date
+    from django.db.models import Subquery, OuterRef, Q
+    from saas.tenant import get_user_organization
+
     latest_receipt_date = ReceiptMaster.objects.filter(
         b_id=OuterRef('pk'),
         next_payment_date__isnull=False
     ).order_by('-created_at').values('next_payment_date')[:1]
 
     qs = BookingMaster.objects.select_related('p_id', 'u_id', 'balance').exclude(status="CANCELLED")
-    if user and user.has_role("manager"):
+
+    org = organization
+    if org is None and user:
+        org = get_user_organization(user)
+    if org:
+        qs = qs.filter(Q(organization=org) | Q(p_id__organization=org)).distinct()
+    elif user and not getattr(user, "is_superuser", False):
+        qs = qs.none()
+
+    if user and user.has_role("manager") and not user.has_role("admin"):
         qs = qs.filter(created_by=user)
         
     return qs.annotate(
@@ -2093,13 +2194,14 @@ def payment_request(request):
 
 @login_required
 def payment_list(request):
-    if request.user.has_role("manager"):
-        payments = Payment.objects.filter(created_by=request.user).order_by("-created_at")
+    from saas.tenant import tenant_payments
+
+    payments = tenant_payments(request).order_by("-created_at")
+    if request.user.has_role("manager") and not request.user.has_role("admin"):
+        payments = payments.filter(created_by=request.user)
     elif request.user.has_role("customer"):
-        payments = Payment.objects.filter(b_id__u_id=request.user).order_by("-created_at")
-    else:
-        payments = Payment.objects.all().order_by("-created_at")
-    
+        payments = payments.filter(b_id__u_id=request.user)
+
     return render(request, "bookings/payment_list.html", {
         "payments": payments,
         "page_title": "Payment Requests"
@@ -2154,7 +2256,7 @@ def payment_approve(request, p_id):
 @login_required
 def all_reports_dashboard(request):
     return render(request, "bookings/all_reports.html", {
-        "page_title": "BookingMaster Reports"
+        "page_title": "Booking & Agent Reports",
     })
 
 @login_required
@@ -2368,13 +2470,14 @@ def my_payments(request):
 def cancelled_plots_list(request):
     from .models import CancelledPlot
     from django.db.models import Sum
-    
+    from saas.tenant import tenant_cancelled_plots
+
     if request.user.has_role("customer"):
-        qs = CancelledPlot.objects.filter(b_id__u_id=request.user).select_related('b_id')
-    elif request.user.role == "manager":
-        qs = CancelledPlot.objects.filter(b_id__created_by=request.user).select_related('b_id')
+        qs = tenant_cancelled_plots(request).filter(b_id__u_id=request.user).select_related('b_id')
+    elif request.user.has_role("manager") and not request.user.has_role("admin"):
+        qs = tenant_cancelled_plots(request).filter(b_id__created_by=request.user).select_related('b_id')
     else:
-        qs = CancelledPlot.objects.all().select_related('b_id', 'b_id__p_id', 'created_by').order_by('-cancellation_date')
+        qs = tenant_cancelled_plots(request).select_related('b_id', 'b_id__p_id', 'created_by').order_by('-cancellation_date')
         
     from django.db.models import Count
 
@@ -2483,7 +2586,9 @@ def cancelled_plot_delete(request, cp_id):
 
 @login_required
 def agent_report(request, role):
-    agent_settings = get_booking_agent_settings()
+    from saas.tenant import get_booking_agent_settings_for_request, tenant_agents, tenant_bookings
+
+    agent_settings = get_booking_agent_settings_for_request(request)
     if role in ("manager", "executive", "telecaller") and not agent_settings.is_role_enabled(role):
         return HttpResponseForbidden("This agent report is disabled in Store Settings.")
 
@@ -2496,7 +2601,7 @@ def agent_report(request, role):
     has_effective_date = "effective_date" in agent_master_columns
     has_payment_method = "payment_method" in agent_master_columns
 
-    agents = AgentMaster.objects.filter(role=role).select_related('u_id')
+    agents = tenant_agents(request).filter(role=role).select_related('u_id')
     defer_fields = []
     if not has_effective_date:
         defer_fields.append("effective_date")
@@ -2533,11 +2638,11 @@ def agent_report(request, role):
 
     if agent_id:
         if role == 'manager':
-            bookings = BookingMaster.objects.filter(manager_u_id=agent_id)
+            bookings = tenant_bookings(request).filter(manager_u_id=agent_id)
         elif role == 'executive':
-            bookings = BookingMaster.objects.filter(executive_u_id=agent_id)
+            bookings = tenant_bookings(request).filter(executive_u_id=agent_id)
         elif role == 'telecaller':
-            bookings = BookingMaster.objects.filter(telecaller_u_id=agent_id)
+            bookings = tenant_bookings(request).filter(telecaller_u_id=agent_id)
 
         bookings = bookings.exclude(status='CANCELLED').select_related(
             'u_id', 'balance', 'p_id'
@@ -2548,7 +2653,7 @@ def agent_report(request, role):
         if to_date:
             bookings = bookings.filter(booking_date__lte=to_date)
 
-        accounts_query = AgentMaster.objects.filter(u_id_id=agent_id, role='accounts')
+        accounts_query = tenant_agents(request).filter(u_id_id=agent_id, role='accounts')
         if defer_fields:
             accounts_query = accounts_query.defer(*defer_fields)
         accounts_entry = accounts_query.prefetch_related("debit_payments").first()
@@ -2563,7 +2668,7 @@ def agent_report(request, role):
         accounts_commission_debit, accounts_security_debit = _accounts_debit_totals(accounts_entry)
 
         # Use the agent's own profile settings from Add Manager / Add Executive / Add Telecaller.
-        agent_profile_query = AgentMaster.objects.filter(u_id_id=agent_id, role=role)
+        agent_profile_query = tenant_agents(request).filter(u_id_id=agent_id, role=role)
         if defer_fields:
             agent_profile_query = agent_profile_query.defer(*defer_fields)
         agent_profile = agent_profile_query.first()
@@ -2691,9 +2796,10 @@ def agent_report(request, role):
 def team_report(request):
     """Manager team report: bookings with manager, executive, telecaller commission merged."""
     from accounts.models import Users
+    from saas.tenant import tenant_agents, tenant_bookings, tenant_users
 
     managers = (
-        AgentMaster.objects.filter(role=AgentMaster.Role.MANAGER)
+        tenant_agents(request).filter(role=AgentMaster.Role.MANAGER)
         .select_related("u_id")
         .order_by("u_id__full_name")
     )
@@ -2723,10 +2829,10 @@ def team_report(request):
 
     if manager_id:
         selected_manager = get_object_or_404(
-            Users.filter_by_role("manager"), pk=manager_id
+            tenant_users(request).filter_by_role("manager"), pk=manager_id
         )
         bookings_qs = (
-            BookingMaster.objects.filter(manager_u_id=manager_id)
+            tenant_bookings(request).filter(manager_u_id=manager_id)
             .exclude(status="CANCELLED")
             .select_related(
                 "u_id",
@@ -2756,13 +2862,13 @@ def team_report(request):
             tel_comm = _booking_commission(paid, booking.telecaller_percentage)
 
             mgr_profile = _agent_role_profile(
-                booking.manager_u_id_id, AgentMaster.Role.MANAGER, profile_cache
+                booking.manager_u_id_id, AgentMaster.Role.MANAGER, profile_cache, request
             )
             exec_profile = _agent_role_profile(
-                booking.executive_u_id_id, AgentMaster.Role.EXECUTIVE, profile_cache
+                booking.executive_u_id_id, AgentMaster.Role.EXECUTIVE, profile_cache, request
             )
             tel_profile = _agent_role_profile(
-                booking.telecaller_u_id_id, AgentMaster.Role.TELECALLER, profile_cache
+                booking.telecaller_u_id_id, AgentMaster.Role.TELECALLER, profile_cache, request
             )
 
             mgr_tds_pct = mgr_profile.tds_amount if mgr_profile else Decimal("0.00")
@@ -2820,7 +2926,7 @@ def team_report(request):
         team_telecaller_names = sorted(telecaller_names_map.values())
 
         team_debit_breakdown, total_commission_debit, total_security_debit = _team_member_summary(
-            bookings, profile_cache
+            bookings, profile_cache, request
         )
         total_team_net = total_team_commission - total_team_tds - total_team_security
         total_balance = (

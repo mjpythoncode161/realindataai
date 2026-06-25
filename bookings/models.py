@@ -8,7 +8,14 @@ from django.conf import settings
 
 class Project(models.Model):
     p_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=200, unique=True)
+    organization = models.ForeignKey(
+        "saas.Organization",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="projects",
+    )
+    name = models.CharField(max_length=200)
     location = models.CharField(max_length=200, blank=True)
     num_plots = models.IntegerField(default=0)
 
@@ -17,6 +24,7 @@ class Project(models.Model):
 
     class Meta:
         db_table = "project"
+        unique_together = ("organization", "name")
 
 
 class AgentMaster(models.Model):
@@ -92,6 +100,13 @@ class AccountsDebitPayment(models.Model):
 
 class BookingMaster(models.Model):
     b_id = models.AutoField(primary_key=True)
+    organization = models.ForeignKey(
+        "saas.Organization",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="bookings",
+    )
     class PaymentMethod(models.TextChoices):
         CASH = "CASH", "Cash"
         BANK_TRANSFER = "BANK_TRANSFER", "Bank Transfer"
@@ -497,9 +512,16 @@ class CancelledPlot(models.Model):
 
 
 class BookingAgentSettings(models.Model):
-    """Singleton — company profile, agent roles, and store-wide booking options."""
+    """Per-organization company profile and agent role toggles."""
 
     settings_id = models.AutoField(primary_key=True)
+    organization = models.OneToOneField(
+        "saas.Organization",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="booking_settings",
+    )
     company_name = models.CharField(max_length=200, default="LANDLINK REAL ESTATE", blank=True)
     company_address = models.TextField(blank=True, default="")
     company_phone = models.CharField(max_length=30, blank=True, default="")
@@ -540,7 +562,15 @@ class BookingAgentSettings(models.Model):
         return len(self.enabled_roles()) >= 2
 
 
-def get_booking_agent_settings() -> BookingAgentSettings:
-    settings_obj, _ = BookingAgentSettings.objects.get_or_create(pk=1)
-    return settings_obj
+def get_booking_agent_settings(organization=None) -> BookingAgentSettings:
+    if organization is not None:
+        settings_obj, _ = BookingAgentSettings.objects.get_or_create(
+            organization=organization,
+            defaults={"company_name": organization.name},
+        )
+        return settings_obj
+    legacy = BookingAgentSettings.objects.filter(organization__isnull=True).first()
+    if legacy:
+        return legacy
+    return BookingAgentSettings.objects.create(company_name="LANDLINK REAL ESTATE")
 

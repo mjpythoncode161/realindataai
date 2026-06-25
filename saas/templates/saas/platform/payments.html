@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Super Admin | Payments{% endblock %}
+{% block content %}
+<div class="content-header py-2">
+  <div class="container-fluid">
+    <h1 class="m-0"><i class="fas fa-rupee-sign mr-2"></i>Payment History</h1>
+    <p class="text-muted mb-0 small">{{ paid_count }} successful payments</p>
+  </div>
+</div>
+<section class="content pt-0">
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-body p-0">
+        <table class="table table-sm table-striped mb-0">
+          <thead>
+            <tr><th>ID</th><th>Company</th><th>Plan</th><th>Amount</th><th>Status</th><th>Paid at</th><th>Demo</th></tr>
+          </thead>
+          <tbody>
+            {% for p in payments %}
+            <tr>
+              <td>{{ p.order_id }}</td>
+              <td><a href="{% url 'platform_organization_detail' p.organization.org_id %}">{{ p.organization.name }}</a></td>
+              <td>{{ p.plan.name }}</td>
+              <td>₹{{ p.amount_inr|floatformat:0 }}</td>
+              <td><span class="badge badge-{% if p.status == 'paid' %}success{% elif p.status == 'failed' %}danger{% else %}secondary{% endif %}">{{ p.get_status_display }}</span></td>
+              <td>{{ p.paid_at|date:"M d, Y H:i"|default:"—" }}</td>
+              <td>{% if p.is_demo %}<span class="badge badge-info">Demo</span>{% else %}Live{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center text-muted py-4">No payments yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <a href="{% url 'platform_dashboard' %}" class="btn btn-sm btn-outline-secondary mt-2">← Dashboard</a>
+  </div>
+</section>
+{% endblock %}

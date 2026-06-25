@@ -4,105 +4,92 @@
 {% block title %}Edit Customer{% endblock %}
 
 {% block content %}
-<div class="content-header">
+<section class="content-header py-2">
   <div class="container-fluid">
-    <div class="row mb-2">
+    <div class="row mb-1 align-items-center">
       <div class="col-sm-6">
         <h1 class="m-0">Edit Customer</h1>
       </div>
+      <div class="col-sm-6 text-right">
+        <a href="{% url 'customer_list' %}" class="btn btn-sm btn-secondary">
+          <i class="fas fa-arrow-left mr-1"></i> Back to List
+        </a>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
-<section class="content">
+<section class="content pt-0">
   <div class="container-fluid">
-    <div class="card card-primary card-outline">
-      <div class="card-header">
-        <h3 class="card-title">Customer Details</h3>
-      </div>
-
+    <div class="card card-outline card-primary customer-form-card">
       <form action="{% url 'edit_customer' customer.cust_id %}" method="POST" id="editCustomerForm">
         {% csrf_token %}
-        <div class="card-body">
-          <div class="row">
-            <div class="col-md-6 form-group">
-              <label for="full_name">Full Name <span class="text-danger">*</span></label>
-              <input type="text" id="full_name" name="full_name" class="form-control"
-                value="{{ customer.u_id.full_name }}" placeholder="Enter full name" required>
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="contact">Contact No. <span class="text-danger">*</span></label>
-              <input type="text" id="contact" name="contact" class="form-control"
-                value="{{ customer.u_id.phone }}" placeholder="Enter 10-digit contact number" maxlength="15" required>
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="email">Email ID <span class="text-danger">*</span></label>
-              <input type="email" id="email" name="email" class="form-control"
-                value="{{ customer.u_id.email }}" placeholder="Enter email ID" required>
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="aadhar_number">Aadhaar No.</label>
-              <input type="text" id="aadhar_number" name="aadhar_number" class="form-control"
-                value="{{ customer.aadhar_number }}" placeholder="Enter 12-digit Aadhaar number (optional)" maxlength="12">
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="password">Password (leave blank to keep current)</label>
-              <input type="password" id="password" name="password" class="form-control" placeholder="Enter new password">
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="confirm_password">Confirm Password</label>
-              <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Re-enter new password">
-            </div>
-          </div>
 
-          <hr>
-          <h5 class="mb-3 text-muted">Additional Information</h5>
-          <div class="row">
-            <div class="col-md-6 form-group">
-              <label for="date_of_birth">DOB</label>
-              <input type="date" id="date_of_birth" name="date_of_birth" class="form-control"
-                value="{{ customer.date_of_birth|date:'Y-m-d' }}">
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="occupation">Occupation</label>
-              <input type="text" id="occupation" name="occupation" class="form-control"
-                value="{{ customer.occupation }}" placeholder="Enter occupation">
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="present_address">Present Address</label>
-              <input type="text" id="present_address" name="present_address" class="form-control"
-                value="{{ customer.present_address }}" placeholder="Enter present address">
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="permanent_address">Permanent Address</label>
-              <input type="text" id="permanent_address" name="permanent_address" class="form-control"
-                value="{{ customer.permanent_address }}" placeholder="Enter permanent address">
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="pin_code">Pin Code</label>
-              <input type="text" id="pin_code" name="pin_code" class="form-control"
-                value="{{ customer.pin_code }}" placeholder="Enter pin code" maxlength="10">
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="nominee">Nominee</label>
-              <input type="text" id="nominee" name="nominee" class="form-control"
-                value="{{ customer.nominee }}" placeholder="Enter nominee name">
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="relationship">Relationship</label>
-              <input type="text" id="relationship" name="relationship" class="form-control"
-                value="{{ customer.relationship }}" placeholder="Enter relationship">
-            </div>
-            <div class="col-md-6 form-group">
-              <label>User Type</label>
-              <input type="text" class="form-control" value="Customer" disabled>
-            </div>
-          </div>
+        <div class="customer-form-section">Account Details</div>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered customer-form-table mb-0">
+            <tbody>
+              <tr>
+                <th>Full Name <span class="text-danger">*</span></th>
+                <td><input type="text" id="full_name" name="full_name" class="form-control" value="{{ customer.u_id.full_name }}" required></td>
+                <th>Contact <span class="text-danger">*</span></th>
+                <td><input type="text" id="contact" name="contact" class="form-control" value="{{ customer.u_id.phone }}" maxlength="15" required></td>
+              </tr>
+              <tr>
+                <th>Email <span class="text-danger">*</span></th>
+                <td><input type="email" id="email" name="email" class="form-control" value="{{ customer.u_id.email }}" required></td>
+                <th>Aadhaar</th>
+                <td><input type="text" id="aadhar_number" name="aadhar_number" class="form-control" value="{{ customer.aadhar_number }}" maxlength="12"></td>
+              </tr>
+              <tr>
+                <th>Password</th>
+                <td><input type="password" id="password" name="password" class="form-control" placeholder="Leave blank to keep"></td>
+                <th>Confirm</th>
+                <td><input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Re-enter password"></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <div class="card-footer text-center">
-          <button type="submit" class="btn btn-primary" style="background-color: #29577f; border: none;">Update</button>
-          <a href="{% url 'customer_list' %}" class="btn btn-secondary">Close</a>
+        <div class="customer-form-section mt-2">Additional Information</div>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered customer-form-table mb-0">
+            <tbody>
+              <tr>
+                <th>DOB</th>
+                <td><input type="date" id="date_of_birth" name="date_of_birth" class="form-control" value="{{ customer.date_of_birth|date:'Y-m-d' }}"></td>
+                <th>Occupation</th>
+                <td><input type="text" id="occupation" name="occupation" class="form-control" value="{{ customer.occupation }}"></td>
+              </tr>
+              <tr>
+                <th>Present Address</th>
+                <td colspan="3"><input type="text" id="present_address" name="present_address" class="form-control" value="{{ customer.present_address }}"></td>
+              </tr>
+              <tr>
+                <th>Permanent Address</th>
+                <td colspan="3"><input type="text" id="permanent_address" name="permanent_address" class="form-control" value="{{ customer.permanent_address }}"></td>
+              </tr>
+              <tr>
+                <th>Pin Code</th>
+                <td><input type="text" id="pin_code" name="pin_code" class="form-control" value="{{ customer.pin_code }}" maxlength="10"></td>
+                <th>Nominee</th>
+                <td><input type="text" id="nominee" name="nominee" class="form-control" value="{{ customer.nominee }}"></td>
+              </tr>
+              <tr>
+                <th>Relationship</th>
+                <td><input type="text" id="relationship" name="relationship" class="form-control" value="{{ customer.relationship }}"></td>
+                <th>User Type</th>
+                <td><input type="text" class="form-control" value="Customer" readonly disabled></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="customer-form-footer text-right">
+          <a href="{% url 'customer_list' %}" class="btn btn-sm btn-secondary mr-1">Cancel</a>
+          <button type="submit" class="btn btn-sm btn-primary ll-btn-primary">
+            <i class="fas fa-save mr-1"></i> Update Customer
+          </button>
         </div>
       </form>
     </div>
@@ -116,7 +103,6 @@
     $('#editCustomerForm').on('submit', function (e) {
       e.preventDefault();
       var form = $(this);
-
       $.ajax({
         url: form.attr('action'),
         method: 'POST',
@@ -124,23 +110,14 @@
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
         success: function (resp) {
           if (resp.status === 'success') {
-            Swal.fire({
-              title: 'Success!',
-              text: resp.message,
-              icon: 'success',
-              confirmButtonColor: '#29577f'
-            }).then(() => {
-              window.location.href = "{% url 'customer_list' %}";
-            });
+            Swal.fire({ title: 'Success!', text: resp.message, icon: 'success', confirmButtonColor: '#29577f' })
+              .then(function () { window.location.href = "{% url 'customer_list' %}"; });
           } else {
             Swal.fire('Error!', resp.message, 'error');
           }
         },
         error: function (xhr) {
-          var errorMsg = 'Something went wrong';
-          if (xhr.responseJSON && xhr.responseJSON.message) {
-            errorMsg = xhr.responseJSON.message;
-          }
+          var errorMsg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Something went wrong';
           Swal.fire('Error!', errorMsg, 'error');
         }
       });

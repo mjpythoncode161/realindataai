@@ -1,0 +1,4 @@
+<option value="">-- Select Ledger --</option>
+{% if bank_cash %}<optgroup label="Bank / Cash">{% for l in bank_cash %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+{% if staff_ledgers %}<optgroup label="Staff Members">{% for l in staff_ledgers %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}
+{% if other_ledgers %}<optgroup label="Other Accounts">{% for l in other_ledgers %}<option value="{{ l.l_id }}">{{ l.name }}</option>{% endfor %}</optgroup>{% endif %}

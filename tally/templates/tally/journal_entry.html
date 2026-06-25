@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Journal Entry{% endblock %}
 {% block content %}
-<section class="content-header">
+<section class="content-header py-2">
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6"><h1>Journal Entry</h1><p class="text-muted">Debit must equal Credit</p></div>
@@ -11,7 +11,7 @@
     </div>
   </div>
 </section>
-<section class="content">
+<section class="content pt-0">
   <div class="container-fluid">
     <div class="card card-outline card-info">
       <div class="card-header"><h3 class="card-title"><i class="fas fa-book text-info mr-1"></i> New Journal Entry</h3></div>
@@ -34,7 +34,7 @@
           </div>
 
           <div class="table-responsive mt-2">
-            <table class="table table-bordered" id="jvTable">
+            <table class="table table-sm table-bordered table-striped table-hover ll-table mb-0" id="jvTable">
               <thead class="bg-light">
                 <tr>
                   <th width="50%">Ledger Account</th>

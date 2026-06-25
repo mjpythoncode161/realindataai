@@ -76,6 +76,13 @@ class Users(AbstractUser):
     roles = models.JSONField(default=list, blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="created_users")
     company_name = models.CharField(max_length=200, blank=True, default="")
+    organization = models.ForeignKey(
+        "saas.Organization",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="users",
+    )
     is_trial_account = models.BooleanField(default=False)
     trial_started_at = models.DateTimeField(null=True, blank=True)
     trial_ends_at = models.DateTimeField(null=True, blank=True)
@@ -121,10 +128,34 @@ class Users(AbstractUser):
         if self.roles:
             stored = [r for r in self.roles if r in dict(self.ROLE_CHOICES)]
             if stored:
-                return stored
-        if self.role:
-            return [self.role]
-        return ["customer"]
+                roles = stored
+            elif self.role:
+                roles = [self.role]
+            else:
+                roles = ["customer"]
+        elif self.role:
+            roles = [self.role]
+        else:
+            roles = ["customer"]
+        if self.role in dict(self.ROLE_CHOICES) and self.role not in roles:
+            roles = list(roles) + [self.role]
+        if self.is_paid_org_owner() and "admin" not in roles:
+            return ["admin"] + [r for r in roles if r != "admin"]
+        return roles
+
+    def is_paid_org_owner(self):
+        """Org owner with active subscription gets full admin CRM access on any plan."""
+        org = getattr(self, "organization", None)
+        if org is None:
+            try:
+                from saas.models import Organization
+
+                org = Organization.objects.filter(owner_id=self.u_id).first()
+            except Exception:
+                return False
+        if not org or not org.is_subscription_active:
+            return False
+        return org.owner_id == self.u_id
 
     def has_role(self, role_name):
         return role_name in self.get_roles()
@@ -132,6 +163,29 @@ class Users(AbstractUser):
     def has_any_role(self, *role_names):
         user_roles = set(self.get_roles())
         return bool(user_roles.intersection(role_names))
+
+    def is_lead_only_staff(self):
+        """Executive or telecaller without admin, manager, or accounts access."""
+        roles = set(self.get_roles())
+        if roles.intersection({"admin", "manager", "accounts"}):
+            return False
+        return bool(roles.intersection({"executive", "telecaller"}))
+
+    def is_manager_only_staff(self):
+        """Manager without admin or accounts access."""
+        if self.has_any_role("admin", "accounts"):
+            return False
+        return self.has_role("manager")
+
+    def is_accounts_only_staff(self):
+        """Accounts role without admin access."""
+        if self.has_role("admin"):
+            return False
+        return self.has_role("accounts")
+
+    def can_manage_bookings(self):
+        """True for staff who may add/edit/cancel bookings (uses get_roles(), not the role DB field)."""
+        return self.has_any_role("admin", "manager", "executive", "telecaller")
 
     def set_roles(self, role_list):
         valid = []
@@ -220,6 +274,13 @@ class Lead(models.Model):
         OTHER = "OTHER", "Other"
 
     lead_id = models.AutoField(primary_key=True)
+    organization = models.ForeignKey(
+        "saas.Organization",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="leads",
+    )
     full_name = models.CharField(max_length=150)
     phone = models.CharField(max_length=15)
     email = models.EmailField(max_length=255, blank=True, default="")
@@ -313,6 +374,13 @@ class ActivityLog(models.Model):
         APPROVE = "APPROVE", "Approved"
         STATUS = "STATUS",  "Status Changed"
 
+    organization = models.ForeignKey(
+        "saas.Organization",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="activity_logs",
+    )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

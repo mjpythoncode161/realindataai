@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .ll-report-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    height: 100%;
+  }
+  .ll-report-link:hover {
+    text-decoration: none;
+    color: inherit;
+  }
+  .ll-report-card {
+    border: 1px solid #e3e8ef;
+    border-top: 3px solid var(--report-accent, #29577f);
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(41, 87, 127, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: 100%;
+  }
+  .ll-report-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(41, 87, 127, 0.14);
+  }
+  .ll-report-icon {
+    font-size: 2.25rem;
+    color: var(--report-accent, #29577f);
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header py-2">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1><i class="fas fa-chart-bar mr-2 text-success"></i>{{ page_title }}</h1>
+      </div>
+      <div class="col-sm-6 text-sm-right">
+        <a href="{% url 'lead_list' %}" class="btn btn-outline-secondary btn-sm">Lead List</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content pt-0">
+  <div class="container-fluid">
+    <div class="row">
+      {% include "includes/lead_report_cards.html" %}
+    </div>
+  </div>
+</section>
+{% endblock %}

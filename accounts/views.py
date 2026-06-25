@@ -98,10 +98,20 @@ def _apply_roles_to_user(user_obj, roles):
 
 
 def _redirect_authenticated_user(user):
+    from saas.tenant import get_user_organization
+    from saas.models import Organization
+
+    org = get_user_organization(user)
+    if org and org.status == Organization.Status.PENDING_PAYMENT:
+        return redirect("saas_choose_plan")
+    if org and not org.is_subscription_active:
+        return redirect("subscription_expired")
     if getattr(user, "pending_signup_approval", False):
-        return redirect("pending_approval")
+        return redirect("saas_choose_plan")
     if getattr(user, "is_trial_account", False) and not user.trial_is_active:
-        return redirect("trial_expired")
+        return redirect("subscription_expired")
+    if getattr(user, "is_superuser", False):
+        return redirect("platform_dashboard")
     return redirect("home")
 
 
@@ -154,8 +164,8 @@ def public_signup(request):
             role="manager",
             password=form.cleaned_data["password"],
             company_name=form.cleaned_data["company_name"],
-            is_trial_account=True,
-            signup_approved=False,
+            is_trial_account=False,
+            signup_approved=True,
             trial_started_at=None,
             trial_ends_at=None,
             is_active=True,
@@ -163,10 +173,18 @@ def public_signup(request):
         auth_login(request, user)
         messages.info(
             request,
-            "Registration received. Your account is waiting for approval from our Followup team.",
+            "Account created. Choose your plan and pay to start your CRM workspace instantly.",
         )
-        return redirect("pending_approval")
-    return render(request, "website/signup.html", {"form": form})
+        tier = (request.POST.get("plan_tier") or request.GET.get("plan") or "").strip().lower()
+        if tier:
+            return redirect(f"{reverse('saas_choose_plan')}?plan={tier}")
+        return redirect("saas_choose_plan")
+    from saas.services import get_active_plans
+    return render(
+        request,
+        "website/signup.html",
+        {"form": form, "plans": get_active_plans()},
+    )
 
 
 def pending_approval(request):
@@ -265,13 +283,7 @@ def login_view(request):
             else:
                 request.session.set_expiry(0)
             auth_login(request, user)
-            if user.pending_signup_approval:
-                messages.info(request, "Your account is still waiting for Followup team approval.")
-                return redirect("pending_approval")
-            if getattr(user, "is_trial_account", False) and not user.trial_is_active:
-                messages.warning(request, "Your free trial has ended. Contact us to upgrade your account.")
-                return redirect("trial_expired")
-            return redirect("home")
+            return _redirect_authenticated_user(user)
         messages.error(request, "Invalid email/phone or password.")
     return render(request, "accounts/login.html")
 
@@ -334,6 +346,9 @@ def home(request):
     if request.user.pending_signup_approval:
         return redirect("pending_approval")
 
+    if request.user.is_superuser:
+        return redirect("platform_dashboard")
+
     from bookings.views import base_report_queryset
     from datetime import date, timedelta
     from bookings.models import Payment
@@ -342,9 +357,10 @@ def home(request):
     today = date.today()
     
     if request.user.has_role("accounts"):
-        # Accounts Dashboard logic
-        pending_payments = Payment.objects.filter(status='PENDING').select_related('b_id', 'created_by').order_by('-created_at')
-        approved_payments = Payment.objects.filter(status='APPROVED')
+        from saas.tenant import tenant_payments
+
+        pending_payments = tenant_payments(request).filter(status='PENDING').select_related('b_id', 'created_by').order_by('-created_at')
+        approved_payments = tenant_payments(request).filter(status='APPROVED')
         
         total_approved_amount = approved_payments.aggregate(Sum('pay_amount'))['pay_amount__sum'] or 0
         
@@ -386,17 +402,56 @@ def home(request):
         }
         return render(request, "accounts/customer_dashboard.html", context)
 
-    # Manager / Admin Dashboard logic
-    qs = base_report_queryset(user=request.user)
+    # Manager / Executive / Telecaller — lead dashboard on home (not admin)
+    if (
+        not request.user.has_role("admin")
+        and request.user.has_any_role("manager", "executive", "telecaller")
+    ):
+        from .lead_views import _lead_queryset_for
+
+        lq = _lead_queryset_for(request.user).distinct()
+        return render(
+            request,
+            "accounts/lead_dashboard.html",
+            {
+                "user": request.user,
+                "lead_counts": {
+                    "total": lq.count(),
+                    "pending": lq.exclude(
+                        status__in=[Lead.Status.CONFIRMED, Lead.Status.CLOSED_LOST]
+                    ).count(),
+                    "confirmed": lq.filter(status=Lead.Status.CONFIRMED).count(),
+                    "closed": lq.filter(status=Lead.Status.CLOSED_LOST).count(),
+                },
+                "recent_leads": lq.order_by("-updated_at", "-lead_id")[:10],
+            },
+        )
+
+    # Admin / staff home dashboard
+    from saas.tenant import (
+        get_request_organization,
+        tenant_bookings,
+        tenant_cancelled_plots,
+        tenant_customers,
+        tenant_payments,
+        tenant_projects,
+        tenant_receipts,
+        tenant_staff_users,
+    )
+
+    org = get_request_organization(request)
+    tb = tenant_bookings(request)
+    tr = tenant_receipts(request)
+    tp = tenant_payments(request)
+
+    qs = base_report_queryset(user=request.user, organization=org)
     qs = qs.filter(payment_status='PARTIAL', final_followup_date__gte=today)
 
-    # Calculate additional metrics
-    total_revenue = ReceiptMaster.objects.aggregate(Sum('pay_amount'))['pay_amount__sum'] or 0
-    pending_payments_amount = Payment.objects.filter(status='PENDING').aggregate(Sum('pay_amount'))['pay_amount__sum'] or 0
+    total_revenue = tr.aggregate(Sum('pay_amount'))['pay_amount__sum'] or 0
+    pending_payments_amount = tp.filter(status='PENDING').aggregate(Sum('pay_amount'))['pay_amount__sum'] or 0
 
-    # Completion rate: (total paid / total amount) * 100
-    total_paid = BalanceMaster.objects.aggregate(Sum('paid_amount'))['paid_amount__sum'] or 0
-    total_amount_all = BalanceMaster.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    total_paid = BalanceMaster.objects.filter(b_id__in=tb.values('b_id')).aggregate(Sum('paid_amount'))['paid_amount__sum'] or 0
+    total_amount_all = BalanceMaster.objects.filter(b_id__in=tb.values('b_id')).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
     completion_rate = round((total_paid / total_amount_all * 100) if total_amount_all > 0 else 0, 1)
 
     # Real monthly booking data for chart (last 6 months)
@@ -414,23 +469,22 @@ def home(request):
         m_end = month_date.replace(day=calendar.monthrange(month_date.year, month_date.month)[1])
         monthly_labels.append(m_start.strftime("%b %Y"))
         monthly_booking_counts.append(
-            BookingMaster.objects.filter(booking_date__gte=m_start, booking_date__lte=m_end).count()
+            tb.filter(booking_date__gte=m_start, booking_date__lte=m_end).count()
         )
         monthly_revenue_data.append(float(
-            ReceiptMaster.objects.filter(receipt_date__gte=m_start, receipt_date__lte=m_end)
+            tr.filter(receipt_date__gte=m_start, receipt_date__lte=m_end)
             .aggregate(Sum('pay_amount'))['pay_amount__sum'] or 0
         ))
 
-    # Project distribution for doughnut chart
     project_labels = []
     project_booking_counts = []
-    for proj in Project.objects.all()[:8]:
-        cnt = BookingMaster.objects.filter(p_id=proj, status='ACTIVE').count()
+    for proj in tenant_projects(request)[:8]:
+        cnt = tb.filter(p_id=proj, status='ACTIVE').count()
         if cnt > 0:
             project_labels.append(proj.name)
             project_booking_counts.append(cnt)
 
-    recent_bookings_qs = BookingMaster.objects.select_related("u_id", "p_id").order_by("-booking_date")
+    recent_bookings_qs = tb.select_related("u_id", "p_id").order_by("-booking_date")
     if request.user.has_role("manager") and not request.user.has_role("admin"):
         recent_bookings_qs = recent_bookings_qs.filter(created_by=request.user)
 
@@ -440,10 +494,10 @@ def home(request):
         "followups_7": qs.filter(final_followup_date__gt=today, final_followup_date__lte=today + timedelta(days=7)).count(),
         "followups_15": qs.filter(final_followup_date__gt=today + timedelta(days=7), final_followup_date__lte=today + timedelta(days=15)).count(),
         "followups_30": qs.filter(final_followup_date__gt=today + timedelta(days=15), final_followup_date__lte=today + timedelta(days=30)).count(),
-        "total_customers": Customer.objects.count(),
-        "total_bookings": BookingMaster.objects.count(),
-        "total_cancellations": CancelledPlot.objects.count(),
-        "total_projects": Project.objects.count(),
+        "total_customers": tenant_customers(request).count(),
+        "total_bookings": tb.count(),
+        "total_cancellations": tenant_cancelled_plots(request).count(),
+        "total_projects": tenant_projects(request).count(),
         "recent_bookings": recent_bookings_qs[:8],
         "total_revenue": total_revenue,
         "pending_payments_amount": pending_payments_amount,
@@ -457,20 +511,22 @@ def home(request):
 
     if request.user.has_role('admin'):
         context.update({
-            "total_employees": Users.objects.exclude(role='customer').count(),
-            "pending_payments": Payment.objects.filter(status='PENDING').count(),
+            "total_employees": tenant_staff_users(request).exclude(role='customer').count(),
+            "pending_payments": tp.filter(status='PENDING').count(),
         })
     elif request.user.has_role('manager'):
-        context["pending_payments"] = Payment.objects.filter(status='PENDING', created_by=request.user).count()
+        context["pending_payments"] = tp.filter(status='PENDING', created_by=request.user).count()
 
     if request.user.has_any_role("followup", "manager", "executive", "telecaller", "admin"):
         from .lead_views import _lead_queryset_for
-        context["open_leads_count"] = (
-            _lead_queryset_for(request.user)
-            .exclude(status__in=[Lead.Status.CONFIRMED, Lead.Status.CLOSED_LOST])
-            .distinct()
-            .count()
-        )
+        lq = _lead_queryset_for(request.user).distinct()
+        context["lead_counts"] = {
+            "total": lq.count(),
+            "pending": lq.exclude(status__in=[Lead.Status.CONFIRMED, Lead.Status.CLOSED_LOST]).count(),
+            "confirmed": lq.filter(status=Lead.Status.CONFIRMED).count(),
+            "closed": lq.filter(status=Lead.Status.CLOSED_LOST).count(),
+        }
+        context["open_leads_count"] = context["lead_counts"]["pending"]
     if request.user.has_role("followup"):
         context["pending_signup_count"] = Users.objects.filter(
             is_trial_account=True, signup_approved=False, is_active=True
@@ -544,6 +600,8 @@ def register_customer(request):
             return redirect("register_customer")
 
         try:
+            from saas.tenant import assign_user_to_organization, get_request_organization
+            org = get_request_organization(request)
             user = Users.objects.create_user(
                 username=email,
                 email=email,
@@ -551,8 +609,11 @@ def register_customer(request):
                 phone=phone,
                 role="customer",
                 password=password,
-                created_by=request.user
+                created_by=request.user,
+                organization=org,
             )
+            if org:
+                assign_user_to_organization(user, org)
             Customer.objects.create(
                 u_id=user,
                 aadhar_number=aadhar_number,
@@ -587,13 +648,11 @@ def register_customer(request):
 
 @login_required
 def user_list(request):
+    from saas.tenant import tenant_staff_users
+
     if not request.user.has_role("admin"):
         return HttpResponseForbidden("Only Admins can view User list.")
-    users = (
-        Users.objects.filter(users_with_any_role_query(*STAFF_ROLE_ORDER))
-        .distinct()
-        .order_by("-u_id")
-    )
+    users = tenant_staff_users(request).order_by("-u_id")
     return render(
         request,
         "accounts/user_list.html",
@@ -603,13 +662,15 @@ def user_list(request):
 
 @login_required
 def customer_list(request):
+    from saas.tenant import tenant_customers
+
     if request.user.has_role("accounts"):
         return HttpResponseForbidden("Accounts cannot access Customer list.")
-        
-    customers = Customer.objects.select_related("u_id").all().order_by("-u_id__u_id")
-    if request.user.has_role("manager"):
+
+    customers = tenant_customers(request).order_by("-u_id__u_id")
+    if request.user.has_role("manager") and not request.user.has_role("admin"):
         customers = customers.filter(u_id__created_by=request.user)
-        
+
     return render(
         request,
         "accounts/customer_list.html",
@@ -755,10 +816,14 @@ def add_user(request):
             phone=phone,
             role=Users._primary_role(roles),
             password=password,
-            created_by=request.user
+            created_by=request.user,
         )
         user.set_roles(roles)
         user.save(update_fields=["roles", "role"])
+        from saas.tenant import assign_user_to_organization, get_request_organization
+        org = get_request_organization(request)
+        if org:
+            assign_user_to_organization(user, org)
         _sync_customer_profile(user, roles)
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -893,27 +958,40 @@ def delete_user(request, user_id: int):
 
 @login_required
 def activity_log(request):
+    from datetime import datetime, timedelta
+
     from .models import ActivityLog
-    from datetime import date, timedelta
+    from saas.tenant import tenant_activity_logs
 
     if not request.user.has_role("admin"):
         return HttpResponseForbidden("Access denied.")
 
-    logs = ActivityLog.objects.select_related("user").all()
-
-    # Defaults: last 7 days and current user
-    default_date_from = (date.today() - timedelta(days=7)).strftime("%Y-%m-%d")
-    default_user = request.user.username
-
-    # Use GET params if explicitly provided (including empty string to clear), else use defaults
-    # We detect "first visit" by checking if ANY filter key is present in GET
-    has_filter = any(k in request.GET for k in ("action", "model", "user", "date_from", "date_to"))
+    logs = tenant_activity_logs(request).select_related("user").order_by("-timestamp")
 
     action_filter = request.GET.get("action", "")
-    model_filter  = request.GET.get("model", "")
-    user_filter   = request.GET.get("user", default_user if not has_filter else "")
-    date_from     = request.GET.get("date_from", default_date_from if not has_filter else "")
-    date_to       = request.GET.get("date_to", "")
+    model_filter = request.GET.get("model", "")
+    user_filter = request.GET.get("user", "")
+    show_all = request.GET.get("show_all") == "1"
+    date_from = request.GET.get("date_from", "")
+    date_to = request.GET.get("date_to", "")
+    default_date_range = False
+
+    if not show_all and not date_from and not date_to:
+        today = timezone.localdate()
+        date_from = (today - timedelta(days=6)).isoformat()
+        date_to = today.isoformat()
+        default_date_range = True
+
+    def _parse_filter_date(value):
+        if not value:
+            return None
+        value = value.strip()
+        for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
+            try:
+                return datetime.strptime(value, fmt).date()
+            except ValueError:
+                continue
+        return None
 
     if action_filter:
         logs = logs.filter(action=action_filter)
@@ -922,25 +1000,28 @@ def activity_log(request):
     if user_filter:
         logs = logs.filter(user__username__icontains=user_filter)
     if date_from:
-        try:
-            from datetime import datetime
-            logs = logs.filter(timestamp__date__gte=datetime.strptime(date_from, "%Y-%m-%d").date())
-        except ValueError:
-            pass
+        parsed_from = _parse_filter_date(date_from)
+        if parsed_from:
+            logs = logs.filter(timestamp__date__gte=parsed_from)
     if date_to:
-        try:
-            from datetime import datetime
-            logs = logs.filter(timestamp__date__lte=datetime.strptime(date_to, "%Y-%m-%d").date())
-        except ValueError:
-            pass
+        parsed_to = _parse_filter_date(date_to)
+        if parsed_to:
+            logs = logs.filter(timestamp__date__lte=parsed_to)
 
     action_choices = ActivityLog.Action.choices
-    model_names = ActivityLog.objects.values_list("model_name", flat=True).distinct().order_by("model_name")
+    model_names = (
+        tenant_activity_logs(request)
+        .values_list("model_name", flat=True)
+        .distinct()
+        .order_by("model_name")
+    )
 
     return render(request, "accounts/activity_log.html", {
         "logs": logs,
         "action_choices": action_choices,
         "model_names": model_names,
+        "show_all": show_all,
+        "default_date_range": default_date_range,
         "filters": {
             "action": action_filter,
             "model": model_filter,

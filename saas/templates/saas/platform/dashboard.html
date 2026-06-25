@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Super Admin | Platform Dashboard{% endblock %}
+{% block content %}
+<div class="content-header py-2">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1 class="m-0"><i class="fas fa-shield-alt mr-2 text-danger"></i>Platform Super Admin</h1>
+      </div>
+      <div class="col-sm-6 text-sm-right">
+        <span class="badge badge-danger">Superuser</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content pt-0">
+  <div class="container-fluid">
+    <div class="row ll-kpi-row">
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="info-box shadow-sm">
+          <span class="info-box-icon bg-primary"><i class="fas fa-building"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Total Accounts</span>
+            <span class="info-box-number">{{ stats.total }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="info-box shadow-sm">
+          <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Active</span>
+            <span class="info-box-number">{{ stats.active }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="info-box shadow-sm">
+          <span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Renewal in 7 Days</span>
+            <span class="info-box-number">{{ stats.renewal_7_days }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="info-box shadow-sm">
+          <span class="info-box-icon bg-danger"><i class="fas fa-times-circle"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Expired / Inactive</span>
+            <span class="info-box-number">{{ stats.expired }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row ll-kpi-row">
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="info-box shadow-sm">
+          <span class="info-box-icon bg-info"><i class="fas fa-hourglass-half"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Pending Payment</span>
+            <span class="info-box-number">{{ stats.pending }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="info-box shadow-sm">
+          <span class="info-box-icon bg-secondary"><i class="fas fa-ban"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Suspended</span>
+            <span class="info-box-number">{{ stats.suspended }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="info-box shadow-sm">
+          <span class="info-box-icon bg-teal"><i class="fas fa-users"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Tenant Users</span>
+            <span class="info-box-number">{{ stats.total_users }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="info-box shadow-sm">
+          <span class="info-box-icon bg-orange"><i class="fas fa-rupee-sign"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Paid Orders</span>
+            <span class="info-box-number">{{ stats.total_revenue }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-4">
+        <div class="card card-outline card-primary">
+          <div class="card-header py-2"><h3 class="card-title mb-0">Quick links</h3></div>
+          <div class="card-body py-2">
+            <a href="{% url 'platform_organizations' %}" class="btn btn-sm btn-outline-primary btn-block mb-1">All accounts</a>
+            <a href="{% url 'platform_organizations' %}?status=active" class="btn btn-sm btn-outline-success btn-block mb-1">Active only</a>
+            <a href="{% url 'platform_organizations' %}?status=expired" class="btn btn-sm btn-outline-danger btn-block mb-1">Expired / inactive</a>
+            <a href="{% url 'platform_plans' %}" class="btn btn-sm btn-outline-warning btn-block mb-1">Set prices &amp; plans</a>
+            <a href="{% url 'platform_payments' %}" class="btn btn-sm btn-outline-info btn-block">Payment history</a>
+          </div>
+        </div>
+        <div class="card card-outline card-secondary">
+          <div class="card-header py-2"><h3 class="card-title mb-0">Current plan prices</h3></div>
+          <div class="card-body p-0">
+            <table class="table table-sm table-striped mb-0">
+              {% for p in plans %}
+              <tr>
+                <td>{{ p.name }}</td>
+                <td class="text-right font-weight-bold">₹{{ p.price_inr|floatformat:0 }}/mo</td>
+              </tr>
+              {% endfor %}
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header py-2">
+            <h3 class="card-title mb-0"><i class="fas fa-calendar-alt mr-1"></i> Next renewals</h3>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0">
+              <thead><tr><th>Company</th><th>Plan</th><th>Owner</th><th>Renewal</th><th>Days left</th></tr></thead>
+              <tbody>
+                {% for org in upcoming_renewals %}
+                <tr>
+                  <td><a href="{% url 'platform_organization_detail' org.org_id %}">{{ org.name }}</a></td>
+                  <td>{{ org.plan.name|default:"—" }}</td>
+                  <td>{{ org.owner.email }}</td>
+                  <td>{{ org.subscription_ends_at|date:"M d, Y"|default:"—" }}</td>
+                  <td>
+                    {% if org.days_remaining <= 7 %}
+                    <span class="badge badge-warning">{{ org.days_remaining }}d</span>
+                    {% else %}
+                    <span class="badge badge-success">{{ org.days_remaining }}d</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted py-3">No renewals scheduled.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header py-2"><h3 class="card-title mb-0">Recent signups</h3></div>
+          <div class="card-body p-0">
+            <table class="table table-sm table-striped mb-0">
+              <thead><tr><th>Company</th><th>Plan</th><th>Status</th><th>Joined</th></tr></thead>
+              <tbody>
+                {% for org in recent_orgs %}
+                <tr>
+                  <td><a href="{% url 'platform_organization_detail' org.org_id %}">{{ org.name }}</a></td>
+                  <td>{{ org.plan.name|default:"—" }}</td>
+                  <td><span class="badge badge-{% if org.is_subscription_active %}success{% else %}secondary{% endif %}">{{ org.get_status_display }}</span></td>
+                  <td>{{ org.created_at|date:"M d, Y" }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

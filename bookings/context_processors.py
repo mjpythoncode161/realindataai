@@ -1,7 +1,7 @@
 def booking_agent_settings(request):
-    from .models import get_booking_agent_settings
+    from saas.tenant import get_booking_agent_settings_for_request
 
-    settings_obj = get_booking_agent_settings()
+    settings_obj = get_booking_agent_settings_for_request(request)
     company_name = (settings_obj.company_name or "").strip() or "LANDLINK REAL ESTATE"
     return {
         "agent_settings": settings_obj,

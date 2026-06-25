@@ -1,0 +1,78 @@
+<script>
+function setDrCr(btn, val) {
+  const row = btn.closest('tr');
+  const hidden = row.querySelector('.drcr-val');
+  hidden.value = val;
+  const drBtn = row.querySelector('.dr-btn');
+  const crBtn = row.querySelector('.cr-btn');
+  if (drBtn) {
+    drBtn.classList.toggle('dr-on', val === 'Dr');
+    drBtn.classList.toggle('dr-off', val !== 'Dr');
+  }
+  if (crBtn) {
+    crBtn.classList.toggle('cr-on', val === 'Cr');
+    crBtn.classList.toggle('cr-off', val !== 'Cr');
+  }
+  updateTotals();
+}
+function updateTotals() {
+  let dr = 0, cr = 0;
+  document.querySelectorAll('#entryBody tr').forEach(row => {
+    const dc = row.querySelector('.drcr-val');
+    const amt = row.querySelector('.amt-input');
+    if (!dc || !amt) return;
+    const v = parseFloat(amt.value || 0);
+    if (dc.value === 'Dr') dr += v; else cr += v;
+  });
+  const diff = Math.abs(dr - cr);
+  document.getElementById('totalDr').textContent = dr.toFixed(2);
+  document.getElementById('totalCr').textContent = cr.toFixed(2);
+  const ok = diff < 0.01 && dr > 0;
+  const statusEl = document.getElementById('balanceStatus');
+  if (ok) {
+    statusEl.className = 'text-success font-weight-bold';
+    statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Balanced';
+  } else {
+    statusEl.className = 'text-danger font-weight-bold';
+    statusEl.innerHTML = '<i class="fas fa-times-circle"></i> Difference: ₹' + diff.toFixed(2);
+  }
+  document.getElementById('saveBtn').disabled = !ok;
+}
+function initLedgerSelects(scope) {
+  var $root = scope ? $(scope) : $('#entryBody');
+  $root.find('.ledger-select').each(function () {
+    var $el = $(this);
+    if ($el.hasClass('select2-hidden-accessible')) {
+      $el.select2('destroy');
+    }
+    $el.select2({
+      theme: 'bootstrap4',
+      width: '100%',
+      placeholder: '-- Select Ledger --',
+      allowClear: true
+    });
+  });
+}
+function addRow() {
+  const tpl = document.getElementById('rowTpl');
+  const body = document.getElementById('entryBody');
+  body.appendChild(tpl.content.cloneNode(true));
+  initLedgerSelects(body.lastElementChild);
+  updateTotals();
+}
+function removeRow(btn) {
+  const body = document.getElementById('entryBody');
+  if (body.rows.length <= 1) return;
+  const row = btn.closest('tr');
+  $(row).find('.ledger-select').select2('destroy');
+  row.remove();
+  updateTotals();
+}
+document.addEventListener('input', function (e) {
+  if (e.target.classList.contains('amt-input')) updateTotals();
+});
+document.addEventListener('DOMContentLoaded', function () {
+  initLedgerSelects();
+  updateTotals();
+});
+</script>

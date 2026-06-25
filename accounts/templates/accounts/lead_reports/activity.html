@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="content-header py-2">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6"><h1>{{ page_title }}</h1></div>
+      <div class="col-sm-6 text-sm-right"><a href="{% url 'lead_reports_hub' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left mr-1"></i> All Lead Reports</a></div>
+    </div>
+  </div>
+</div>
+<section class="content pt-0">
+  <div class="container-fluid">
+    {% include "accounts/lead_reports/_filters.html" %}
+    <div class="row ll-kpi-row mb-3">
+      <div class="col-md-4"><div class="info-box shadow-sm"><span class="info-box-icon bg-info"><i class="fas fa-list"></i></span><div class="info-box-content"><span class="info-box-text">Total Activities</span><span class="info-box-number">{{ total_activities }}</span></div></div></div>
+    </div>
+    <div class="card mb-3">
+      <div class="card-header py-2"><h3 class="card-title mb-0">Activity Type Breakdown</h3></div>
+      <div class="card-body table-responsive p-0">
+        <table class="table table-sm table-bordered mb-0">
+          <thead class="thead-light"><tr><th>Type</th><th>Count</th></tr></thead>
+          <tbody>
+            {% for row in activity_rows %}
+            <tr><td>{{ row.label }}</td><td><strong>{{ row.count }}</strong></td></tr>
+            {% empty %}<tr><td colspan="2" class="text-center text-muted">No activities</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header py-2"><h3 class="card-title mb-0">Activity Log</h3></div>
+      <div class="card-body table-responsive p-0">
+        <table class="table table-bordered table-striped table-sm mb-0">
+          <thead class="thead-light">
+            <tr><th>#</th><th>Lead</th><th>Type</th><th>Notes</th><th>By</th><th>Date</th></tr>
+          </thead>
+          <tbody>
+            {% for a in activities %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td><a href="{% url 'lead_detail' a.lead.lead_id %}">{{ a.lead.full_name }}</a></td>
+              <td>{{ a.get_activity_type_display }}</td>
+              <td>{{ a.note|truncatechars:80 }}</td>
+              <td>{{ a.created_by.full_name|default:"—" }}</td>
+              <td class="text-nowrap">{{ a.created_at|date:"d-m-Y H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center text-muted py-4">No activities in this period.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

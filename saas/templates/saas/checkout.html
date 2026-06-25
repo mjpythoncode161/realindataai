@@ -1,0 +1,64 @@
+{% extends "website/landing_base.html" %}
+{% block title %}Checkout | Land Link{% endblock %}
+{% block body %}
+<div style="max-width:520px;margin:2.5rem auto;padding:0 1.25rem;">
+  <div style="background:#fff;border-radius:16px;padding:2rem;border:1px solid #e8edf3;box-shadow:0 12px 40px rgba(41,87,127,0.1);">
+    <h1 style="color:var(--ll-primary);font-size:1.5rem;margin:0 0 1rem;"><i class="fas fa-credit-card"></i> Complete Payment</h1>
+
+    {% if preview %}
+    <p><strong>Plan:</strong> {{ plan.name }}</p>
+    <p><strong>Company:</strong> {{ organization.name }}</p>
+    <p><strong>Amount:</strong> ₹{{ plan.price_inr|floatformat:0 }} / month</p>
+    <form method="post" action="{% url 'saas_checkout' %}">
+      {% csrf_token %}
+      <button type="submit" class="ll-btn ll-btn-primary" style="width:100%;padding:0.85rem;margin-top:1rem;border:none;color:#fff !important;">
+        Pay ₹{{ plan.price_inr|floatformat:0 }} &amp; Start Workspace
+      </button>
+    </form>
+    {% else %}
+    <p><strong>{{ plan.name }}</strong> — ₹{{ plan.price_inr|floatformat:0 }}</p>
+    <p style="color:var(--ll-muted);font-size:0.9rem;">Secure payment via Razorpay</p>
+    <button id="rzp-button" class="ll-btn ll-btn-primary" style="width:100%;padding:0.85rem;margin-top:1rem;border:none;color:#fff !important;">
+      Pay Now
+    </button>
+    <form id="verify-form" method="post" action="{% url 'saas_payment_verify' %}" style="display:none;">
+      {% csrf_token %}
+      <input type="hidden" name="order_uuid" value="{{ payment_order.uuid }}">
+      <input type="hidden" name="razorpay_order_id" id="rzp_order_id">
+      <input type="hidden" name="razorpay_payment_id" id="rzp_payment_id">
+      <input type="hidden" name="razorpay_signature" id="rzp_signature">
+    </form>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+    (function() {
+      var options = {
+        key: "{{ razorpay_key_id }}",
+        amount: {{ amount_paise }},
+        currency: "INR",
+        name: "Land Link CRM",
+        description: "{{ plan.name }} Plan",
+        order_id: "{{ payment_order.razorpay_order_id }}",
+        handler: function (response) {
+          document.getElementById('rzp_order_id').value = response.razorpay_order_id;
+          document.getElementById('rzp_payment_id').value = response.razorpay_payment_id;
+          document.getElementById('rzp_signature').value = response.razorpay_signature;
+          document.getElementById('verify-form').submit();
+        },
+        prefill: {
+          name: "{{ request.user.full_name }}",
+          email: "{{ request.user.email }}",
+          contact: "{{ request.user.phone }}"
+        },
+        theme: { color: "#29577f" }
+      };
+      var rzp = new Razorpay(options);
+      document.getElementById('rzp-button').onclick = function(e) {
+        e.preventDefault();
+        rzp.open();
+      };
+    })();
+    </script>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

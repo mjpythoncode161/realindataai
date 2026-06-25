@@ -1,0 +1,32 @@
+<div class="card card-outline card-primary mb-3">
+  <div class="card-header py-2">
+    <h3 class="card-title mb-0"><i class="fas fa-filter mr-2"></i>Filter — From Date / To Date</h3>
+  </div>
+  <div class="card-body">
+    <form method="GET">
+      <div class="row align-items-end">
+        {% block report_extra_filters %}{% endblock %}
+        <div class="col-md-3 col-sm-6">
+          <div class="form-group mb-md-0">
+            <label>From Date</label>
+            <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="form-group mb-md-0">
+            <label>To Date</label>
+            <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
+          </div>
+        </div>
+        <div class="col-md-2 col-sm-6">
+          <button type="submit" class="btn btn-primary btn-block">
+            <i class="fas fa-search mr-1"></i> Show Report
+          </button>
+        </div>
+        <div class="col-md-2 col-sm-6">
+          <a href="{{ request.path }}" class="btn btn-secondary btn-block">Reset</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

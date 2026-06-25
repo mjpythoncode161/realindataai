@@ -3,183 +3,136 @@
 
 {% block title %}Add Customer{% endblock %}
 
+{% block extra_head %}{% endblock %}
+
 {% block content %}
-<div class="content-header">
+<section class="content-header py-2">
   <div class="container-fluid">
-    <div class="row mb-2">
+    <div class="row mb-1 align-items-center">
       <div class="col-sm-6">
         <h1 class="m-0">Add Customer</h1>
       </div>
+      <div class="col-sm-6 text-right">
+        <a href="{% url 'customer_list' %}" class="btn btn-sm btn-secondary">
+          <i class="fas fa-arrow-left mr-1"></i> Back to List
+        </a>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
-<section class="content">
+<section class="content pt-0">
   <div class="container-fluid">
-    <div class="card card-primary card-outline">
-      <div class="card-header">
-        <h3 class="card-title">Account Details</h3>
-      </div>
-
+    <div class="card card-outline card-primary customer-form-card">
       <form action="{% url 'register_customer' %}" method="POST" id="addCustomerForm">
         {% csrf_token %}
-        <div class="card-body">
-          <div class="row">
-            <div class="col-md-6 form-group">
-              <label for="full_name">Full Name <span class="text-danger">*</span></label>
-              <input
-                type="text"
-                id="full_name"
-                name="full_name"
-                class="form-control"
-                placeholder="Enter full name"
-                required
-              />
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="contact">Contact No. <span class="text-danger">*</span></label>
-              <input
-                type="text"
-                id="contact"
-                name="contact"
-                class="form-control"
-                placeholder="Enter 10-digit contact number"
-                maxlength="15"
-                required
-              />
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="email">Email ID <span class="text-danger">*</span></label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                class="form-control"
-                placeholder="Enter email ID"
-                required
-              />
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="aadhar_number">Aadhaar No.</label>
-              <input
-                type="text"
-                id="aadhar_number"
-                name="aadhar_number"
-                class="form-control"
-                placeholder="Enter 12-digit Aadhaar number (optional)"
-                maxlength="12"
-              />
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="password">Password <span class="text-danger">*</span></label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                class="form-control"
-                placeholder="Enter password"
-                required
-              />
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="confirm_password">Confirm Password <span class="text-danger">*</span></label>
-              <input
-                type="password"
-                id="confirm_password"
-                name="confirm_password"
-                class="form-control"
-                placeholder="Re-enter password"
-                required
-              />
-            </div>
-          </div>
 
-          <hr>
-          <h5 class="mb-3 text-muted">Additional Information <small>(optional)</small></h5>
-          <div class="row">
-            <div class="col-md-6 form-group">
-              <label for="date_of_birth">DOB</label>
-              <input
-                type="date"
-                id="date_of_birth"
-                name="date_of_birth"
-                class="form-control"
-              />
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="occupation">Occupation</label>
-              <input
-                type="text"
-                id="occupation"
-                name="occupation"
-                class="form-control"
-                placeholder="Enter occupation"
-              />
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="present_address">Present Address</label>
-              <input
-                type="text"
-                id="present_address"
-                name="present_address"
-                class="form-control"
-                placeholder="Enter present address"
-              />
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="permanent_address">Permanent Address</label>
-              <input
-                type="text"
-                id="permanent_address"
-                name="permanent_address"
-                class="form-control"
-                placeholder="Enter permanent address"
-              />
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="pin_code">Pin Code</label>
-              <input
-                type="text"
-                id="pin_code"
-                name="pin_code"
-                class="form-control"
-                placeholder="Enter pin code"
-                maxlength="10"
-              />
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="nominee">Nominee</label>
-              <input
-                type="text"
-                id="nominee"
-                name="nominee"
-                class="form-control"
-                placeholder="Enter nominee name"
-              />
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="relationship">Relationship</label>
-              <input
-                type="text"
-                id="relationship"
-                name="relationship"
-                class="form-control"
-                placeholder="Enter relationship"
-              />
-            </div>
-            <div class="col-md-6 form-group">
-              <label for="user_type">User Type</label>
-              <input type="hidden" name="type" value="2" />
-              <select id="user_type" class="form-control" disabled>
-                <option selected>Customer</option>
-              </select>
-            </div>
-          </div>
+        <div class="customer-form-section">Account Details</div>
+        <div class="card-body p-0 table-responsive">
+          <table class="table table-sm table-bordered customer-form-table mb-0">
+            <tbody>
+              <tr>
+                <th>Full Name <span class="text-danger">*</span></th>
+                <td>
+                  <input type="text" id="full_name" name="full_name" class="form-control"
+                    placeholder="Full name" required />
+                </td>
+                <th>Contact No. <span class="text-danger">*</span></th>
+                <td>
+                  <input type="text" id="contact" name="contact" class="form-control"
+                    placeholder="10-digit mobile" maxlength="15" required />
+                </td>
+              </tr>
+              <tr>
+                <th>Email ID <span class="text-danger">*</span></th>
+                <td>
+                  <input type="email" id="email" name="email" class="form-control"
+                    placeholder="Email address" required />
+                </td>
+                <th>Aadhaar No.</th>
+                <td>
+                  <input type="text" id="aadhar_number" name="aadhar_number" class="form-control"
+                    placeholder="12 digits (optional)" maxlength="12" />
+                </td>
+              </tr>
+              <tr>
+                <th>Password <span class="text-danger">*</span></th>
+                <td>
+                  <input type="password" id="password" name="password" class="form-control"
+                    placeholder="Password" required />
+                </td>
+                <th>Confirm <span class="text-danger">*</span></th>
+                <td>
+                  <input type="password" id="confirm_password" name="confirm_password" class="form-control"
+                    placeholder="Re-enter password" required />
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <div class="card-footer text-center">
-          <button type="submit" class="btn btn-primary" style="background-color: #29577f; border: none;">Submit</button>
-          <a href="{% url 'customer_list' %}" class="btn btn-secondary">Close</a>
+        <div class="customer-form-section mt-2">Additional Information <span class="text-muted font-weight-normal">(optional)</span></div>
+        <div class="card-body p-0 table-responsive">
+          <table class="table table-sm table-bordered customer-form-table mb-0">
+            <tbody>
+              <tr>
+                <th>DOB</th>
+                <td>
+                  <input type="date" id="date_of_birth" name="date_of_birth" class="form-control" />
+                </td>
+                <th>Occupation</th>
+                <td>
+                  <input type="text" id="occupation" name="occupation" class="form-control"
+                    placeholder="Occupation" />
+                </td>
+              </tr>
+              <tr>
+                <th>Present Address</th>
+                <td colspan="3">
+                  <input type="text" id="present_address" name="present_address" class="form-control"
+                    placeholder="Present address" />
+                </td>
+              </tr>
+              <tr>
+                <th>Permanent Address</th>
+                <td colspan="3">
+                  <input type="text" id="permanent_address" name="permanent_address" class="form-control"
+                    placeholder="Permanent address" />
+                </td>
+              </tr>
+              <tr>
+                <th>Pin Code</th>
+                <td>
+                  <input type="text" id="pin_code" name="pin_code" class="form-control"
+                    placeholder="Pin code" maxlength="10" />
+                </td>
+                <th>Nominee</th>
+                <td>
+                  <input type="text" id="nominee" name="nominee" class="form-control"
+                    placeholder="Nominee name" />
+                </td>
+              </tr>
+              <tr>
+                <th>Relationship</th>
+                <td>
+                  <input type="text" id="relationship" name="relationship" class="form-control"
+                    placeholder="Relationship" />
+                </td>
+                <th>User Type</th>
+                <td>
+                  <input type="hidden" name="type" value="2" />
+                  <input type="text" class="form-control" value="Customer" readonly disabled />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="customer-form-footer text-right">
+          <a href="{% url 'customer_list' %}" class="btn btn-sm btn-secondary mr-1">Cancel</a>
+          <button type="submit" class="btn btn-sm btn-primary">
+            <i class="fas fa-save mr-1"></i> Save Customer
+          </button>
         </div>
       </form>
     </div>
@@ -193,7 +146,7 @@
     $('#addCustomerForm').on('submit', function (e) {
       e.preventDefault();
       var form = $(this);
-      
+
       $.ajax({
         url: form.attr('action'),
         method: 'POST',
@@ -206,7 +159,7 @@
               text: resp.message,
               icon: 'success',
               confirmButtonColor: '#29577f'
-            }).then(() => {
+            }).then(function () {
               window.location.href = "{% url 'customer_list' %}";
             });
           } else {

@@ -1,0 +1,37 @@
+{# Accounts-role sidebar — same layout as before #}
+<li class="nav-item">
+  <a href="{% url 'home' %}" class="nav-link">
+    <i class="nav-icon fas fa-calculator"></i>
+    <p>Accounts</p>
+  </a>
+</li>
+<li class="nav-item has-treeview">
+  <a href="#" class="nav-link">
+    <i class="nav-icon fas fa-credit-card text-success"></i>
+    <p>Payments <i class="right fas fa-angle-left"></i></p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item"><a href="{% url 'receipt_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Receipt List</p></a></li>
+    <li class="nav-item"><a href="{% url 'payment_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Approval List</p></a></li>
+    <li class="nav-item"><a href="{% url 'ledger_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Ledger</p></a></li>
+  </ul>
+</li>
+<li class="nav-item">
+  <a href="{% url 'cancelled_plots_list' %}" class="nav-link">
+    <i class="nav-icon fas fa-ban text-danger"></i>
+    <p>Cancelled Plots</p>
+  </a>
+</li>
+<li class="nav-item has-treeview">
+  <a href="#" class="nav-link">
+    <i class="nav-icon fas fa-book text-warning"></i>
+    <p>Voucher / Tally<i class="right fas fa-angle-left"></i></p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item"><a href="{% url 'tally_payment_voucher' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Payment Voucher</p></a></li>
+    <li class="nav-item"><a href="{% url 'tally_receipt_voucher' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Receipt Voucher</p></a></li>
+    <li class="nav-item"><a href="{% url 'tally_journal_entry' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Journal Entry</p></a></li>
+    <li class="nav-item"><a href="{% url 'tally_account_statement' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Account Statements</p></a></li>
+    <li class="nav-item"><a href="{% url 'tally_create_master' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Create Master</p></a></li>
+  </ul>
+</li>

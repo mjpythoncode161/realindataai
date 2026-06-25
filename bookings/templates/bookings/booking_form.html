@@ -3,215 +3,150 @@
 
 {% block title %}{{ page_title|default:"Site BookingMaster Application" }}{% endblock %}
 
-{% block extra_head %}
-<style>
-  .booking-section-highlight {
-    outline: 2px solid #dc3545;
-    outline-offset: 4px;
-    border-radius: 6px;
-    background-color: #fff5f5;
-    transition: outline-color 0.2s, background-color 0.2s;
-  }
-  .booking-section-highlight .card-header {
-    background-color: #f8d7da !important;
-    color: #721c24;
-  }
-  .has-validation-error label {
-    color: #dc3545;
-    font-weight: 600;
-  }
-  .is-invalid-field,
-  .has-validation-error .form-control,
-  .has-validation-error select {
-    border-color: #dc3545 !important;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.2);
-  }
-  #itemsTable .project-cell {
-    min-width: 180px;
-  }
-  #itemsTable #id_p_id {
-    min-width: 160px;
-  }
-  #itemsTable tr.has-validation-error td {
-    background-color: #fff5f5;
-  }
-</style>
-{% endblock %}
+{% block extra_head %}{% endblock %}
 
 {% block content %}
-<section class="content-header">
+<section class="content-header py-2">
   <div class="container-fluid">
-    <div class="row mb-2">
+    <div class="row mb-1 align-items-center">
       <div class="col-sm-6">
-        <h1 style="color: #333; font-weight: 500;">{{ page_title|default:"Site BookingMaster Application" }}</h1>
+        <h1 class="m-0" style="font-size: 1.35rem;">{{ page_title|default:"Add Booking" }}</h1>
+      </div>
+      <div class="col-sm-6 text-right">
+        <a href="{% url 'booking_list' %}" class="btn btn-sm btn-secondary">
+          <i class="fas fa-arrow-left mr-1"></i> Back to List
+        </a>
       </div>
     </div>
-    
-    <!-- Explicit Booking ID for Validation -->
     <input type="hidden" id="current_booking_id" value="{{ booking.pk|default:'' }}">
   </div>
 </section>
 
-<section class="content">
+<section class="content pt-0">
   <div class="container-fluid">
-    <div class="card card-outline card-maroon">
+    <div class="card card-outline card-primary booking-form-card">
       <form method="POST" novalidate id="bookingForm">
         {% csrf_token %}
-        <div class="card-body">
 
-
-          <div id="section-customer" class="card card-outline card-info mt-3 mb-4 booking-form-section">
-            <div class="card-header">
-              <h3 class="card-title mb-0">Customer Details</h3>
-              <small class="text-muted ml-2">Enter mobile number to auto-fill — other fields optional</small>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-4 form-group">
-                  <label>Booking Date</label>
-                  {{ form.booking_date }}
-                </div>
-                <div class="col-md-4 form-group">
-                  <label>Phone No / WhatsApp No <span class="text-danger">*</span></label>
-                  {{ form.phone }}
-                  <small id="customerLookupStatus" class="form-text text-muted"></small>
-                </div>
-                <div class="col-md-4 form-group">
-                  <label>Full Name</label>
-                  {{ form.full_name }}
-                </div>
-                <div class="col-md-4 form-group">
-                  <label>Mail ID</label>
-                  {{ form.email }}
-                </div>
-                <div class="col-md-4 form-group">
-                  <label>DOB</label>
-                  {{ form.date_of_birth }}
-                </div>
-                <div class="col-md-4 form-group">
-                  <label>Occupation</label>
-                  {{ form.occupation }}
-                </div>
-                <div class="col-md-4 form-group">
-                  <label>Present Address</label>
-                  {{ form.present_address }}
-                </div>
-                <div class="col-md-4 form-group">
-                  <label>Permanent Address</label>
-                  {{ form.permanent_address }}
-                </div>
-                <div class="col-md-4 form-group">
-                  <label>Aadhaar Number</label>
-                  {{ form.aadhar_number }}
-                </div>
-                <div class="col-md-4 form-group">
-                  <label>Pin Code</label>
-                  {{ form.pin_code }}
-                </div>
-                <div class="col-md-4 form-group">
-                  <label>Nominee</label>
-                  {{ form.nominee }}
-                </div>
-                <div class="col-md-4 form-group">
-                  <label>Relationship</label>
-                  {{ form.relationship }}
-                </div>
-              </div>
-            </div>
+        <div id="section-customer" class="booking-form-section">
+          <div class="booking-form-section-title">
+            Customer Details
+            <span class="text-muted font-weight-normal text-lowercase">— mobile lookup auto-fills</span>
           </div>
-
-          <div id="section-booking" class="row booking-form-section">
-            <!-- Agent Rows -->
-            {% if agent_settings.enable_manager %}
-            <div class="col-md-4 form-group">
-              <label>Manager <span class="text-danger">*</span></label>
-              {{ form.manager_u_id }}
-            </div>
-            <div class="col-md-4 form-group">
-              <label>Manager (%)</label>
-              {{ form.manager_percentage }}
-            </div>
-            {% else %}
-            {{ form.manager_u_id }}
-            {{ form.manager_percentage }}
-            {% endif %}
-
-            {% if agent_settings.enable_executive %}
-            <div class="col-md-4 form-group">
-                <label>Executive <span class="text-danger">*</span></label>
-                {{ form.executive_u_id }}
-            </div>
-            <div class="col-md-4 form-group">
-              <label>Executive (%)</label>
-              {{ form.executive_percentage }}
-            </div>
-            {% else %}
-            {{ form.executive_u_id }}
-            {{ form.executive_percentage }}
-            {% endif %}
-            {{ form.manager_tds }}
-            {{ form.manager_security_amount }}
-
-            {% if agent_settings.enable_telecaller %}
-            <div class="col-md-4 form-group">
-                <label>Telecaller</label>
-                {{ form.telecaller_u_id }}
-            </div>
-            <div class="col-md-4 form-group">
-                <label>Telecaller (%)</label>
-                {{ form.telecaller_percentage }}
-            </div>
-            {% else %}
-            {{ form.telecaller_u_id }}
-            {{ form.telecaller_percentage }}
-            {% endif %}
-            {{ form.executive_tds }}
-            {{ form.executive_security_amount }}
-            {{ form.telecaller_tds }}
-            {{ form.telecaller_security_amount }}
-
-            <!-- Row 5 -->
-            <div class="col-md-4 form-group">
-              <label>Payment Method</label>
-              {{ form.payment_method }}
-            </div>
-            <div class="col-md-4 form-group">
-              <label>Payment Details</label>
-              {{ form.payment_details }}
-            </div>
-            <div class="col-md-4 form-group">
-              <label>Payment Status</label>
-              {{ form.payment_status }}
-            </div>
-            <div class="col-md-4 form-group">
-              <label>Next Payment Date</label>
-              {{ form.next_payment_date }}
-            </div>
-          </div>
-
-          <div id="section-property" class="card card-outline card-success mt-4 mb-3 booking-form-section">
-            <div class="card-header">
-              <h3 class="card-title mb-0">Add Property Details</h3>
-              <small class="text-muted ml-2">
-                Projects from
-                <a href="{% url 'project_list' %}" target="_blank" rel="noopener">Store Settings &rarr; Projects</a>
-              </small>
-            </div>
-            <div class="card-body">
-              {{ form.location }}
-
-          {{ formset.management_form }}
           <div class="table-responsive">
-            <table class="table table-bordered" id="itemsTable">
-              <thead style="background-color: #f8f9fa;">
+            <table class="table table-sm table-bordered booking-form-table mb-0">
+              <tbody>
+                <tr>
+                  <th>Booking Date</th>
+                  <td>{{ form.booking_date }}</td>
+                  <th>Phone <span class="text-danger">*</span></th>
+                  <td>
+                    {{ form.phone }}
+                    <small id="customerLookupStatus" class="form-text text-muted mb-0"></small>
+                  </td>
+                  <th>Full Name</th>
+                  <td>{{ form.full_name }}</td>
+                </tr>
+                <tr>
+                  <th>Email</th>
+                  <td>{{ form.email }}</td>
+                  <th>DOB</th>
+                  <td>{{ form.date_of_birth }}</td>
+                  <th>Occupation</th>
+                  <td>{{ form.occupation }}</td>
+                </tr>
+                <tr>
+                  <th>Present Address</th>
+                  <td colspan="3">{{ form.present_address }}</td>
+                  <th>Aadhaar</th>
+                  <td>{{ form.aadhar_number }}</td>
+                </tr>
+                <tr>
+                  <th>Permanent Address</th>
+                  <td colspan="3">{{ form.permanent_address }}</td>
+                  <th>Pin Code</th>
+                  <td>{{ form.pin_code }}</td>
+                </tr>
+                <tr>
+                  <th>Nominee</th>
+                  <td>{{ form.nominee }}</td>
+                  <th>Relationship</th>
+                  <td colspan="3">{{ form.relationship }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="section-booking" class="booking-form-section mt-2">
+          <div class="booking-form-section-title">Agent &amp; Payment</div>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered booking-form-table mb-0">
+              <tbody>
+                <tr>
+                  {% if agent_settings.enable_manager %}
+                  <th>Manager <span class="text-danger">*</span></th>
+                  <td>{{ form.manager_u_id }}</td>
+                  <th>Manager (%)</th>
+                  <td>{{ form.manager_percentage }}</td>
+                  {% else %}
+                  {{ form.manager_u_id }}{{ form.manager_percentage }}
+                  {% endif %}
+                  {% if agent_settings.enable_executive %}
+                  <th>Executive <span class="text-danger">*</span></th>
+                  <td>{{ form.executive_u_id }}</td>
+                  <th>Executive (%)</th>
+                  <td>{{ form.executive_percentage }}</td>
+                  {% else %}
+                  {{ form.executive_u_id }}{{ form.executive_percentage }}
+                  {% endif %}
+                </tr>
+                <tr>
+                  {% if agent_settings.enable_telecaller %}
+                  <th>Telecaller</th>
+                  <td>{{ form.telecaller_u_id }}</td>
+                  <th>Telecaller (%)</th>
+                  <td>{{ form.telecaller_percentage }}</td>
+                  {% else %}
+                  {{ form.telecaller_u_id }}{{ form.telecaller_percentage }}
+                  {% endif %}
+                  <th>Payment Method</th>
+                  <td>{{ form.payment_method }}</td>
+                  <th>Payment Status</th>
+                  <td>{{ form.payment_status }}</td>
+                </tr>
+                <tr>
+                  <th>Next Payment</th>
+                  <td>{{ form.next_payment_date }}</td>
+                  <th>Payment Details</th>
+                  <td colspan="5">{{ form.payment_details }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          {{ form.manager_tds }}{{ form.manager_security_amount }}
+          {{ form.executive_tds }}{{ form.executive_security_amount }}
+          {{ form.telecaller_tds }}{{ form.telecaller_security_amount }}
+        </div>
+
+        <div id="section-property" class="booking-form-section mt-2">
+          <div class="booking-form-section-title">
+            Property Details
+            <a href="{% url 'project_list' %}" target="_blank" rel="noopener" class="float-right font-weight-normal text-lowercase">projects →</a>
+          </div>
+          <div class="table-responsive p-0">
+            {{ form.location }}
+            {{ formset.management_form }}
+            <table class="table table-sm table-bordered mb-0" id="itemsTable">
+              <thead>
                 <tr>
                   <th>Project <span class="text-danger">*</span></th>
                   <th>Plot No <span class="text-danger">*</span></th>
-                  <th>Area(sq.ft) <span class="text-danger">*</span></th>
+                  <th>Area (sq.ft) <span class="text-danger">*</span></th>
                   <th>Rate <span class="text-danger">*</span></th>
-                  <th>BookingMaster Amount</th>
-                  <th>Total Amount</th>
-                  <th style="width: 100px">Row</th>
+                  <th>Booking Amt</th>
+                  <th>Total</th>
+                  <th style="width: 60px;"></th>
                 </tr>
               </thead>
               <tbody>
@@ -222,8 +157,7 @@
                       {{ form.p_id }}
                       {% if not projects %}
                       <small class="form-text text-warning mb-0">
-                        Add projects in
-                        <a href="{% url 'project_add' %}" target="_blank" rel="noopener">Store Settings</a>.
+                        <a href="{% url 'project_add' %}" target="_blank" rel="noopener">Add project</a>
                       </small>
                       {% endif %}
                     {% endif %}
@@ -233,13 +167,13 @@
                   <td>{{ f.rate }}</td>
                   <td>{{ f.booking_amount }}</td>
                   <td>
-                    <input type="text" class="form-control total-cell" readonly style="background-color: #e9ecef;" placeholder="Enter Total Amount" />
+                    <input type="text" class="form-control total-cell" readonly style="background-color: #e9ecef;" />
                   </td>
-                  <td>
+                  <td class="text-center text-nowrap">
                     <div class="d-none">{{ f.DELETE }}</div>
-                    <button type="button" class="btn btn-sm btn-success add-row">+</button>
+                    <button type="button" class="btn btn-sm btn-success py-0 px-1 add-row">+</button>
                     {% if not forloop.first %}
-                    <button type="button" class="btn btn-sm btn-danger remove-row">-</button>
+                    <button type="button" class="btn btn-sm btn-danger py-0 px-1 remove-row">−</button>
                     {% endif %}
                   </td>
                   {% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
@@ -248,31 +182,30 @@
               </tbody>
             </table>
           </div>
-            </div>
-          </div>
-
-          <template id="emptyFormTemplate">
-            <tr class="item-row">
-              <td class="project-cell"></td>
-              <td>{{ formset.empty_form.plot_number }}</td>
-              <td>{{ formset.empty_form.area_sqft }}</td>
-              <td>{{ formset.empty_form.rate }}</td>
-              <td>{{ formset.empty_form.booking_amount }}</td>
-              <td><input type="text" class="form-control total-cell" readonly style="background-color: #e9ecef;" placeholder="Enter Total Amount" /></td>
-              <td>
-                <div class="d-none">{{ formset.empty_form.DELETE }}</div>
-                <button type="button" class="btn btn-sm btn-success add-row">+</button>
-                <button type="button" class="btn btn-sm btn-danger remove-row">-</button>
-              </td>
-              {% for hidden in formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
-            </tr>
-          </template>
-
         </div>
 
-        <div class="card-footer text-right" style="background: transparent; border-top: none;">
-          <a href="{% url 'booking_list' %}" class="btn btn-secondary mr-2" style="padding: 6px 20px;">Cancel</a>
-          <button type="submit" class="btn btn-maroon-custom" style="background-color: #29577f; color: white; border: none; padding: 6px 20px;">Submit</button>
+        <template id="emptyFormTemplate">
+          <tr class="item-row">
+            <td class="project-cell"></td>
+            <td>{{ formset.empty_form.plot_number }}</td>
+            <td>{{ formset.empty_form.area_sqft }}</td>
+            <td>{{ formset.empty_form.rate }}</td>
+            <td>{{ formset.empty_form.booking_amount }}</td>
+            <td><input type="text" class="form-control total-cell" readonly style="background-color: #e9ecef;" /></td>
+            <td class="text-center text-nowrap">
+              <div class="d-none">{{ formset.empty_form.DELETE }}</div>
+              <button type="button" class="btn btn-sm btn-success py-0 px-1 add-row">+</button>
+              <button type="button" class="btn btn-sm btn-danger py-0 px-1 remove-row">−</button>
+            </td>
+            {% for hidden in formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+          </tr>
+        </template>
+
+        <div class="booking-form-footer text-right">
+          <a href="{% url 'booking_list' %}" class="btn btn-sm btn-secondary mr-1">Cancel</a>
+          <button type="submit" class="btn btn-sm btn-primary">
+            <i class="fas fa-save mr-1"></i> Save Booking
+          </button>
         </div>
       </form>
     </div>

@@ -8,9 +8,21 @@ decorated views and never causes a rollback of the main operation.
 from django.db import transaction as _tx
 
 
-def log_activity(user, action, model_name, object_id="", object_repr="", changes=""):
+def log_activity(user, action, model_name, object_id="", object_repr="", changes="", organization=None):
     """Schedule an ActivityLog entry to be written after the current transaction commits."""
     user_pk = user.pk if (user and getattr(user, "is_authenticated", False)) else None
+
+    org_id = None
+    if organization is not None:
+        org_id = organization.pk if hasattr(organization, "pk") else organization
+    elif user_pk:
+        try:
+            from saas.tenant import get_user_organization
+
+            org = get_user_organization(user)
+            org_id = org.pk if org else None
+        except Exception:
+            org_id = getattr(user, "organization_id", None)
 
     # Sanitise — strip non-ASCII to avoid any encoding edge-cases
     def _safe(s):
@@ -27,6 +39,7 @@ def log_activity(user, action, model_name, object_id="", object_repr="", changes
             from .models import ActivityLog
             ActivityLog.objects.create(
                 user_id=user_pk,
+                organization_id=org_id,
                 action=_action,
                 model_name=_model_name,
                 object_id=_object_id,

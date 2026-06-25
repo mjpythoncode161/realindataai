@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Voucher List{% endblock %}
 {% block content %}
-<section class="content-header">
+<section class="content-header py-2">
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6"><h1>Voucher List</h1></div>
@@ -13,7 +13,7 @@
     </div>
   </div>
 </section>
-<section class="content">
+<section class="content pt-0">
   <div class="container-fluid">
     <div class="card card-outline card-primary">
       <div class="card-header"><h3 class="card-title">Filter Vouchers</h3></div>
@@ -35,7 +35,7 @@
 
     <div class="card">
       <div class="card-body p-0 table-responsive">
-        <table class="table table-hover table-striped">
+        <table class="table table-sm table-hover table-striped table-bordered ll-table mb-0">
           <thead class="bg-dark text-white">
             <tr>
               <th>Voucher No</th><th>Type</th><th>Date</th><th>Narration</th><th>Amount (Dr)</th><th>Created By</th><th>Actions</th>

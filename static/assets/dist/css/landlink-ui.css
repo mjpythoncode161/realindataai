@@ -1,0 +1,478 @@
+/**
+ * LandLink — compact tables, forms, reports (project-wide)
+ */
+:root {
+  --ll-brand: #29577f;
+  --ll-brand-hover: #1e4568;
+  --ll-border: #dee2e6;
+  --ll-head-bg: #f8f9fa;
+  --ll-section-bg: #f0f4f8;
+  --ll-font: 0.82rem;
+  --ll-font-sm: 0.8rem;
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+.landlink-ui .content-header {
+  padding: 0.5rem 0.5rem 0.25rem;
+}
+.landlink-ui .content-header h1,
+.landlink-ui .content-header .m-0 {
+  font-size: 1.35rem !important;
+  font-weight: 600;
+  color: #333;
+}
+.landlink-ui section.content {
+  padding-top: 0;
+}
+.landlink-ui section.content > .container-fluid {
+  padding-top: 0;
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.landlink-ui .ll-card,
+.landlink-ui .content .card.card-outline {
+  margin-bottom: 0.75rem;
+}
+.landlink-ui .ll-card > .card-body,
+.landlink-ui .content .card:not(.card-outline) > .card-body {
+  padding: 0.75rem;
+}
+.landlink-ui .ll-card > .card-body.p-2,
+.landlink-ui .content .card .card-body.table-responsive.p-2 {
+  padding: 0.5rem !important;
+}
+.landlink-ui .content .card > .card-header {
+  padding: 0.45rem 0.75rem;
+  min-height: auto;
+}
+.landlink-ui .content .card > .card-header .card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+}
+.landlink-ui .card-outline.card-primary {
+  border-top: 3px solid var(--ll-brand);
+}
+
+/* ── Tables (lists + reports) ────────────────────────────────────────────── */
+.landlink-ui table.table,
+.landlink-ui .ll-table {
+  font-size: var(--ll-font);
+  margin-bottom: 0;
+}
+.landlink-ui table.table thead th,
+.landlink-ui .ll-table thead th {
+  padding: 0.45rem 0.5rem !important;
+  white-space: nowrap;
+  background: var(--ll-head-bg);
+  vertical-align: middle;
+  font-weight: 600;
+  border-bottom-width: 1px;
+}
+.landlink-ui table.table tbody td,
+.landlink-ui .ll-table tbody td {
+  padding: 0.35rem 0.5rem !important;
+  vertical-align: middle;
+}
+.landlink-ui table.table tbody td .btn-group {
+  position: static;
+}
+.landlink-ui table.table tbody td .dropdown-menu {
+  z-index: 1050;
+  font-size: var(--ll-font);
+  min-width: 7rem;
+}
+.landlink-ui .ll-link {
+  font-weight: 600;
+  color: var(--ll-brand);
+}
+.landlink-ui .table-responsive {
+  overflow-x: auto;
+}
+
+/* DataTables */
+.landlink-ui .dataTables_wrapper .dataTables_length,
+.landlink-ui .dataTables_wrapper .dataTables_filter,
+.landlink-ui .dataTables_wrapper .dataTables_info,
+.landlink-ui .dataTables_wrapper .dataTables_paginate {
+  font-size: var(--ll-font-sm);
+  padding-top: 0.35rem;
+}
+.landlink-ui .dataTables_wrapper .dataTables_filter input {
+  font-size: var(--ll-font-sm);
+  padding: 0.2rem 0.45rem;
+  height: auto;
+}
+.landlink-ui .dataTables_wrapper .dataTables_paginate .paginate_button {
+  padding: 0.2rem 0.5rem !important;
+}
+
+/* ── Forms ───────────────────────────────────────────────────────────────── */
+.landlink-ui .content .form-control,
+.landlink-ui .content select.form-control,
+.landlink-ui .content textarea.form-control {
+  font-size: var(--ll-font);
+  padding: 0.2rem 0.45rem;
+  height: calc(1.5em + 0.45rem + 2px);
+}
+.landlink-ui .content textarea.form-control {
+  height: auto;
+  min-height: calc(1.5em + 0.45rem + 2px);
+}
+.landlink-ui .content .form-group {
+  margin-bottom: 0.5rem;
+}
+.landlink-ui .content label:not(.custom-control-label) {
+  font-size: var(--ll-font-sm);
+  margin-bottom: 0.15rem;
+  font-weight: 600;
+}
+
+.landlink-ui .ll-form-section-title,
+.landlink-ui .booking-form-section-title,
+.landlink-ui .customer-form-section {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ll-brand);
+  background: var(--ll-section-bg);
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--ll-border);
+  border-bottom: none;
+}
+
+.landlink-ui .ll-form-table,
+.landlink-ui .booking-form-table,
+.landlink-ui .customer-form-table {
+  font-size: var(--ll-font);
+  margin-bottom: 0;
+}
+.landlink-ui .ll-form-table th,
+.landlink-ui .booking-form-table th,
+.landlink-ui .customer-form-table th {
+  width: 120px;
+  background: var(--ll-head-bg);
+  font-weight: 600;
+  vertical-align: middle;
+  padding: 0.3rem 0.45rem !important;
+  white-space: nowrap;
+}
+.landlink-ui .ll-form-table td,
+.landlink-ui .booking-form-table td,
+.landlink-ui .customer-form-table td {
+  vertical-align: middle;
+  padding: 0.25rem 0.4rem !important;
+}
+.landlink-ui .ll-form-table .form-control,
+.landlink-ui .booking-form-table .form-control,
+.landlink-ui .customer-form-table .form-control,
+.landlink-ui .ll-form-table select,
+.landlink-ui .booking-form-table select {
+  font-size: var(--ll-font);
+  height: calc(1.5em + 0.45rem + 2px);
+  padding: 0.2rem 0.45rem;
+}
+
+.landlink-ui .ll-form-footer,
+.landlink-ui .booking-form-footer,
+.landlink-ui .customer-form-footer {
+  padding: 0.5rem 0.75rem;
+  background: var(--ll-head-bg);
+  border-top: 1px solid var(--ll-border);
+}
+
+.landlink-ui .customer-form-card .card-body,
+.landlink-ui .booking-form-card .card-body {
+  padding: 0;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.landlink-ui .ll-btn-primary,
+.landlink-ui .btn-maroon-custom {
+  background-color: var(--ll-brand) !important;
+  border-color: var(--ll-brand) !important;
+  color: #fff !important;
+}
+.landlink-ui .ll-btn-primary:hover,
+.landlink-ui .btn-maroon-custom:hover {
+  background-color: var(--ll-brand-hover) !important;
+  border-color: var(--ll-brand-hover) !important;
+  color: #fff !important;
+}
+
+/* ── Reports & dashboard widgets ─────────────────────────────────────────── */
+.landlink-ui .info-box {
+  height: 88px;
+  min-height: 88px;
+  max-height: 88px;
+  width: 100%;
+  margin-bottom: 0;
+  border: 1px solid var(--ll-border);
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+.landlink-ui a:hover .info-box,
+.landlink-ui .info-box:hover {
+  border-color: rgba(41, 87, 127, 0.45);
+  box-shadow: 0 2px 8px rgba(41, 87, 127, 0.12);
+}
+.landlink-ui .info-box .info-box-icon {
+  width: 72px;
+  min-width: 72px;
+  max-width: 72px;
+  height: 88px;
+  min-height: 88px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.45rem;
+  border-radius: 3px 0 0 3px;
+}
+.landlink-ui .info-box .info-box-content {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+.landlink-ui .info-box .info-box-text {
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.25;
+  height: 2.5em;
+  max-height: 2.5em;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #5a6268;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+.landlink-ui .info-box .info-box-number {
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #212529;
+  margin-top: 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.landlink-ui .info-box-icon.bg-primary,
+.landlink-ui .bg-primary.info-box-icon {
+  background-color: var(--ll-brand) !important;
+}
+.landlink-ui .info-box.bg-primary {
+  background-color: var(--ll-brand) !important;
+}
+.landlink-ui .ll-kpi-row {
+  margin-bottom: 0.35rem;
+}
+.landlink-ui .ll-kpi-row > [class*="col-"] {
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+  margin-bottom: 0.65rem;
+  display: flex;
+}
+.landlink-ui .ll-kpi-row > [class*="col-"] > a,
+.landlink-ui .ll-kpi-row > [class*="col-"] > .info-box {
+  display: flex;
+  width: 100%;
+  flex: 1;
+}
+.landlink-ui .ll-kpi-row > [class*="col-"] > a .info-box {
+  flex: 1;
+}
+.landlink-ui .row:not(.ll-kpi-row) > [class*="col-"] > .info-box,
+.landlink-ui .row:not(.ll-kpi-row) > [class*="col-"] > a {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.65rem;
+}
+.landlink-ui .breadcrumb-item.active {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6c757d;
+}
+.landlink-ui .content .card.card-outline.card-primary {
+  border-top: 3px solid var(--ll-brand);
+}
+.landlink-ui .small-box {
+  margin-bottom: 0.5rem;
+}
+.landlink-ui .small-box .inner {
+  padding: 8px 12px;
+}
+.landlink-ui .small-box .inner h3 {
+  font-size: 1.5rem;
+}
+.landlink-ui .small-box .inner p {
+  font-size: var(--ll-font-sm);
+}
+.landlink-ui .small-box .icon > i {
+  font-size: 50px;
+  top: 10px;
+}
+
+.landlink-ui .nav-tabs.custom-tabs .nav-link {
+  font-size: var(--ll-font);
+  padding: 0.4rem 0.85rem;
+}
+.landlink-ui .filter-btn-group .btn {
+  font-size: var(--ll-font-sm);
+  padding: 0.2rem 0.65rem;
+  border-radius: 1rem;
+  margin-right: 0.35rem;
+}
+.landlink-ui .btn-outline-maroon {
+  color: var(--ll-brand);
+  border-color: var(--ll-brand);
+}
+.landlink-ui .btn-outline-maroon:hover,
+.landlink-ui .btn-outline-maroon.active {
+  background-color: var(--ll-brand);
+  color: #fff;
+}
+
+/* ── Alerts & badges ─────────────────────────────────────────────────────── */
+.landlink-ui .alert {
+  padding: 0.4rem 0.75rem;
+  font-size: var(--ll-font);
+  margin-bottom: 0.5rem;
+}
+.landlink-ui .badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* ── Validation (booking/customer forms) ─────────────────────────────────── */
+.landlink-ui .booking-section-highlight {
+  outline: 2px solid #dc3545;
+  outline-offset: 2px;
+  border-radius: 4px;
+  background-color: #fff5f5;
+}
+.landlink-ui .is-invalid-field,
+.landlink-ui .has-validation-error .form-control {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 0.15rem rgba(220, 53, 69, 0.15);
+}
+
+.landlink-ui .col-email {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.landlink-ui .booking-form-table tr.has-validation-error td {
+  background-color: #fff5f5;
+}
+.landlink-ui #itemsTable .project-cell { min-width: 140px; }
+.landlink-ui #itemsTable #id_p_id { min-width: 130px; }
+.landlink-ui #customerLookupStatus { font-size: 0.75rem; }
+.landlink-ui .ll-card .card-body,
+.landlink-ui .dataTables_wrapper,
+.landlink-ui .dataTables_scrollBody {
+  overflow: visible !important;
+}
+.landlink-ui .ll-table td {
+  overflow: visible !important;
+  position: static;
+}
+
+/* ── Sidebar (match compact tables/forms) ─────────────────────────────────── */
+.landlink-ui .main-sidebar {
+  font-family: "Source Sans Pro", sans-serif;
+}
+.landlink-ui .brand-link {
+  padding: 0.55rem 0.65rem;
+  font-size: 0.95rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.landlink-ui .brand-link .brand-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.landlink-ui .sidebar {
+  padding-top: 0.35rem;
+}
+.landlink-ui .nav-sidebar > .nav-item {
+  margin-bottom: 1px;
+}
+.landlink-ui .nav-sidebar .nav-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.42rem 0.65rem;
+  color: rgba(255, 255, 255, 0.88);
+  border-radius: 4px;
+  margin: 0 0.35rem;
+  width: calc(100% - 0.7rem);
+}
+.landlink-ui .nav-sidebar .nav-link p {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.35;
+}
+.landlink-ui .nav-sidebar .nav-link .nav-icon,
+.landlink-ui .nav-sidebar .nav-link i.nav-icon {
+  font-size: 0.95rem;
+  width: 1.35rem;
+  margin-right: 0.45rem;
+  text-align: center;
+}
+.landlink-ui .nav-sidebar .nav-link.active {
+  background: var(--ll-brand) !important;
+  color: #fff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+.landlink-ui .nav-sidebar .nav-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+.landlink-ui .nav-sidebar .nav-treeview {
+  padding-left: 0.15rem;
+}
+.landlink-ui .nav-sidebar .nav-treeview > .nav-item > .nav-link {
+  font-size: 0.82rem;
+  font-weight: 400;
+  padding: 0.32rem 0.55rem 0.32rem 1.85rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+.landlink-ui .nav-sidebar .nav-treeview > .nav-item > .nav-link p {
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+.landlink-ui .nav-sidebar .nav-treeview .nav-icon {
+  font-size: 0.55rem;
+  width: 1rem;
+}
+.landlink-ui .nav-sidebar .nav-link .right {
+  font-size: 0.75rem;
+  top: 0.55rem;
+}
+.landlink-ui .main-header.navbar {
+  min-height: 2.75rem;
+  padding: 0.2rem 0.5rem;
+}
+.landlink-ui .main-header .nav-link {
+  font-size: 0.875rem;
+  padding: 0.35rem 0.65rem;
+}
+.landlink-ui .main-header .nav-link strong {
+  font-size: 0.875rem;
+  font-weight: 600;
+}

@@ -1,0 +1,40 @@
+{# Manager-only sidebar — Lead, Customers, Booking, Payments #}
+<li class="nav-item has-treeview">
+  <a href="#" class="nav-link">
+    <i class="nav-icon fas fa-user-plus text-success"></i>
+    <p>Lead Management <i class="right fas fa-angle-left"></i></p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item"><a href="{% url 'lead_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>All Leads</p></a></li>
+    <li class="nav-item"><a href="{% url 'lead_add' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Add Lead</p></a></li>
+    <li class="nav-item"><a href="{% url 'lead_reports_hub' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Lead Reports</p></a></li>
+  </ul>
+</li>
+<li class="nav-item">
+  <a href="{% url 'customer_list' %}" class="nav-link">
+    <i class="nav-icon fas fa-users text-info"></i>
+    <p>Customers</p>
+  </a>
+</li>
+<li class="nav-item has-treeview">
+  <a href="#" class="nav-link">
+    <i class="nav-icon fas fa-book-open text-primary"></i>
+    <p>Booking <i class="right fas fa-angle-left"></i></p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item"><a href="{% url 'booking_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>All Bookings</p></a></li>
+    <li class="nav-item"><a href="{% url 'booking_add' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Add Booking</p></a></li>
+    <li class="nav-item"><a href="{% url 'cancelled_plots_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Cancelled Plots</p></a></li>
+    <li class="nav-item"><a href="{% url 'master_plots' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Master Plots Details</p></a></li>
+  </ul>
+</li>
+<li class="nav-item has-treeview">
+  <a href="#" class="nav-link">
+    <i class="nav-icon fas fa-credit-card text-success"></i>
+    <p>Payments <i class="right fas fa-angle-left"></i></p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item"><a href="{% url 'receipt_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Receipt List</p></a></li>
+    <li class="nav-item"><a href="{% url 'payment_list' %}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>Approval List</p></a></li>
+  </ul>
+</li>

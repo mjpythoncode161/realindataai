@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="content-header py-2">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6"><h1>{{ page_title }}</h1></div>
+      <div class="col-sm-6 text-sm-right"><a href="{% url 'lead_reports_hub' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left mr-1"></i> All Lead Reports</a></div>
+    </div>
+  </div>
+</div>
+<section class="content pt-0">
+  <div class="container-fluid">
+    {% include "accounts/lead_reports/_filters.html" %}
+    <div class="row ll-kpi-row mb-3">
+      <div class="col-md-4"><div class="info-box shadow-sm"><span class="info-box-icon bg-success"><i class="fas fa-check"></i></span><div class="info-box-content"><span class="info-box-text">Confirmed</span><span class="info-box-number">{{ confirmed_count }}</span></div></div></div>
+      <div class="col-md-4"><div class="info-box shadow-sm"><span class="info-box-icon bg-secondary"><i class="fas fa-times"></i></span><div class="info-box-content"><span class="info-box-text">Closed (Lost)</span><span class="info-box-number">{{ closed_count }}</span></div></div></div>
+      <div class="col-md-4"><div class="info-box shadow-sm"><span class="info-box-icon bg-info"><i class="fas fa-percentage"></i></span><div class="info-box-content"><span class="info-box-text">Conversion Rate</span><span class="info-box-number">{{ conversion_rate }}%</span></div></div></div>
+    </div>
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="card mb-3">
+          <div class="card-header bg-success text-white py-2"><h3 class="card-title mb-0">Confirmed Leads</h3></div>
+          <div class="card-body table-responsive p-0">
+            <table class="table table-sm table-striped mb-0">
+              <thead><tr><th>Name</th><th>Phone</th><th>Date</th></tr></thead>
+              <tbody>
+                {% for lead in confirmed_leads %}
+                <tr><td><a href="{% url 'lead_detail' lead.lead_id %}">{{ lead.full_name }}</a></td><td>{{ lead.phone }}</td><td>{{ lead.confirmed_at|date:"d-m-Y"|default:lead.created_at|date:"d-m-Y" }}</td></tr>
+                {% empty %}<tr><td colspan="3" class="text-muted text-center">None</td></tr>{% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card mb-3">
+          <div class="card-header bg-secondary text-white py-2"><h3 class="card-title mb-0">Closed (Lost) Leads</h3></div>
+          <div class="card-body table-responsive p-0">
+            <table class="table table-sm table-striped mb-0">
+              <thead><tr><th>Name</th><th>Phone</th><th>Date</th></tr></thead>
+              <tbody>
+                {% for lead in closed_leads %}
+                <tr><td><a href="{% url 'lead_detail' lead.lead_id %}">{{ lead.full_name }}</a></td><td>{{ lead.phone }}</td><td>{{ lead.closed_at|date:"d-m-Y"|default:lead.created_at|date:"d-m-Y" }}</td></tr>
+                {% empty %}<tr><td colspan="3" class="text-muted text-center">None</td></tr>{% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

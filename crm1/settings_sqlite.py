@@ -2,8 +2,12 @@
 from .settings import *  # noqa: F403
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'u673831287_two_db',
+        'USER': 'u673831287_two_db',  # replace if your MySQL username is different
+        'PASSWORD': 'v~lM*SY?!6O',
+        'HOST': '92.113.22.3',
+        'PORT': '3306',
     }
 }

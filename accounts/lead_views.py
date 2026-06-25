@@ -25,7 +25,16 @@ def _team_user_ids(user):
 
 
 def _lead_queryset_for(user):
+    from django.db.models import Q
+    from saas.tenant import get_user_organization
+
+    org = get_user_organization(user)
     qs = Lead.objects.select_related("p_id", "assigned_to", "created_by", "converted_customer__u_id")
+    if org:
+        qs = qs.filter(Q(organization=org) | Q(p_id__organization=org)).distinct()
+    elif not getattr(user, "is_superuser", False):
+        return qs.none()
+
     if user.has_role("admin"):
         return qs
     if user.has_role("manager"):
@@ -53,12 +62,12 @@ def lead_list(request):
         qs = qs.filter(status=status)
 
     counts = {
-        "open": _lead_queryset_for(request.user).exclude(
+        "total": _lead_queryset_for(request.user).distinct().count(),
+        "pending": _lead_queryset_for(request.user).exclude(
             status__in=[Lead.Status.CONFIRMED, Lead.Status.CLOSED_LOST]
         ).distinct().count(),
-        "new": _lead_queryset_for(request.user).filter(status=Lead.Status.NEW).distinct().count(),
         "confirmed": _lead_queryset_for(request.user).filter(status=Lead.Status.CONFIRMED).distinct().count(),
-        "lost": _lead_queryset_for(request.user).filter(status=Lead.Status.CLOSED_LOST).distinct().count(),
+        "closed": _lead_queryset_for(request.user).filter(status=Lead.Status.CLOSED_LOST).distinct().count(),
     }
 
     return render(
@@ -83,6 +92,10 @@ def lead_add(request):
         if form.is_valid():
             lead = form.save(commit=False)
             lead.created_by = request.user
+            from saas.tenant import get_request_organization
+            org = get_request_organization(request)
+            if org:
+                lead.organization = org
             if not lead.assigned_to_id and not (
                 request.user.has_role("manager") and not request.user.has_role("admin")
             ):

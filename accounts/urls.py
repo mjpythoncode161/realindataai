@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import lead_views
+from . import lead_report_views
 
 
 urlpatterns = [
@@ -23,6 +24,15 @@ urlpatterns = [
     path("leads/", lead_views.lead_list, name="lead_list"),
     path("leads/add/", lead_views.lead_add, name="lead_add"),
     path("leads/check-booking/", lead_views.lead_check_booking, name="lead_check_booking"),
+    path("leads/reports/", lead_report_views.lead_reports_hub, name="lead_reports_hub"),
+    path("leads/reports/summary/", lead_report_views.lead_summary_report, name="lead_summary_report"),
+    path("leads/reports/status/", lead_report_views.lead_status_report, name="lead_status_report"),
+    path("leads/reports/source/", lead_report_views.lead_source_report, name="lead_source_report"),
+    path("leads/reports/project/", lead_report_views.lead_project_report, name="lead_project_report"),
+    path("leads/reports/staff/", lead_report_views.lead_staff_report, name="lead_staff_report"),
+    path("leads/reports/conversion/", lead_report_views.lead_conversion_report, name="lead_conversion_report"),
+    path("leads/reports/follow-up/", lead_report_views.lead_followup_report, name="lead_followup_report"),
+    path("leads/reports/activity/", lead_report_views.lead_activity_report, name="lead_activity_report"),
     path("leads/<int:lead_id>/", lead_views.lead_detail, name="lead_detail"),
     path("leads/<int:lead_id>/edit/", lead_views.lead_edit, name="lead_edit"),
     path("leads/<int:lead_id>/confirm/", lead_views.lead_confirm, name="lead_confirm"),

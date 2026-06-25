@@ -28,15 +28,16 @@ DEBUG = True  # Set to False in production
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "realindataai.onrender.com",
-    ".onrender.com",
-] 
-
-# Add your domain for production
+    "yourdomain.com",
+    "www.yourdomain.com",
+    "landlink-tai1.onrender.com",
+    "https://landlink-tai1.onrender.com/",
+]  # Add your domain for production
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://realindataai.onrender.com",
+    "https://landlink-tai1.onrender.com",
 ]
+
 
 # Application definition
 
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
     "bookings.apps.BookingsConfig",
     "api",
     "tally",
+    "saas",
 ]
 
 MIDDLEWARE = [
@@ -65,6 +67,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "accounts.middleware.TrialAccessMiddleware",
+    "accounts.middleware.LeadOnlyStaffAccessMiddleware",
+    "saas.middleware.SubscriptionAccessMiddleware",
 ]
 
 ROOT_URLCONF = "crm1.urls"
@@ -81,6 +85,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "bookings.context_processors.booking_agent_settings",
+                "saas.context_processors.saas_context",
             ],
         },
     },
@@ -91,6 +96,18 @@ WSGI_APPLICATION = "crm1.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
+
+DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'NAME': 'u673831287_two_db',
+    #     'USER': 'u673831287_two_db',  # replace if your MySQL username is different
+    #     'PASSWORD': 'v~lM*SY?!6O',
+    #     'HOST': 'srv1689.hstgr.io',
+    #     'PORT': '3306',
+    # }
+}
+
 
 DATABASES = {
     "default": {
@@ -139,6 +156,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
@@ -178,3 +196,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
 }
+
+# ── SaaS & Payments ───────────────────────────────────────────────────────────
+# Set SAAS_DEMO_MODE=False and add Razorpay keys for live payments.
+SAAS_DEMO_MODE = os.environ.get("SAAS_DEMO_MODE", "true").lower() in ("1", "true", "yes")
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")

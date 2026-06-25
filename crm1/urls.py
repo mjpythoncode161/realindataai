@@ -20,12 +20,15 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from bookings.views import team_report
+from saas.views import pricing_page
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("reports/team/", team_report, name="team_report"),
+    path("pricing/", pricing_page, name="saas_pricing"),
     path("", include("accounts.urls")),
     path("", include("bookings.urls")),
     path("api/", include("api.urls")),
     path("", include("tally.urls")),
+    path("saas/", include("saas.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

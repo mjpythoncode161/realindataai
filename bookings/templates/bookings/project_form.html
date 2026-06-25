@@ -4,7 +4,7 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<section class="content-header">
+<section class="content-header py-2">
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
@@ -14,11 +14,11 @@
   </div>
 </section>
 
-<section class="content">
+<section class="content pt-0">
   <div class="container-fluid">
     <div class="row">
       <div class="col-12 col-md-8">
-        <div class="card card-outline card-maroon">
+        <div class="card card-outline card-primary ll-card">
           <div class="card-body">
             <form method="POST" id="projectForm">
               {% csrf_token %}
@@ -40,7 +40,7 @@
                 {% if form.location.errors %}<div class="text-danger small">{{ form.location.errors }}</div>{% endif %}
               </div>
               <div class="mt-4">
-                <button type="submit" class="btn btn-maroon-custom" style="background-color: #29577f; color: white; border: none; padding: 6px 20px;">Save</button>
+                <button type="submit" class="btn btn-sm btn-primary ll-btn-primary">Save</button>
                 <a href="{% url 'project_list' %}" class="btn btn-secondary">Cancel</a>
               </div>
             </form>
