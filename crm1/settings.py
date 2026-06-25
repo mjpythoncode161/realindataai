@@ -67,6 +67,10 @@ MIDDLEWARE = [
     "accounts.middleware.TrialAccessMiddleware",
     "accounts.middleware.LeadOnlyStaffAccessMiddleware",
     "saas.middleware.SubscriptionAccessMiddleware",
+     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "crm1.cors_middleware.CorsMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
 ]
 
 ROOT_URLCONF = "crm1.urls"
@@ -153,16 +157,22 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
+# Static Files
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+
+# Media Files
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-# Silence AutoField W042 warnings
+# Default Auto Field
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
-
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 
 SESSION_COOKIE_AGE = 86400
@@ -194,6 +204,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
 }
+
+
 
 # ── SaaS & Payments ───────────────────────────────────────────────────────────
 # Set SAAS_DEMO_MODE=False and add Razorpay keys for live payments.
