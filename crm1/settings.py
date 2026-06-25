@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = "cz=&%f*9(d*zo$_55p=(p)(eki#p$pb^0159-)8k^6$9c3l&_b"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     "realindataai.onrender.com",
@@ -34,7 +34,6 @@ ALLOWED_HOSTS = [
 CSRF_TRUSTED_ORIGINS = [
     "https://realindataai.onrender.com",
 ]
-
 
 
 # Application definition
@@ -57,6 +56,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "crm1.cors_middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -67,10 +67,6 @@ MIDDLEWARE = [
     "accounts.middleware.TrialAccessMiddleware",
     "accounts.middleware.LeadOnlyStaffAccessMiddleware",
     "saas.middleware.SubscriptionAccessMiddleware",
-     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
-    "crm1.cors_middleware.CorsMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
 ]
 
 ROOT_URLCONF = "crm1.urls"
@@ -157,22 +153,24 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-# Static Files
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-]
-
-STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
-
-# Media Files
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-# Default Auto Field
+# Silence AutoField W042 warnings
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 
 SESSION_COOKIE_AGE = 86400
@@ -204,8 +202,6 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
 }
-
-
 
 # ── SaaS & Payments ───────────────────────────────────────────────────────────
 # Set SAAS_DEMO_MODE=False and add Razorpay keys for live payments.
