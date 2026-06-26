@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: realindataai
+    runtime: python
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input
+    startCommand: bash start.sh
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.9"

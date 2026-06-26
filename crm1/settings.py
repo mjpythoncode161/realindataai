@@ -155,23 +155,26 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
+
+# Serve CSS/JS from static/ and staticfiles/ on Render (no separate nginx).
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_MAX_AGE = 31536000
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Silence AutoField W042 warnings
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
-
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-
 
 SESSION_COOKIE_AGE = 86400
 
